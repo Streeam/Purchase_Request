@@ -24,8 +24,10 @@ import java.util.Collection;
 @EnableConfigurationProperties({LiquibaseProperties.class, ApplicationProperties.class})
 public class CidApp implements InitializingBean {
 
-    //TODO 1. Add an option when a user register to create a company (ROLE_MANAGER) or join a company (ROLE_USER).
-    //TODO 2.a. Create an API/setupCompany to create a company and invite employees (allocate an email address and a role)
+    //TODO  Add an option when a user register to create a company (ROLE_MANAGER) or join a company (ROLE_USER).
+
+    //****Option 1****
+    //TODO 1. Create an API/setupCompany to create a company and invite employees (allocate an email address and a role)
     //TODO 2.b. Send emails with link to registration to invited employees to register to the company
     //TODO 3.a. Add field to the registration page to choose a company.
     //TODO 3.b. If the employee has been invited login automatically
