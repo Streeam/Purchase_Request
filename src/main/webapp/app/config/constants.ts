@@ -11,7 +11,8 @@ export const AUTHORITIES = {
   USER: 'ROLE_USER',
   MANAGER: 'ROLE_MANAGER',
   SALE: 'ROLE_SALES',
-  STORE: 'ROLE_STORES'
+  STORE: 'ROLE_STORES',
+  EMPLOYEE: 'ROLE_EMPLOYEE'
 };
 
 export const messages = {

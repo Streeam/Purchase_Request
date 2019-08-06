@@ -24,16 +24,18 @@ import java.util.Collection;
 @EnableConfigurationProperties({LiquibaseProperties.class, ApplicationProperties.class})
 public class CidApp implements InitializingBean {
 
-    //TODO  Add an option when a user register to create a company (ROLE_MANAGER) or join a company (ROLE_USER).
+    //TODO 1. Create Company and Employee entities.
+    //TODO 2. In the companyController API:
+            // TODO - Creates a company (verifies if the company name and email haven't been used) and adds the user to that company with ROLE_MANAGER
+            // TODO - Can only create one company but you can be employed to another company (just one)
+            // TODO - Create an API that send emails to people to  invite them to join the company
+            // TODO - The person can't be in another company (If he is register but not an employee it give the ROLE_EMPLOYEE )
+            // TODO - Create a notification entity to let the manager know that a employee needs confirmation/rejection
 
-    //****Option 1****
-    //TODO 1. Create an API/setupCompany to create a company and invite employees (allocate an email address and a role)
-    //TODO 2.b. Send emails with link to registration to invited employees to register to the company
-    //TODO 3.a. Add field to the registration page to choose a company.
-    //TODO 3.b. If the employee has been invited login automatically
-    //TODO 3.c. If the employee was not invited, send a email to the manager to confirm his registration
-    //TODO 3.d  Create a notification entity to let the manager know that a employee needs confirmation/rejection
-    //TODO 3.f Send confirmation email to the employee
+            // TODO - Request to join an existing company (if already in a company cannot see this feature)
+            // TODO - Send email to the manager for approval. If approved obtains ROLE_EMPLOYEE and receives a link to signin (activated)
+
+
 
     private static final Logger log = LoggerFactory.getLogger(CidApp.class);
 
