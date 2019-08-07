@@ -3,11 +3,10 @@ package com.streeam.cims.service;
 import com.streeam.cims.CidApp;
 import com.streeam.cims.config.Constants;
 import com.streeam.cims.domain.User;
-import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.repository.UserRepository;
+import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.service.dto.UserDTO;
 import com.streeam.cims.service.util.RandomUtil;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,16 +20,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Integration tests for {@link UserService}.
@@ -113,6 +109,23 @@ public class UserServiceIT {
         assertThat(maybeUser).isNotPresent();
         userRepository.delete(user);
     }
+
+//    @Test
+//    @Transactional
+//    public void assertThatUserCantCreateACompanyIfManager() {
+//        Set<Authority> authorities  = new HashSet<>();
+//        Authority authority = new Authority();
+//        authority.setName(AuthoritiesConstants.MANAGER);
+//        authorities.add(authority);
+//        user.setAuthorities(authorities);
+//
+//        userRepository.saveAndFlush(user);
+//
+//        assertThat(userService.checkIfCurrentUserHasRoles(user ,AuthoritiesConstants.MANAGER)).isTrue();
+//
+//        userRepository.delete(user);
+//
+//    }
 
     @Test
     @Transactional

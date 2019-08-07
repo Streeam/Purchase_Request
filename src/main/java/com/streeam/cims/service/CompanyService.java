@@ -1,6 +1,7 @@
 package com.streeam.cims.service;
 
 import com.streeam.cims.domain.Company;
+import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.CompanyRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.service.dto.CompanyDTO;
@@ -107,16 +108,44 @@ public class CompanyService {
             .map(companyMapper::toDto);
     }
 
+    /**
+     * Checks if the company email already exists
+     * @param email
+     * @return true if the company email is present in the database false otherwise
+     */
     public boolean companyEmailAlreadyExists(String email) {
 
         return companyRepository.findAll().stream().anyMatch(company -> company.getEmail().equals(email));
 
     }
 
+    /**
+     * Checks if the company name already exists
+     * @param name
+     * @return true if the company name is present in the database false otherwise
+     */
     public boolean companyNameAlreadyExists(String name) {
 
         return companyRepository.findAll().stream().anyMatch(company -> company.getName().equals(name));
 
     }
+    /**
+     *  Checks if the current uses has the provided authorities
+     * @param roles
+     * @return true if the user has at least one of the authorities false otherwise
+     */
+    public boolean checkCurrentUserForRoles(String... roles) {
 
+        User user = userService.getCurrentUser().get();
+        return userService.checkIfCurrentUserHasRoles(user, roles);
+    }
+
+    /**
+     *
+     * @return an optional of the current user
+     */
+    public Optional<User> findCurrentUser() {
+
+        return userService.getCurrentUser();
+    }
 }

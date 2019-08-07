@@ -1,5 +1,7 @@
 package com.streeam.cims.web.rest;
 
+import com.streeam.cims.domain.User;
+import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.CompanyService;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.web.rest.errors.BadRequestAlertException;
@@ -65,6 +67,9 @@ public class CompanyResource {
 
         // TODO Get the current user
 
+        User user = companyService.findCurrentUser().orElseThrow(() -> new BadRequestAlertException("User could not be reached", ENTITY_NAME, "usetnotexists"));
+
+         boolean c = companyService.checkCurrentUserForRoles(AuthoritiesConstants.EMPLOYEE,AuthoritiesConstants.MANAGER);
 
         // TODO Check if you are MANAGER or EMPLOYEE
         //!SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)
