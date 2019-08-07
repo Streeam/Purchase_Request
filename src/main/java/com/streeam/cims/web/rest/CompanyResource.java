@@ -55,6 +55,14 @@ public class CompanyResource {
         if (companyDTO.getId() != null) {
             throw new BadRequestAlertException("A new company cannot already have an ID", ENTITY_NAME, "idexists");
         }
+
+        if (companyService.companyEmailAlreadyExists(companyDTO.getEmail())) {
+            throw new BadRequestAlertException("This company email is already being used", ENTITY_NAME, "emailexists");
+        }
+        if (companyService.companyNameAlreadyExists(companyDTO.getName())) {
+            throw new BadRequestAlertException("This company name is already being used", ENTITY_NAME, "emailexists");
+        }
+
         CompanyDTO result = companyService.save(companyDTO);
         return ResponseEntity.created(new URI("/api/companies/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
@@ -85,9 +93,7 @@ public class CompanyResource {
     /**
      * {@code GET  /companies} : get all the companies.
      *
-
      * @param pageable the pagination information.
-
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of companies in body.
      */
     @GetMapping("/companies")
@@ -128,7 +134,7 @@ public class CompanyResource {
      * {@code SEARCH  /_search/companies?query=:query} : search for the company corresponding
      * to the query.
      *
-     * @param query the query of the company search.
+     * @param query    the query of the company search.
      * @param pageable the pagination information.
      * @return the result of the search.
      */
