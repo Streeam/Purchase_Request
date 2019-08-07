@@ -241,10 +241,66 @@ public class CompanyResourceIT {
         verify(mockCompanySearchRepository, times(0)).save(company);
     }
 
+    @Test
+    @Transactional
+    public void createCompanyWithExistingEmail() throws Exception {
+
+        companyRepository.saveAndFlush(company);
+        int databaseSizeBeforeCreate = companyRepository.findAll().size();
+
+        Company updatedCompany = createUpdatedEntity(em);
+
+        // Create the Company with an existing ID
+        updatedCompany.setEmail(DEFAULT_EMAIL);
+        CompanyDTO companyDTO = companyMapper.toDto(updatedCompany);
+
+        // An entity with an existing ID cannot be created, so this API call must fail
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        // Validate the Company in the database
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeCreate);
+
+        // Validate the Company in Elasticsearch
+        verify(mockCompanySearchRepository, times(0)).save(updatedCompany);
+    }
+
+    @Test
+    @Transactional
+    public void createCompanyWithExistingName() throws Exception {
+
+        companyRepository.saveAndFlush(company);
+        int databaseSizeBeforeCreate = companyRepository.findAll().size();
+
+        Company updatedCompany = createUpdatedEntity(em);
+
+        // Create the Company with an existing ID
+        updatedCompany.setName(DEFAULT_NAME);
+        CompanyDTO companyDTO = companyMapper.toDto(updatedCompany);
+
+        // An entity with an existing ID cannot be created, so this API call must fail
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        // Validate the Company in the database
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeCreate);
+
+        // Validate the Company in Elasticsearch
+        verify(mockCompanySearchRepository, times(0)).save(updatedCompany);
+    }
+
 
     @Test
     @Transactional
     public void checkNameIsRequired() throws Exception {
+
+
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setName(null);
@@ -397,7 +453,7 @@ public class CompanyResourceIT {
             .andExpect(jsonPath("$.[*].companyLogoContentType").value(hasItem(DEFAULT_COMPANY_LOGO_CONTENT_TYPE)))
             .andExpect(jsonPath("$.[*].companyLogo").value(hasItem(Base64Utils.encodeToString(DEFAULT_COMPANY_LOGO))));
     }
-    
+
     @Test
     @Transactional
     public void getCompany() throws Exception {

@@ -63,6 +63,15 @@ public class CompanyResource {
             throw new BadRequestAlertException("This company name is already being used", ENTITY_NAME, "emailexists");
         }
 
+        // TODO Get the current user
+
+
+        // TODO Check if you are MANAGER or EMPLOYEE
+        //!SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)
+        // TODO Give the user ROLE_MANAGER
+        // TODO Use the user to find the employee
+        // TODO Link the employee to the company
+
         CompanyDTO result = companyService.save(companyDTO);
         return ResponseEntity.created(new URI("/api/companies/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))

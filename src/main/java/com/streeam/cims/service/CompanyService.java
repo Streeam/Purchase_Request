@@ -31,7 +31,10 @@ public class CompanyService {
 
     private final CompanySearchRepository companySearchRepository;
 
-    public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, CompanySearchRepository companySearchRepository) {
+    private final UserService userService;
+
+    public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserService userService, CompanySearchRepository companySearchRepository) {
+        this.userService = userService;
         this.companyRepository = companyRepository;
         this.companyMapper = companyMapper;
         this.companySearchRepository = companySearchRepository;

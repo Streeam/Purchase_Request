@@ -291,6 +291,12 @@ public class UserService {
             });
     }
 
+    public Optional<User> getCurrentUser(){
+        String login = SecurityUtils.getCurrentUserLogin().orElse("");
+
+        return userRepository.findOneByLogin(login);
+    }
+
     /**
      * Gets a list of all the authorities.
      * @return a list of all the authorities.
