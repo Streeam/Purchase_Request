@@ -24,18 +24,36 @@ import java.util.Collection;
 @EnableConfigurationProperties({LiquibaseProperties.class, ApplicationProperties.class})
 public class CidApp implements InitializingBean {
 
-    //TODO 1. Create Company and Employee entities.
+    //TODO 1. Create Company, Notification and Employee entities.
     //TODO 2. In the companyController API:
-            // TODO - Creates a company (verifies if the company name and email haven't been used) and adds the user to that company with ROLE_MANAGER
-            // TODO - Can only create one company but you can be employed to another company (just one)
+            // TODO - Creates a company (verifies if the company name and email haven't been used) and links the user(ROLE_MANAGER) to an employee and to that company
+            // TODO - Cannot be manager at two distinct companies
+            // TODO - Cannot be employed at two distinct companies
+            // TODO - If you are a manager you cannot be an employee at another company
+            // TODO - If you are a employee you cannot be an manager at another company
             // TODO - Create an API that send emails to people to  invite them to join the company
-            // TODO - The person can't be in another company (If he is register but not an employee it give the ROLE_EMPLOYEE )
-            // TODO - Create a notification entity to let the manager know that a employee needs confirmation/rejection
-
+            // TODO - Create a notification entity linked to an employee and every time it sends an email send a notifications as well
+            // TODO - Have the option to leave a company as an employee and also delete a company as a manager
             // TODO - Request to join an existing company (if already in a company cannot see this feature)
             // TODO - Send email to the manager for approval. If approved obtains ROLE_EMPLOYEE and receives a link to signin (activated)
 
-
+    //TODO API's:
+        //TODO 1. api/companies
+            //TODO POST Create a company and automatically become the manager (ROLE_MANAGER)
+            //TODO GET List all the companies (manager can see only his company, admin can see all companies)
+            //TODO DELETE Delete a company  (manager can delete only his company, admin can delete any companies)
+            //TODO PUT Update a company (manager his , admin any)
+        //TODO 2. api/all-companies (no restriction)
+            //TODO GET List all the company names (this is so a user can find and join a company)
+                // * If the user is ROLE_MANAGER and ROLE_EMPLOYEE he cannot see this option otherwise he can
+        //TODO 3. api/request-to-join (no restriction)
+            //TODO POST(companyName) Request to join a company
+                // * If the user is ROLE_MANAGER and ROLE_EMPLOYEE he cannot see this option
+                // * If the user is not ROLE_MANAGER nor ROLE_EMPLOYEE he can send a request to join the company
+        //TODO 4. api/invite-to-join (Pre-Authorize ROLE_MANAGER)
+            //TODO POST(email)
+                // * If the user exists and is not ROLE_MANAGER and ROLE_EMPLOYEE sends a notification and an email to the user
+                // * If the user don't exists send an email with link to registration page
 
     private static final Logger log = LoggerFactory.getLogger(CidApp.class);
 
