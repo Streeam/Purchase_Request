@@ -53,8 +53,7 @@ relationship OneToOne {
 
 
 // Set pagination options
-paginate  Employee, Notificationn, Company, User
-with pagination
+paginate  Employee, Notification, Company with pagination
 
 // Use Data Transfert Objects (DTO)
  dto * with mapstruct
