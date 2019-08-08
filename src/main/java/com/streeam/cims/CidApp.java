@@ -54,6 +54,7 @@ public class CidApp implements InitializingBean {
             //TODO POST(email)
                 // * If the user exists and is not ROLE_MANAGER and ROLE_EMPLOYEE sends a notification and an email to the user
                 // * If the user don't exists send an email with link to registration page
+    //TODO 4. api/approve-employee (employeeId)
 
     private static final Logger log = LoggerFactory.getLogger(CidApp.class);
 
