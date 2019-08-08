@@ -24,6 +24,7 @@ import java.util.Collection;
 @EnableConfigurationProperties({LiquibaseProperties.class, ApplicationProperties.class})
 public class CidApp implements InitializingBean {
 
+    //TODO  ****SUMMARY****
     //TODO 1. Create Company, Notification and Employee entities.
     //TODO 2. In the companyController API:
             // TODO - Creates a company (verifies if the company name and email haven't been used) and links the user(ROLE_MANAGER) to an employee and to that company
@@ -32,15 +33,16 @@ public class CidApp implements InitializingBean {
             // TODO - If you are a manager you cannot be an employee at another company
             // TODO - If you are a employee you cannot be an manager at another company
             // TODO - Create an API that send emails to people to  invite them to join the company
-            // TODO - Create a notification entity linked to an employee and every time it sends an email send a notifications as well
+            // TODO - Create a notification entity linked to an employee and every time it sends an email sends a notifications as well
             // TODO - Have the option to leave a company as an employee and also delete a company as a manager
             // TODO - Request to join an existing company (if already in a company cannot see this feature)
             // TODO - Send email to the manager for approval. If approved obtains ROLE_EMPLOYEE and receives a link to signin (activated)
 
-    //TODO API's:
+    //TODO  ****API'S****
         //TODO 1. api/companies
             //TODO POST Create a company and automatically become the manager (ROLE_MANAGER)
-            //TODO GET List all the companies (manager can see only his company, admin can see all companies)
+                    // * If the user is ROLE_MANAGER or ROLE_EMPLOYEE he cannot see this option otherwise he can
+            //TODO GET List all the companies details (manager can see only his company, admin can see all companies)
             //TODO DELETE Delete a company  (manager can delete only his company, admin can delete any companies)
             //TODO PUT Update a company (manager his , admin any)
         //TODO 2. api/all-companies (no restriction)
@@ -56,12 +58,14 @@ public class CidApp implements InitializingBean {
                 // * If the user don't exists send an email with link to registration page
     //TODO 4. api/approve-employee (employeeId)
 
+    //TODO ***TESTS****
+
     private static final Logger log = LoggerFactory.getLogger(CidApp.class);
 
-    private final Environment env;
+    private final Environment environment;
 
-    public CidApp(Environment env) {
-        this.env = env;
+    public CidApp(Environment environment) {
+        this.environment = environment;
     }
 
     /**
@@ -73,7 +77,7 @@ public class CidApp implements InitializingBean {
      */
     @Override
     public void afterPropertiesSet() throws Exception {
-        Collection<String> activeProfiles = Arrays.asList(env.getActiveProfiles());
+        Collection<String> activeProfiles = Arrays.asList(environment.getActiveProfiles());
         if (activeProfiles.contains(JHipsterConstants.SPRING_PROFILE_DEVELOPMENT) && activeProfiles.contains(JHipsterConstants.SPRING_PROFILE_PRODUCTION)) {
             log.error("You have misconfigured your application! It should not run " +
                 "with both the 'dev' and 'prod' profiles at the same time.");

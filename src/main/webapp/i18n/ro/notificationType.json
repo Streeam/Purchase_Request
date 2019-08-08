@@ -1,0 +1,16 @@
+{
+  "cidApp": {
+    "NotificationType": {
+      "null": "",
+      "INVITATION": "INVITATION",
+      "NEW_EMPLOYEE": "NEW_EMPLOYEE",
+      "FIRED": "FIRED",
+      "ACCEPT_INVITE": "ACCEPT_INVITE",
+      "REJECT_INVITE": "REJECT_INVITE",
+      "REQUEST_TO_JOIN": "REQUEST_TO_JOIN",
+      "LEFT_COMPANY": "LEFT_COMPANY",
+      "COMPANY_DELETED": "COMPANY_DELETED",
+      "OTHERS": "OTHERS"
+    }
+  }
+}

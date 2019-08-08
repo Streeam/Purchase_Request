@@ -43,6 +43,11 @@ public class CacheConfiguration {
             createCache(cm, com.streeam.cims.domain.User.class.getName());
             createCache(cm, com.streeam.cims.domain.Authority.class.getName());
             createCache(cm, com.streeam.cims.domain.User.class.getName() + ".authorities");
+            createCache(cm, com.streeam.cims.domain.Company.class.getName());
+            createCache(cm, com.streeam.cims.domain.Company.class.getName() + ".employees");
+            createCache(cm, com.streeam.cims.domain.Notification.class.getName());
+            createCache(cm, com.streeam.cims.domain.Employee.class.getName());
+            createCache(cm, com.streeam.cims.domain.Employee.class.getName() + ".notifications");
             // jhipster-needle-ehcache-add-entry
         };
     }

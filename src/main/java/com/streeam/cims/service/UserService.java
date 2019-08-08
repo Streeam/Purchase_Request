@@ -291,6 +291,12 @@ public class UserService {
             });
     }
 
+    public Optional<User> getCurrentUser(){
+        String login = SecurityUtils.getCurrentUserLogin().orElse("");
+
+        return userRepository.findOneByLogin(login);
+    }
+
     /**
      * Gets a list of all the authorities.
      * @return a list of all the authorities.
@@ -303,5 +309,9 @@ public class UserService {
     private void clearUserCaches(User user) {
         Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).evict(user.getLogin());
         Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
+    }
+
+    public boolean checkIfCurrentUserHasRoles(User user,String... roles) {
+        return user.getAuthorities().stream().anyMatch(new HashSet<>(Arrays.asList(roles))::contains);
     }
 }

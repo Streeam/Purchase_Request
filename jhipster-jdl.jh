@@ -1,0 +1,65 @@
+
+
+entity Company {
+    name String required unique
+    email String required unique  minlength(5) maxlength(254)  pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/) 
+    phone String required
+    addressLine1 String required
+    addressLine2 String
+    city String required
+    country String required
+    postcode String required
+    companyLogo ImageBlob
+
+}
+
+entity Notification{
+    comment String
+    sentDate Instant required
+    read Boolean required
+    format NotificationType required
+}
+
+enum NotificationType {
+    INVITATION, NEW_EMPLOYEE, FIRED, ACCEPT_INVITE,
+    REJECT_INVITE, REQUEST_TO_JOIN, LEFT_COMPANY, COMPANY_DELETED, OTHERS
+}
+
+entity Employee {
+	login String required maxlength(50)
+    firstName String required maxlength(50)
+    lastName String required maxlength(50)
+     email String required minlength(5) maxlength(254)
+     pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/) 
+    hired Boolean required
+    language String
+    image ImageBlob
+}
+
+
+relationship OneToMany {
+    Company{employees(id) required} to 
+    Employee{company(name)}
+    Employee{notification(id)} to Notification{employee(id)}
+
+}
+
+
+relationship OneToOne {
+    Employee{user(login) required} to User
+}
+
+
+
+
+// Set pagination options
+paginate  Employee, Notification, Company with pagination
+
+// Use Data Transfert Objects (DTO)
+ dto * with mapstruct
+
+// Set service options to all except few
+service * with serviceClass
+
+// Set an angular suffix
+// angularSuffix * with mySuffix
