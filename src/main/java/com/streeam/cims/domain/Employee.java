@@ -2,11 +2,12 @@ package com.streeam.cims.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import javax.persistence.*;
-import javax.validation.constraints.*;
-
-import org.springframework.data.elasticsearch.annotations.FieldType;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,14 +34,12 @@ public class Employee implements Serializable {
     @Column(name = "login", length = 50, nullable = false)
     private String login;
 
-    @NotNull
     @Size(max = 50)
-    @Column(name = "first_name", length = 50, nullable = false)
+    @Column(name = "first_name", length = 50)
     private String firstName;
 
-    @NotNull
     @Size(max = 50)
-    @Column(name = "last_name", length = 50, nullable = false)
+    @Column(name = "last_name", length = 50)
     private String lastName;
 
     @NotNull

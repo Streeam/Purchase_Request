@@ -14,7 +14,6 @@
             "fieldName": "firstName",
             "fieldType": "String",
             "fieldValidateRules": [
-                "required",
                 "maxlength"
             ],
             "fieldValidateRulesMaxlength": 50
@@ -23,7 +22,6 @@
             "fieldName": "lastName",
             "fieldType": "String",
             "fieldValidateRules": [
-                "required",
                 "maxlength"
             ],
             "fieldValidateRulesMaxlength": 50

@@ -27,8 +27,8 @@ enum NotificationType {
 
 entity Employee {
 	login String required maxlength(50)
-    firstName String required maxlength(50)
-    lastName String required maxlength(50)
+    firstName String  maxlength(50)
+    lastName String  maxlength(50)
      email String required minlength(5) maxlength(254)
      pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/) 
     hired Boolean required
@@ -36,6 +36,10 @@ entity Employee {
     image ImageBlob
 }
 
+//entity Authorities{
+//	name String required,
+//    description String 
+//}
 
 relationship OneToMany {
     Company{employees(id) required} to 
@@ -49,7 +53,9 @@ relationship OneToOne {
     Employee{user(login) required} to User
 }
 
-
+//relationship ManyToMany{
+//	Employee{authorities(name)} to Authorities
+//}
 
 
 // Set pagination options

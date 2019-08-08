@@ -134,10 +134,9 @@ public class CompanyService {
      * @param roles
      * @return true if the user has at least one of the authorities false otherwise
      */
-    public boolean checkCurrentUserForRoles(String... roles) {
+    public boolean checkUserHasRoles(User user,String... roles) {
 
-        User user = userService.getCurrentUser().get();
-        return userService.checkIfCurrentUserHasRoles(user, roles);
+        return userService.checkIfUserHasRoles(user, roles);
     }
 
     /**

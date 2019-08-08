@@ -2,9 +2,12 @@ package com.streeam.cims.service;
 
 import com.streeam.cims.CidApp;
 import com.streeam.cims.config.Constants;
+import com.streeam.cims.domain.Authority;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.repository.search.UserSearchRepository;
+import com.streeam.cims.security.AuthoritiesConstants;
+import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.dto.UserDTO;
 import com.streeam.cims.service.util.RandomUtil;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -22,8 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -110,22 +115,26 @@ public class UserServiceIT {
         userRepository.delete(user);
     }
 
-//    @Test
-//    @Transactional
-//    public void assertThatUserCantCreateACompanyIfManager() {
-//        Set<Authority> authorities  = new HashSet<>();
-//        Authority authority = new Authority();
-//        authority.setName(AuthoritiesConstants.MANAGER);
-//        authorities.add(authority);
-//        user.setAuthorities(authorities);
-//
-//        userRepository.saveAndFlush(user);
-//
-//        assertThat(userService.checkIfCurrentUserHasRoles(user ,AuthoritiesConstants.MANAGER)).isTrue();
-//
-//        userRepository.delete(user);
-//
-//    }
+    @Test
+    @Transactional
+    public void assertThatWhenTestsRunNoUserIsLoggedIn() {
+
+        assertThat(SecurityUtils.getCurrentUserLogin()).isNotPresent();
+    }
+
+    @Test
+    @Transactional
+    public void assertThatUserCantCreateACompanyIfManager() {
+        Set<Authority> authorities  = new HashSet<>();
+        Authority authority = new Authority();
+        authority.setName(AuthoritiesConstants.MANAGER);
+        authorities.add(authority);
+        user.setAuthorities(authorities);
+
+        assertThat(userService.checkIfUserHasRoles(user , AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)).isTrue();
+
+
+    }
 
     @Test
     @Transactional

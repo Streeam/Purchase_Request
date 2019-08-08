@@ -1,6 +1,8 @@
 package com.streeam.cims.web.rest;
 
+import com.streeam.cims.domain.Authority;
 import com.streeam.cims.domain.User;
+import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.CompanyService;
 import com.streeam.cims.service.dto.CompanyDTO;
@@ -23,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * REST controller for managing {@link com.streeam.cims.domain.Company}.
@@ -40,8 +43,11 @@ public class CompanyResource {
 
     private final CompanyService companyService;
 
-    public CompanyResource(CompanyService companyService) {
+    private final AuthorityRepository authorityRepository;
+
+    public CompanyResource(CompanyService companyService, AuthorityRepository authorityRepository) {
         this.companyService = companyService;
+        this.authorityRepository = authorityRepository;
     }
 
     /**
@@ -65,15 +71,23 @@ public class CompanyResource {
             throw new BadRequestAlertException("This company name is already being used", ENTITY_NAME, "emailexists");
         }
 
-        // TODO Get the current user
 
         User user = companyService.findCurrentUser().orElseThrow(() -> new BadRequestAlertException("User could not be reached", ENTITY_NAME, "usetnotexists"));
 
-         boolean c = companyService.checkCurrentUserForRoles(AuthoritiesConstants.EMPLOYEE,AuthoritiesConstants.MANAGER);
+         if(companyService.checkUserHasRoles(user ,AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER)){
+             throw new BadRequestAlertException("You can't create a company if you already have a company or are employed by another", ENTITY_NAME, "wrongrole");
+         }
 
-        // TODO Check if you are MANAGER or EMPLOYEE
+            Set<Authority> authorities = user.getAuthorities();
+            authorityRepository.findById(AuthoritiesConstants.MANAGER).ifPresent(authorities::add);
+            user.setAuthorities(authorities);
+
+            //companyService.saveAndLinkUserToEmployee(user);
+
+
         //!SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)
-        // TODO Give the user ROLE_MANAGER
+
+
         // TODO Use the user to find the employee
         // TODO Link the employee to the company
 
