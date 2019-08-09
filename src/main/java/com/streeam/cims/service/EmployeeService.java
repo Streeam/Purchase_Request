@@ -1,6 +1,7 @@
 package com.streeam.cims.service;
 
 import com.streeam.cims.domain.Employee;
+import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.EmployeeRepository;
 import com.streeam.cims.repository.search.EmployeeSearchRepository;
 import com.streeam.cims.service.dto.EmployeeDTO;
@@ -104,4 +105,31 @@ public class EmployeeService {
         return employeeSearchRepository.search(queryStringQuery(query), pageable)
             .map(employeeMapper::toDto);
     }
+
+    public Employee createEmployeeFromUser(User newUser) {
+        Employee employee = new Employee();
+            employee.login(newUser.getLogin())
+                .firstName(newUser.getFirstName())
+                .lastName(newUser.getLastName())
+                .email(newUser.getEmail())
+                .hired(false)
+                .user(newUser);
+
+        employee = employeeRepository.save(employee);
+        employeeSearchRepository.save(employee);
+
+        return employee;
+    }
+
+    /**
+     *     private String login;
+     *     private String firstName;
+     *     private String lastName;
+     *     private String email;
+     *     private Boolean hired;
+     *     private byte[] image;
+     *     private String imageContentType;
+     *     private User user;
+     *     private Company company;
+     */
 }

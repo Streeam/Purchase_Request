@@ -133,7 +133,6 @@ export class EmployeeUpdate extends React.Component<IEmployeeUpdateProps, IEmplo
                     type="text"
                     name="firstName"
                     validate={{
-                      required: { value: true, errorMessage: translate('entity.validation.required') },
                       maxLength: { value: 50, errorMessage: translate('entity.validation.maxlength', { max: 50 }) }
                     }}
                   />
@@ -147,7 +146,6 @@ export class EmployeeUpdate extends React.Component<IEmployeeUpdateProps, IEmplo
                     type="text"
                     name="lastName"
                     validate={{
-                      required: { value: true, errorMessage: translate('entity.validation.required') },
                       maxLength: { value: 50, errorMessage: translate('entity.validation.maxlength', { max: 50 }) }
                     }}
                   />

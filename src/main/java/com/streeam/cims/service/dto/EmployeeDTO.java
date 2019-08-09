@@ -15,11 +15,9 @@ public class EmployeeDTO implements Serializable {
     @Size(max = 50)
     private String login;
 
-    @NotNull
     @Size(max = 50)
     private String firstName;
 
-    @NotNull
     @Size(max = 50)
     private String lastName;
 

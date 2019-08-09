@@ -20,11 +20,11 @@
             </column>
 
             <column name="first_name" type="varchar(50)">
-                <constraints nullable="false" />
+                <constraints nullable="true" />
             </column>
 
             <column name="last_name" type="varchar(50)">
-                <constraints nullable="false" />
+                <constraints nullable="true" />
             </column>
 
             <column name="email" type="varchar(254)">

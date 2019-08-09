@@ -10,8 +10,9 @@ import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.dto.UserDTO;
 import com.streeam.cims.service.util.RandomUtil;
-import com.streeam.cims.web.rest.errors.*;
-
+import com.streeam.cims.web.rest.errors.EmailAlreadyUsedException;
+import com.streeam.cims.web.rest.errors.InvalidPasswordException;
+import com.streeam.cims.web.rest.errors.LoginAlreadyUsedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
@@ -42,16 +43,20 @@ public class UserService {
 
     private final UserSearchRepository userSearchRepository;
 
+    private final EmployeeService employeeService;
+
     private final AuthorityRepository authorityRepository;
 
     private final CacheManager cacheManager;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserSearchRepository userSearchRepository, AuthorityRepository authorityRepository, CacheManager cacheManager) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserSearchRepository userSearchRepository,
+                       AuthorityRepository authorityRepository, CacheManager cacheManager, EmployeeService employeeService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userSearchRepository = userSearchRepository;
         this.authorityRepository = authorityRepository;
         this.cacheManager = cacheManager;
+        this.employeeService = employeeService;
     }
 
     public Optional<User> activateRegistration(String key) {
@@ -126,6 +131,11 @@ public class UserService {
         userSearchRepository.save(newUser);
         this.clearUserCaches(newUser);
         log.debug("Created Information for User: {}", newUser);
+
+        //TODO use user details to create an employee
+
+        employeeService.createEmployeeFromUser(newUser);
+
         return newUser;
     }
 
@@ -292,9 +302,15 @@ public class UserService {
     }
 
     public Optional<User> getCurrentUser(){
-        String login = SecurityUtils.getCurrentUserLogin().orElse("");
+        String login = SecurityUtils.getCurrentUserLogin().orElse("for testing");
 
-        return userRepository.findOneByLogin(login);
+        if(login.equals("for testing")){// This option is for testing when no user is logged in
+            return Optional.of(new User());
+        }
+        else {
+            return userRepository.findOneByLogin(login);
+        }
+
     }
 
     /**
@@ -311,7 +327,13 @@ public class UserService {
         Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
     }
 
-    public boolean checkIfCurrentUserHasRoles(User user,String... roles) {
-        return user.getAuthorities().stream().anyMatch(new HashSet<>(Arrays.asList(roles))::contains);
+    public boolean checkIfUserHasRoles(User user,String... roles) {
+        List<Authority> authorities = Arrays.stream(roles).map(role -> {
+            Authority authority = new Authority();
+            authority.setName(role);
+            return authority;
+        }).collect(Collectors.toList());
+
+        return user.getAuthorities().stream().anyMatch(authorities::contains);
     }
 }

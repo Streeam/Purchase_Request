@@ -3,15 +3,17 @@ package com.streeam.cims.web.rest;
 import com.streeam.cims.CidApp;
 import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
+import com.streeam.cims.domain.User;
+import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.repository.CompanyRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.service.CompanyService;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
 import com.streeam.cims.web.rest.errors.ExceptionTranslator;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -77,6 +79,9 @@ public class CompanyResourceIT {
     private CompanyRepository companyRepository;
 
     @Autowired
+    private  AuthorityRepository authorityRepository;
+
+    @Autowired
     private CompanyMapper companyMapper;
 
     @Autowired
@@ -109,10 +114,15 @@ public class CompanyResourceIT {
 
     private Company company;
 
+    @Mock
+    private CompanyService mockCompanyService;
+
+
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final CompanyResource companyResource = new CompanyResource(companyService);
+
+        final CompanyResource companyResource = new CompanyResource(companyService, authorityRepository);
         this.restCompanyMockMvc = MockMvcBuilders.standaloneSetup(companyResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -191,6 +201,17 @@ public class CompanyResourceIT {
     @Transactional
     public void createCompany() throws Exception {
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
+        User user;
+
+        if(TestUtil.findAll(em, User.class).isEmpty()){
+            user = UserResourceIT.createEntity(em);
+            em.persist(user);
+            em.flush();
+        }
+        else {
+            user = TestUtil.findAll(em, User.class).get(0);
+        }
+
 
         // Create the Company
         CompanyDTO companyDTO = companyMapper.toDto(company);
