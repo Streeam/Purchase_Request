@@ -45,6 +45,8 @@ public class CidApp implements InitializingBean {
             //TODO GET List all the companies details (manager can see only his company, admin can see all companies)
             //TODO DELETE Delete a company  (manager can delete only his company, admin can delete any companies)
             //TODO PUT Update a company (manager his , admin any)
+        //TODO 2. api/activate
+                // GET When activating the user also create and link to an employee (NEEDS TEST)
         //TODO 2. api/all-companies (no restriction)
             //TODO GET List all the company names (this is so a user can find and join a company)
                 // * If the user is ROLE_MANAGER and ROLE_EMPLOYEE he cannot see this option otherwise he can

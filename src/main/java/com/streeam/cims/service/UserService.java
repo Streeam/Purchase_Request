@@ -61,7 +61,10 @@ public class UserService {
 
     public Optional<User> activateRegistration(String key) {
         log.debug("Activating user for activation key {}", key);
-        return userRepository.findOneByActivationKey(key)
+
+        //TODO use user details to create an employee
+
+        Optional<User> activatedUser = userRepository.findOneByActivationKey(key)
             .map(user -> {
                 // activate given user for the registration key.
                 user.setActivated(true);
@@ -71,6 +74,12 @@ public class UserService {
                 log.debug("Activated user: {}", user);
                 return user;
             });
+
+        if(activatedUser.isPresent()){
+            employeeService.createEmployeeFromUser(activatedUser.get());
+        }
+
+        return activatedUser;
     }
 
     public Optional<User> completePasswordReset(String newPassword, String key) {
@@ -131,10 +140,6 @@ public class UserService {
         userSearchRepository.save(newUser);
         this.clearUserCaches(newUser);
         log.debug("Created Information for User: {}", newUser);
-
-        //TODO use user details to create an employee
-
-        employeeService.createEmployeeFromUser(newUser);
 
         return newUser;
     }
@@ -302,15 +307,10 @@ public class UserService {
     }
 
     public Optional<User> getCurrentUser(){
+
         String login = SecurityUtils.getCurrentUserLogin().orElse("for testing");
 
-        if(login.equals("for testing")){// This option is for testing when no user is logged in
-            return Optional.of(new User());
-        }
-        else {
-            return userRepository.findOneByLogin(login);
-        }
-
+        return userRepository.findOneByLogin(login);
     }
 
     /**
