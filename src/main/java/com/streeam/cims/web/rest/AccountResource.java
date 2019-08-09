@@ -67,7 +67,6 @@ public class AccountResource {
         User user = userService.registerUser(managedUserVM, managedUserVM.getPassword());
         mailService.sendActivationEmail(user);
     }
-
     /**
      * {@code GET  /activate} : activate the registered user.
      *

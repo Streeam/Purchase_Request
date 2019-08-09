@@ -45,6 +45,8 @@ public class CidApp implements InitializingBean {
             //TODO GET List all the companies details (manager can see only his company, admin can see all companies)
             //TODO DELETE Delete a company  (manager can delete only his company, admin can delete any companies)
             //TODO PUT Update a company (manager his , admin any)
+        //TODO 2. api/activate
+                // GET When activating the user also create and link to an employee (NEEDS TEST)
         //TODO 2. api/all-companies (no restriction)
             //TODO GET List all the company names (this is so a user can find and join a company)
                 // * If the user is ROLE_MANAGER and ROLE_EMPLOYEE he cannot see this option otherwise he can
@@ -56,6 +58,7 @@ public class CidApp implements InitializingBean {
             //TODO POST(email)
                 // * If the user exists and is not ROLE_MANAGER and ROLE_EMPLOYEE sends a notification and an email to the user
                 // * If the user don't exists send an email with link to registration page
+    //TODO 4. api/approve-employee (employeeId)
 
     //TODO ***TESTS****
 
@@ -130,4 +133,51 @@ public class CidApp implements InitializingBean {
             contextPath,
             env.getActiveProfiles());
     }
+
+    /**
+     *
+     <changeSet author="streeam" id="20190807193905-1-insertData">
+     <insert tableName="employee">
+     <column name="id"  value="nextval('hibernate_sequence')"/>
+     <column name="login" value="system"/>
+     <column name="first_name" value="System"/>
+     <column name="last_name" value="System"/>
+     <column name="email" value="system@system.com"/>
+     <column name="hired" value="true"/>
+     <column name="user_id" value="1"/>
+     <column name="company_id" value="1"/>
+     </insert>
+     <insert tableName="employee">
+     <column name="id"  value="nextval('hibernate_sequence')"/>
+     <column name="login" value="anonymoususer"/>
+     <column name="first_name" value="Anonymous"/>
+     <column name="last_name" value="User"/>
+     <column name="email" value="anonymous@localhost.com"/>
+     <column name="hired" value="true"/>
+     <column name="user_id" value="2"/>
+     <column name="company_id" value="1"/>
+     </insert>
+     <insert tableName="employee">
+     <column name="id"  value="nextval('hibernate_sequence')"/>
+     <column name="login" value="admin"/>
+     <column name="first_name" value="Administrator"/>
+     <column name="last_name" value="Administrator"/>
+     <column name="email" value="admin@localhost.com"/>
+     <column name="hired" value="true"/>
+     <column name="user_id" value="3"/>
+     <column name="company_id" value="1"/>
+     </insert>
+     <insert tableName="employee">
+     <column name="id"  value="nextval('hibernate_sequence')"/>
+     <column name="login" value="user"/>
+     <column name="first_name" value="User"/>
+     <column name="last_name" value="User"/>
+     <column name="email" value="user@localhost.com"/>
+     <column name="hired" value="true"/>
+     <column name="user_id" value="4"/>
+     <column name="company_id" value="1"/>
+     </insert>
+     </changeSet>
+
+     */
 }
