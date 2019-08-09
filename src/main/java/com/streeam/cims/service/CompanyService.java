@@ -147,4 +147,8 @@ public class CompanyService {
 
         return userService.getCurrentUser();
     }
+
+    public void saveAndLinkUserToEmployee(User user) {
+
+    }
 }

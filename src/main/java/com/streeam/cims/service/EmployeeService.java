@@ -120,16 +120,4 @@ public class EmployeeService {
 
         return employee;
     }
-
-    /**
-     *     private String login;
-     *     private String firstName;
-     *     private String lastName;
-     *     private String email;
-     *     private Boolean hired;
-     *     private byte[] image;
-     *     private String imageContentType;
-     *     private User user;
-     *     private Company company;
-     */
 }

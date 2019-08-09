@@ -75,17 +75,15 @@ public class CompanyResource {
         User user = companyService.findCurrentUser().orElseThrow(() -> new BadRequestAlertException("User could not be reached", ENTITY_NAME, "usetnotexists"));
 
          if(companyService.checkUserHasRoles(user ,AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER)){
-             throw new BadRequestAlertException("You can't create a company if you already have a company or are employed by another", ENTITY_NAME, "wrongrole");
+             throw new BadRequestAlertException("You can't create a company if you already have a company or are employed by one", ENTITY_NAME, "wrongrole");
          }
 
             Set<Authority> authorities = user.getAuthorities();
             authorityRepository.findById(AuthoritiesConstants.MANAGER).ifPresent(authorities::add);
             user.setAuthorities(authorities);
 
-            //companyService.saveAndLinkUserToEmployee(user);
+            companyService.saveAndLinkUserToEmployee(user);
 
-
-        //!SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)
 
 
         // TODO Use the user to find the employee
