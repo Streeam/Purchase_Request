@@ -108,6 +108,20 @@ public class CompanyServiceTestIT {
 
     private static final String DEFAULT_USER_LANGKEY = "dummy";
 
+
+    //***************USER2 DEFAULT VALUES**************
+    private static final String DEFAULT_USER2_LOGIN = "legolas";
+
+    private static final String DEFAULT_USER2_EMAIL = "aragors@localhost.com";
+
+    private static final String DEFAULT_USER2_FIRSTNAME = "gimli";
+
+    private static final String DEFAULT_USER2_LASTNAME = "frodo";
+
+    private static final String DEFAULT_USER2_IMAGEURL = "http://placehold.it/50x50";
+
+    private static final String DEFAULT_USER2_LANGKEY = "elvish";
+
     @Autowired
     private CompanyRepository companyRepository;
 
@@ -174,6 +188,9 @@ public class CompanyServiceTestIT {
 
     @BeforeEach
     public void init() {
+
+
+
         user = new User();
         user.setLogin(DEFAULT_USER_LOGIN);
         user.setPassword(RandomStringUtils.random(60));
@@ -183,12 +200,25 @@ public class CompanyServiceTestIT {
         user.setLastName(DEFAULT_USER_LASTNAME);
         user.setImageUrl(DEFAULT_USER_IMAGEURL);
         user.setLangKey(DEFAULT_USER_LANGKEY);
+        allocateAuthority(AuthoritiesConstants.USER, user);
+
+
+        user2 = new User();
+        user2.setLogin(DEFAULT_USER2_LOGIN);
+        user2.setPassword(RandomStringUtils.random(60));
+        user2.setActivated(true);
+        user2.setEmail(DEFAULT_USER2_EMAIL);
+        user2.setFirstName(DEFAULT_USER2_FIRSTNAME);
+        user2.setLastName(DEFAULT_USER2_LASTNAME);
+        user2.setImageUrl(DEFAULT_USER2_IMAGEURL);
+        user2.setLangKey(DEFAULT_USER2_LANGKEY);
+        allocateAuthority(AuthoritiesConstants.USER, user2);
 
         when(dateTimeProvider.getNow()).thenReturn(Optional.of(LocalDateTime.now()));
         auditingHandler.setDateTimeProvider(dateTimeProvider);
 
         employee = new Employee()
-            .login(DEFAULT_EMPLOYEE_LOGIN)
+            .login(DEFAULT_USER_LOGIN)
             .firstName(DEFAULT_EMPLOYEE_FIRST_NAME)
             .lastName(DEFAULT_EMPLOYEE_LAST_NAME)
             .email(DEFAULT_EMPLOYEE_EMAIL)
@@ -196,6 +226,16 @@ public class CompanyServiceTestIT {
             .image(DEFAULT_EMPLOYEE_IMAGE)
             .imageContentType(DEFAULT_EMPLOYEE_IMAGE_CONTENT_TYPE)
             .user(user);
+
+        employee2 = new Employee()
+            .login(DEFAULT_USER2_LOGIN)
+            .firstName(UPDATED_EMPLOYEE_FIRST_NAME)
+            .lastName(UPDATED_EMPLOYEE_LAST_NAME)
+            .email(DEFAULT_USER2_EMAIL)
+            .hired(UPDATED_HIRED)
+            .image(UPDATED_EMPLOYEE_IMAGE)
+            .imageContentType(UPDATED_EMPLOYEE_IMAGE_CONTENT_TYPE)
+            .user(user2);
 
         company = new Company()
             .name(DEFAULT_NAME)
@@ -208,14 +248,21 @@ public class CompanyServiceTestIT {
             .postcode(DEFAULT_POSTCODE)
             .companyLogo(DEFAULT_COMPANY_LOGO)
             .companyLogoContentType(DEFAULT_COMPANY_LOGO_CONTENT_TYPE)
-            .addEmployees(employee);
+            .addEmployees(employee)
+            .addEmployees(employee2);
     }
 
     @Test
     @Transactional
     public void assertThatCompanyEmailAlreadyExists() {
+
         userRepository.saveAndFlush(user);
+        userRepository.saveAndFlush(user2);
+
         employeeRepository.saveAndFlush(employee);
+        employeeRepository.saveAndFlush(employee2);
+
+
         companyRepository.saveAndFlush(company);
 
 
@@ -269,45 +316,65 @@ public class CompanyServiceTestIT {
     @Test
     @Transactional
     public void assertThatCheckIfUserHasRoles() {
-        Set<Authority> authorities  = new HashSet<>();
-        Authority authority = new Authority();
-        authority.setName(AuthoritiesConstants.MANAGER);
-        authorities.add(authority);
-        Authority authority2 = new Authority();
-        authority2.setName(AuthoritiesConstants.USER);
-        authorities.add(authority2);
-        user.setAuthorities(authorities);
 
+        allocateAuthority(AuthoritiesConstants.MANAGER, user);
 
         assertThat(userService.checkIfUserHasRoles(user , AuthoritiesConstants.MANAGER,  AuthoritiesConstants.EMPLOYEE)).isTrue();
         assertThat(userService.checkIfUserHasRoles(user ,  AuthoritiesConstants.EMPLOYEE)).isFalse();
 
         assertThat(userService.checkIfUserHasRoles(user , AuthoritiesConstants.MANAGER)).isTrue();
         assertThat(userService.checkIfUserHasRoles(user , AuthoritiesConstants.USER)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user2 , AuthoritiesConstants.USER)).isTrue();
     }
+
 
     //void delete(Long id)
 
     @Test
     @Transactional
     public void assertThatWhenCompanyIsRemovedItRemovesTheUsersRoles() {
+        int initialEmployeesInACompany = company.getEmployees().size();
 
-        Set<Authority> authorities  = new HashSet<>();
-        Authority authority = new Authority();
-        authority.setName(AuthoritiesConstants.MANAGER);
-        authorities.add(authority);
-        user.setAuthorities(authorities);
+        allocateAuthority(AuthoritiesConstants.MANAGER, user);
 
         userRepository.saveAndFlush(user);
+
+        allocateAuthority(AuthoritiesConstants.EMPLOYEE, user2);
+
+        userRepository.saveAndFlush(user2);
+        employeeRepository.saveAndFlush(employee2);
         employeeRepository.saveAndFlush(employee);
         companyRepository.saveAndFlush(company);
 
+        assertThat(companyRepository.findOneById(company.getId()).get().getEmployees().size()).isEqualTo(initialEmployeesInACompany);
+        assertThat(companyRepository.findOneById(company.getId()).get().getEmployees().stream().findAny()).isPresent();
+        assertThat(userRepository.findOneByLogin(employee.getLogin())).isPresent();
+
+        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.EMPLOYEE)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user, AuthoritiesConstants.MANAGER)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.USER)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user, AuthoritiesConstants.USER)).isTrue();
 
         companyService.delete(company.getId());
 
-        employeeService.delete(employee.getId());
+        assertThat(userService.checkIfUserHasRoles(user, AuthoritiesConstants.MANAGER)).isFalse();
+        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.EMPLOYEE)).isFalse();
+        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.USER)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user, AuthoritiesConstants.USER)).isTrue();
 
+
+
+        employeeService.delete(employee.getId());
+        employeeService.delete(employee2.getId());
     }
 
 
+    private Set<Authority> allocateAuthority(String role, User user) {
+        Set<Authority> authorities  = new HashSet<>();
+        Authority authority = new Authority();
+        authority.setName(role);
+        authorities.add(authority);
+        user.getAuthorities().add(authority);
+        return authorities;
+    }
 }

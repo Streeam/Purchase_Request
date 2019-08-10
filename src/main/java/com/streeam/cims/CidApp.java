@@ -40,8 +40,8 @@ public class CidApp implements InitializingBean {
                     // * If the user is ROLE_MANAGER or ROLE_EMPLOYEE he cannot see this option otherwise he can
             //TODO GET List all the companies details (manager can see only his company, admin can see all companies)
 
-            //TODO DELETE Delete a company  (manager can delete only his company, admin can delete any companies)
-                    // Get all the employees from the company and remove the employee role. Remove the managers roles
+            //TODO DELETE Delete a company  (manager can delete only his company, admin can delete any companies)           **********DONE********
+                    // Get all the employees from the company and remove the employee role. Remove the managers roles       **********DONE********
 
             //TODO PUT Update a company (manager his , admin any)
 
