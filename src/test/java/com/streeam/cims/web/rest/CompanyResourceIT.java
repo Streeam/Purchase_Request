@@ -6,6 +6,7 @@ import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.repository.CompanyRepository;
+import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.service.CompanyService;
 import com.streeam.cims.service.dto.CompanyDTO;
@@ -27,6 +28,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Base64Utils;
 import org.springframework.validation.Validator;
+import org.springframework.web.context.WebApplicationContext;
 
 import javax.persistence.EntityManager;
 import java.util.Collections;
@@ -39,6 +41,8 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 /**
  * Integration tests for the {@link CompanyResource} REST controller.
@@ -77,6 +81,12 @@ public class CompanyResourceIT {
 
     @Autowired
     private CompanyRepository companyRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private WebApplicationContext context;
 
     @Autowired
     private  AuthorityRepository authorityRepository;
@@ -200,6 +210,15 @@ public class CompanyResourceIT {
     @Test
     @Transactional
     public void createCompany() throws Exception {
+
+        when(mockCompanySearchRepository.save(any(Company.class))).thenReturn(new Company());
+
+        // Create security-aware mockMvc
+        restCompanyMockMvc = MockMvcBuilders
+            .webAppContextSetup(context)
+            .apply(springSecurity())
+            .build();
+
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
         User user;
 
@@ -212,11 +231,11 @@ public class CompanyResourceIT {
             user = TestUtil.findAll(em, User.class).get(0);
         }
 
-
         // Create the Company
         CompanyDTO companyDTO = companyMapper.toDto(company);
         restCompanyMockMvc.perform(post("/api/companies")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .with(user("user"))
             .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
             .andExpect(status().isCreated());
 
@@ -234,9 +253,11 @@ public class CompanyResourceIT {
         assertThat(testCompany.getPostcode()).isEqualTo(DEFAULT_POSTCODE);
         assertThat(testCompany.getCompanyLogo()).isEqualTo(DEFAULT_COMPANY_LOGO);
         assertThat(testCompany.getCompanyLogoContentType()).isEqualTo(DEFAULT_COMPANY_LOGO_CONTENT_TYPE);
-
+        assertThat(testCompany.getEmployees().stream().findAny().get().getLogin()).isEqualTo("user");
+        assertThat(testCompany.getEmployees().stream().findAny().get().getCompany().getName()).isEqualTo(DEFAULT_NAME);
         // Validate the Company in Elasticsearch
         verify(mockCompanySearchRepository, times(1)).save(testCompany);
+
     }
 
     @Test

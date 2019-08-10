@@ -28,10 +28,6 @@ public class CidApp implements InitializingBean {
     //TODO 1. Create Company, Notification and Employee entities.
     //TODO 2. In the companyController API:
             // TODO - Creates a company (verifies if the company name and email haven't been used) and links the user(ROLE_MANAGER) to an employee and to that company
-            // TODO - Cannot be manager at two distinct companies
-            // TODO - Cannot be employed at two distinct companies
-            // TODO - If you are a manager you cannot be an employee at another company
-            // TODO - If you are a employee you cannot be an manager at another company
             // TODO - Create an API that send emails to people to  invite them to join the company
             // TODO - Create a notification entity linked to an employee and every time it sends an email sends a notifications as well
             // TODO - Have the option to leave a company as an employee and also delete a company as a manager
@@ -40,27 +36,31 @@ public class CidApp implements InitializingBean {
 
     //TODO  ****API'S****
         //TODO 1. api/companies
-            //TODO POST Create a company and automatically become the manager (ROLE_MANAGER)
+            //TODO POST Create a company and automatically become the manager                                                  *****DONE********
                     // * If the user is ROLE_MANAGER or ROLE_EMPLOYEE he cannot see this option otherwise he can
             //TODO GET List all the companies details (manager can see only his company, admin can see all companies)
             //TODO DELETE Delete a company  (manager can delete only his company, admin can delete any companies)
+                    // Get all the employees from the company and remove the employee role. Remove the managers roles
             //TODO PUT Update a company (manager his , admin any)
-        //TODO 2. api/activate
-                // GET When activating the user also create and link to an employee (NEEDS TEST)
-        //TODO 2. api/all-companies (no restriction)
+        //TODO 2. api/activate                                                                                                  ********DONE********
+                // GET When activating the user also create and links to an employee (NEEDS TEST)                               ********DONE********
+        //TODO 3. api/all-companies (no restriction)
             //TODO GET List all the company names (this is so a user can find and join a company)
                 // * If the user is ROLE_MANAGER and ROLE_EMPLOYEE he cannot see this option otherwise he can
-        //TODO 3. api/request-to-join (no restriction)
+        //TODO 4. api/request-to-join (no restriction)
             //TODO POST(companyName) Request to join a company
                 // * If the user is ROLE_MANAGER and ROLE_EMPLOYEE he cannot see this option
                 // * If the user is not ROLE_MANAGER nor ROLE_EMPLOYEE he can send a request to join the company
-        //TODO 4. api/invite-to-join (Pre-Authorize ROLE_MANAGER)
+        //TODO 5. api/invite-to-join (Pre-Authorize ROLE_MANAGER)
             //TODO POST(email)
                 // * If the user exists and is not ROLE_MANAGER and ROLE_EMPLOYEE sends a notification and an email to the user
                 // * If the user don't exists send an email with link to registration page
-    //TODO 4. api/approve-employee (employeeId)
+        //TODO 6. api/employees/employeeId/approve-employee
 
-    //TODO ***TESTS****
+        //TODO 7. api/employees/employeeId/fire-employee
+
+        //TODO 8. api/users
+                // POST When admin creates a user also creates an employee
 
     private static final Logger log = LoggerFactory.getLogger(CidApp.class);
 

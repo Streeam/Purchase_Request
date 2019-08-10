@@ -3,10 +3,14 @@ package com.streeam.cims.web.rest;
 import com.streeam.cims.CidApp;
 import com.streeam.cims.config.Constants;
 import com.streeam.cims.domain.Authority;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.repository.UserRepository;
+import com.streeam.cims.repository.search.EmployeeSearchRepository;
+import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
+import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.UserService;
 import com.streeam.cims.service.dto.PasswordChangeDTO;
@@ -15,7 +19,6 @@ import com.streeam.cims.web.rest.errors.ExceptionTranslator;
 import com.streeam.cims.web.rest.vm.KeyAndPasswordVM;
 import com.streeam.cims.web.rest.vm.ManagedUserVM;
 import org.apache.commons.lang3.RandomStringUtils;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -31,13 +34,17 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -50,10 +57,19 @@ public class AccountResourceIT {
     private UserRepository userRepository;
 
     @Autowired
+    private EmployeeSearchRepository mockEmployeeSearchRepository;
+
+    @Autowired
+    private UserSearchRepository mockUserSearchRepository;
+
+    @Autowired
     private AuthorityRepository authorityRepository;
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private EmployeeService employeeService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -78,6 +94,8 @@ public class AccountResourceIT {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         doNothing().when(mockMailService).sendActivationEmail(any());
+        when(mockEmployeeSearchRepository.save(any(Employee.class))).thenReturn(new Employee());
+        when(mockUserSearchRepository.save(any(User.class))).thenReturn(new User());
         AccountResource accountResource =
             new AccountResource(userRepository, userService, mockMailService);
 
@@ -447,11 +465,19 @@ public class AccountResourceIT {
 
         userRepository.saveAndFlush(user);
 
+
         restMvc.perform(get("/api/activate?key={activationKey}", activationKey))
             .andExpect(status().isOk());
 
+
         user = userRepository.findOneByLogin(user.getLogin()).orElse(null);
+        Employee employee = employeeService.createEmployeeFromUser(user);
         assertThat(user.getActivated()).isTrue();
+        assertThat(user).isEqualTo(employee.getUser());
+        assertThat(user.getEmail()).isEqualTo(employee.getEmail());
+        assertThat(user.getLogin()).isEqualTo(employee.getLogin());
+
+
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.streeam.cims.service;
 
 import com.streeam.cims.config.Constants;
 import com.streeam.cims.domain.Authority;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.repository.UserRepository;
@@ -9,6 +10,7 @@ import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.dto.UserDTO;
+import com.streeam.cims.service.mapper.UserMapper;
 import com.streeam.cims.service.util.RandomUtil;
 import com.streeam.cims.web.rest.errors.EmailAlreadyUsedException;
 import com.streeam.cims.web.rest.errors.InvalidPasswordException;
@@ -49,20 +51,22 @@ public class UserService {
 
     private final CacheManager cacheManager;
 
+    private final UserMapper userMapper;
+
+
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserSearchRepository userSearchRepository,
-                       AuthorityRepository authorityRepository, CacheManager cacheManager, EmployeeService employeeService) {
+                       AuthorityRepository authorityRepository, CacheManager cacheManager, EmployeeService employeeService, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userSearchRepository = userSearchRepository;
         this.authorityRepository = authorityRepository;
         this.cacheManager = cacheManager;
         this.employeeService = employeeService;
+        this.userMapper = userMapper;
     }
 
     public Optional<User> activateRegistration(String key) {
         log.debug("Activating user for activation key {}", key);
-
-        //TODO use user details to create an employee
 
         Optional<User> activatedUser = userRepository.findOneByActivationKey(key)
             .map(user -> {
@@ -76,6 +80,7 @@ public class UserService {
             });
 
         if(activatedUser.isPresent()){
+            log.debug("Create and link an employee to the activated user.");
             employeeService.createEmployeeFromUser(activatedUser.get());
         }
 
@@ -181,6 +186,8 @@ public class UserService {
         }
         userRepository.save(user);
         userSearchRepository.save(user);
+        employeeService.createEmployeeFromUser(user);
+
         this.clearUserCaches(user);
         log.debug("Created Information for User: {}", user);
         return user;
@@ -217,7 +224,8 @@ public class UserService {
      * @return updated user.
      */
     public Optional<UserDTO> updateUser(UserDTO userDTO) {
-        return Optional.of(userRepository
+
+        Optional<UserDTO> userToUpdate = Optional.of(userRepository
             .findById(userDTO.getId()))
             .filter(Optional::isPresent)
             .map(Optional::get)
@@ -243,6 +251,10 @@ public class UserService {
                 return user;
             })
             .map(UserDTO::new);
+
+        User user = userMapper.userDTOToUser(userDTO);
+
+        return userToUpdate;
     }
 
     public void deleteUser(String login) {
@@ -335,5 +347,10 @@ public class UserService {
         }).collect(Collectors.toList());
 
         return user.getAuthorities().stream().anyMatch(authorities::contains);
+    }
+
+    public Optional<Employee> findLinkedEmployee(User user) {
+
+        return employeeService.findOneByLogin(user.getLogin());
     }
 }

@@ -1,11 +1,13 @@
 package com.streeam.cims.service;
 
 import com.streeam.cims.domain.Company;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.CompanyRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
+import com.streeam.cims.service.mapper.EmployeeMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
@@ -34,11 +37,18 @@ public class CompanyService {
 
     private final UserService userService;
 
-    public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserService userService, CompanySearchRepository companySearchRepository) {
+    private final EmployeeService employeeService;
+
+    private final EmployeeMapper employeeMapper;
+
+    public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserService userService,
+                          CompanySearchRepository companySearchRepository, EmployeeService employeeService, EmployeeMapper employeeMapper) {
         this.userService = userService;
         this.companyRepository = companyRepository;
         this.companyMapper = companyMapper;
         this.companySearchRepository = companySearchRepository;
+        this.employeeService = employeeService;
+        this.employeeMapper = employeeMapper;
     }
 
     /**
@@ -51,6 +61,33 @@ public class CompanyService {
         log.debug("Request to save Company : {}", companyDTO);
         Company company = companyMapper.toEntity(companyDTO);
         company = companyRepository.save(company);
+        CompanyDTO result = companyMapper.toDto(company);
+        companySearchRepository.save(company);
+        return result;
+    }
+
+
+    /**
+     * Save a company.
+     *
+     * @param companyDTO the entity to save.
+     * @param employee
+     * @return the persisted entity.
+     */
+    public CompanyDTO saveWithEmployee(CompanyDTO companyDTO, Optional<Employee> employee) {
+        log.debug("Request to save Company : {}", companyDTO);
+        Company company = companyMapper.toEntity(companyDTO);
+        if(employee.isPresent()) {
+            employee.get().setHired(true);
+            Set<Employee> employees = company.getEmployees();
+            employees.add(employee.get());
+            company.setEmployees(employees);
+            company = companyRepository.save(company);
+            employeeService.saveWithCompany(employee.get(), company);
+            log.debug("Request to save Company with employee: {}", employee.get().getLogin());
+        }
+
+
         CompanyDTO result = companyMapper.toDto(company);
         companySearchRepository.save(company);
         return result;
@@ -148,7 +185,10 @@ public class CompanyService {
         return userService.getCurrentUser();
     }
 
-    public void saveAndLinkUserToEmployee(User user) {
+    public Optional<Employee> findEmployeeFromUser(User user) {
 
+
+
+        return userService.findLinkedEmployee(user);
     }
 }

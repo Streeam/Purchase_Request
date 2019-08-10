@@ -131,9 +131,10 @@ public class UserServiceIT {
         authorities.add(authority);
         user.setAuthorities(authorities);
 
-        assertThat(userService.checkIfUserHasRoles(user , AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user , AuthoritiesConstants.MANAGER,  AuthoritiesConstants.EMPLOYEE)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user ,  AuthoritiesConstants.EMPLOYEE)).isFalse();
 
-
+        assertThat(userService.checkIfUserHasRoles(user , AuthoritiesConstants.MANAGER)).isTrue();
     }
 
     @Test

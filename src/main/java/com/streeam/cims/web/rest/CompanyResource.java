@@ -1,9 +1,11 @@
 package com.streeam.cims.web.rest;
 
 import com.streeam.cims.domain.Authority;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
+import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.CompanyService;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.web.rest.errors.BadRequestAlertException;
@@ -71,27 +73,23 @@ public class CompanyResource {
             throw new BadRequestAlertException("This company name is already being used", ENTITY_NAME, "emailexists");
         }
 
+        Optional<Employee> employee = Optional.empty();
+        Optional<User> user = companyService.findCurrentUser();
+        if(user.isPresent()){
 
-        if(companyService.findCurrentUser().isPresent()){
-
-            User user = companyService.findCurrentUser().get();
-            if(companyService.checkUserHasRoles(user , AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER)){
+            if(companyService.checkUserHasRoles(user.get() , AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER,
+                AuthoritiesConstants.ADMIN)){
                 throw new BadRequestAlertException("You can't create a company if you already have a company or are employed by another", ENTITY_NAME, "wrongrole");
             }
 
-            Set<Authority> authorities = user.getAuthorities();
+            Set<Authority> authorities = user.get().getAuthorities();
             authorityRepository.findById(AuthoritiesConstants.MANAGER).ifPresent(authorities::add);
-            user.setAuthorities(authorities);
-
-            companyService.saveAndLinkUserToEmployee(user);
-
+            user.get().setAuthorities(authorities);
+            employee =  companyService.findEmployeeFromUser(user.get());
         }
 
+        CompanyDTO result = companyService.saveWithEmployee(companyDTO,employee);
 
-        // TODO Use the user to find the employee
-        // TODO Link the employee to the company
-
-        CompanyDTO result = companyService.save(companyDTO);
         return ResponseEntity.created(new URI("/api/companies/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -127,7 +125,14 @@ public class CompanyResource {
     @GetMapping("/companies")
     public ResponseEntity<List<CompanyDTO>> getAllCompanies(Pageable pageable) {
         log.debug("REST request to get a page of Companies");
-        Page<CompanyDTO> page = companyService.findAll(pageable);
+        Page<CompanyDTO> page;
+        if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)){
+            page = companyService.findAll(pageable);
+        }
+        else {
+            page = companyService.findAll(pageable);
+        }
+
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -155,6 +160,7 @@ public class CompanyResource {
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
         log.debug("REST request to delete Company : {}", id);
         companyService.delete(id);
+
         return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString())).build();
     }
 

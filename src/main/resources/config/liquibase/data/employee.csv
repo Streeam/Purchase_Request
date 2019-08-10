@@ -1,5 +1,0 @@
-id;login;first_name;last_name;email;hired;user_id
-1;system;System;System;system@localhost.com;true;1
-2;anonymoususer;Anonymous;User;anonymous@localhost.com;true;2
-3;admin;Administrator;Administrator;admin@localhost.com;true;3
-4;user;User;User;user@localhost.com;true;4
