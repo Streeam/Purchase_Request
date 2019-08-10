@@ -110,7 +110,14 @@ public class CompanyResource {
         if (companyDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
-        CompanyDTO result = companyService.save(companyDTO);
+
+        Optional<Employee> employee = Optional.empty();
+        Optional<User> user = companyService.findCurrentUser();
+        if(user.isPresent()){
+            employee =  companyService.findEmployeeFromUser(user.get());
+        }
+
+        CompanyDTO result = companyService.saveWithEmployee(companyDTO, employee);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyDTO.getId().toString()))
             .body(result);
@@ -158,6 +165,13 @@ public class CompanyResource {
      */
     @DeleteMapping("/companies/{id}")
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
+        Optional<User> user = companyService.findCurrentUser();
+
+        if(user.isPresent() && !companyService.checkUserHasRoles(user.get() , AuthoritiesConstants.MANAGER,
+            AuthoritiesConstants.ADMIN)){
+            throw new BadRequestAlertException("You don't have the authority to delete this company", ENTITY_NAME, "companyremoveforbiden");
+        }
+
         log.debug("REST request to delete Company : {}", id);
         companyService.delete(id);
 

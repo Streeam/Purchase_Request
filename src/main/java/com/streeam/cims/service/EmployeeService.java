@@ -129,6 +129,12 @@ public class EmployeeService {
         return employeeRepository.findByLogin(login);
     }
 
+
+    /**
+     *  Creates and saves a employee and links it to a company
+     * @param employee
+     * @param company
+     */
     public void saveWithCompany(Employee employee, Company company) {
         employee.company(company);
         employee = employeeRepository.save(employee);

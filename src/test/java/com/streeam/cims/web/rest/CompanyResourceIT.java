@@ -39,10 +39,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 /**
  * Integration tests for the {@link CompanyResource} REST controller.
@@ -213,14 +213,13 @@ public class CompanyResourceIT {
 
         when(mockCompanySearchRepository.save(any(Company.class))).thenReturn(new Company());
 
-        // Create security-aware mockMvc
-        restCompanyMockMvc = MockMvcBuilders
-            .webAppContextSetup(context)
-            .apply(springSecurity())
-            .build();
-
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
         User user;
+
+
+        // Create security-aware mockMvc
+        securityAwareMockMVC();
+
 
         if(TestUtil.findAll(em, User.class).isEmpty()){
             user = UserResourceIT.createEntity(em);
@@ -535,6 +534,9 @@ public class CompanyResourceIT {
 
         int databaseSizeBeforeUpdate = companyRepository.findAll().size();
 
+        securityAwareMockMVC();
+
+
         // Update the company
         Company updatedCompany = companyRepository.findById(company.getId()).get();
         // Disconnect from session so that the updates on updatedCompany are not directly saved in db
@@ -554,6 +556,7 @@ public class CompanyResourceIT {
 
         restCompanyMockMvc.perform(put("/api/companies")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .with(user("user"))
             .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
             .andExpect(status().isOk());
 
@@ -574,6 +577,14 @@ public class CompanyResourceIT {
 
         // Validate the Company in Elasticsearch
         verify(mockCompanySearchRepository, times(1)).save(testCompany);
+    }
+
+    private void securityAwareMockMVC() {
+        // Create security-aware mockMvc
+        restCompanyMockMvc = MockMvcBuilders
+            .webAppContextSetup(context)
+            .apply(springSecurity())
+            .build();
     }
 
     @Test
@@ -601,6 +612,10 @@ public class CompanyResourceIT {
     @Test
     @Transactional
     public void deleteCompany() throws Exception {
+
+        // Create security-aware mockMvc
+        securityAwareMockMVC();
+
         // Initialize the database
         companyRepository.saveAndFlush(company);
 
@@ -608,6 +623,7 @@ public class CompanyResourceIT {
 
         // Delete the company
         restCompanyMockMvc.perform(delete("/api/companies/{id}", company.getId())
+            .with(user("admin"))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isNoContent());
 

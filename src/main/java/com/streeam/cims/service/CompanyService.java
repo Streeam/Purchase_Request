@@ -1,13 +1,17 @@
 package com.streeam.cims.service;
 
+import com.streeam.cims.domain.Authority;
 import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.CompanyRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
+import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.dto.CompanyDTO;
+import com.streeam.cims.service.dto.UserDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
 import com.streeam.cims.service.mapper.EmployeeMapper;
+import com.streeam.cims.service.mapper.UserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -15,8 +19,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
@@ -37,13 +43,17 @@ public class CompanyService {
 
     private final UserService userService;
 
+    private final UserMapper userMapper;
+
     private final EmployeeService employeeService;
 
     private final EmployeeMapper employeeMapper;
 
     public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserService userService,
-                          CompanySearchRepository companySearchRepository, EmployeeService employeeService, EmployeeMapper employeeMapper) {
+                          CompanySearchRepository companySearchRepository, EmployeeService employeeService, EmployeeMapper employeeMapper,
+                          UserMapper userMapper) {
         this.userService = userService;
+        this.userMapper = userMapper;
         this.companyRepository = companyRepository;
         this.companyMapper = companyMapper;
         this.companySearchRepository = companySearchRepository;
@@ -51,20 +61,20 @@ public class CompanyService {
         this.employeeMapper = employeeMapper;
     }
 
-    /**
-     * Save a company.
-     *
-     * @param companyDTO the entity to save.
-     * @return the persisted entity.
-     */
-    public CompanyDTO save(CompanyDTO companyDTO) {
-        log.debug("Request to save Company : {}", companyDTO);
-        Company company = companyMapper.toEntity(companyDTO);
-        company = companyRepository.save(company);
-        CompanyDTO result = companyMapper.toDto(company);
-        companySearchRepository.save(company);
-        return result;
-    }
+//    /**
+//     * Save a company.
+//     *
+//     * @param companyDTO the entity to save.
+//     * @return the persisted entity.
+//     */
+//    public CompanyDTO save(CompanyDTO companyDTO) {
+//        log.debug("Request to save Company : {}", companyDTO);
+//        Company company = companyMapper.toEntity(companyDTO);
+//        company = companyRepository.save(company);
+//        CompanyDTO result = companyMapper.toDto(company);
+//        companySearchRepository.save(company);
+//        return result;
+//    }
 
 
     /**
@@ -125,8 +135,32 @@ public class CompanyService {
      *
      * @param id the id of the entity.
      */
+
     public void delete(Long id) {
         log.debug("Request to delete Company : {}", id);
+
+        // Find all employees from the company and the manager and remove the ROLE_EMPLOYEE and ROLE_MANAGER
+
+        Optional<Company> company = companyRepository.findOneById(id);
+        Set<Employee> employees = new HashSet<>();
+        if(company.isPresent()){
+            employees = company.get().getEmployees();
+            employees.stream().filter(employee-> {
+                Optional<User> user = userService.findOneByLogin(employee.getLogin());
+                boolean managersAndEmployees = userService.checkIfUserHasRoles(user.get(), AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE);
+
+                Set<Authority> authorities = user.get().getAuthorities().stream().
+                    filter(authority -> !authority.getName().equals(AuthoritiesConstants.MANAGER) && !authority.getName().equals(AuthoritiesConstants.EMPLOYEE)).
+                    collect(Collectors.toSet());
+                user.get().setAuthorities(authorities);
+                UserDTO userDTO = userMapper.userToUserDTO(user.get());
+                userService.updateUser(userDTO);
+
+                return managersAndEmployees;
+            }).forEach(employee -> employee.setHired(false));
+
+        }
+
         companyRepository.deleteById(id);
         companySearchRepository.deleteById(id);
     }

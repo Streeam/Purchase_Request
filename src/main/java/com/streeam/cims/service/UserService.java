@@ -10,7 +10,6 @@ import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.dto.UserDTO;
-import com.streeam.cims.service.mapper.UserMapper;
 import com.streeam.cims.service.util.RandomUtil;
 import com.streeam.cims.web.rest.errors.EmailAlreadyUsedException;
 import com.streeam.cims.web.rest.errors.InvalidPasswordException;
@@ -51,18 +50,16 @@ public class UserService {
 
     private final CacheManager cacheManager;
 
-    private final UserMapper userMapper;
 
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserSearchRepository userSearchRepository,
-                       AuthorityRepository authorityRepository, CacheManager cacheManager, EmployeeService employeeService, UserMapper userMapper) {
+                       AuthorityRepository authorityRepository, CacheManager cacheManager, EmployeeService employeeService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userSearchRepository = userSearchRepository;
         this.authorityRepository = authorityRepository;
         this.cacheManager = cacheManager;
         this.employeeService = employeeService;
-        this.userMapper = userMapper;
     }
 
     public Optional<User> activateRegistration(String key) {
@@ -252,8 +249,6 @@ public class UserService {
             })
             .map(UserDTO::new);
 
-        User user = userMapper.userDTOToUser(userDTO);
-
         return userToUpdate;
     }
 
@@ -320,9 +315,7 @@ public class UserService {
 
     public Optional<User> getCurrentUser(){
 
-        String login = SecurityUtils.getCurrentUserLogin().orElse("for testing");
-
-        return userRepository.findOneByLogin(login);
+        return userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().get());
     }
 
     /**
@@ -339,6 +332,12 @@ public class UserService {
         Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
     }
 
+    /**
+     * Check if the user has any of the specified roles
+     * @param user
+     * @param roles
+     * @return true if it has any roles false otherwise
+     */
     public boolean checkIfUserHasRoles(User user,String... roles) {
         List<Authority> authorities = Arrays.stream(roles).map(role -> {
             Authority authority = new Authority();
@@ -346,11 +345,18 @@ public class UserService {
             return authority;
         }).collect(Collectors.toList());
 
-        return user.getAuthorities().stream().anyMatch(authorities::contains);
-    }
+        Set<String> authoritiesString =  user.getAuthorities().stream().map(authority ->  authority.getName()).collect(Collectors.toSet());
+
+        return Arrays.stream(roles).anyMatch(authoritiesString::contains);
+        }
 
     public Optional<Employee> findLinkedEmployee(User user) {
 
         return employeeService.findOneByLogin(user.getLogin());
+    }
+
+    public Optional<User> findOneByLogin(String login) {
+
+        return userRepository.findOneByLogin(login);
     }
 }
