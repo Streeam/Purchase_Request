@@ -359,4 +359,15 @@ public class UserService {
 
         return userRepository.findOneByLogin(login);
     }
+
+
+    public Set<Authority> allocateAuthority(String role, User user) {
+        Set<Authority> authorities  = new HashSet<>();
+        Authority authority = new Authority();
+        authority.setName(role);
+        authorities.add(authority);
+        user.getAuthorities().add(authority);
+        return authorities;
+    }
+
 }

@@ -222,7 +222,7 @@ public class CompanyService {
     }
 
 
-    public Page<CompanyDTO> findCompanyWithCurrentUser(User user, Pageable pageable) {
+    public Page<CompanyDTO> findCompanyWithCurrentUser(User user) {
         Optional<Employee> employee = employeeService.findOneByLogin(user.getLogin());
         Optional<Company> company = companyRepository.findOneByEmployees(Collections.singleton(employee.get()));
         CompanyDTO companyDTO = companyMapper.toDto(company.get());

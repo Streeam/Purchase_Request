@@ -146,7 +146,7 @@ public class CompanyResource {
             page = companyService.findAll(pageable);
         }
         if (companyService.checkUserHasRoles(user.get(),AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)){
-            page = companyService.findCompanyWithCurrentUser(user.get(), pageable);
+            page = companyService.findCompanyWithCurrentUser(user.get());
         }
 
 
