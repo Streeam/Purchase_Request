@@ -12,7 +12,7 @@ import org.mapstruct.*;
 public interface CompanyMapper extends EntityMapper<CompanyDTO, Company> {
 
 
-    @Mapping(target = "employees", ignore = false)
+    @Mapping(target = "employees", ignore = true)
     @Mapping(target = "removeEmployees", ignore = true)
     Company toEntity(CompanyDTO companyDTO);
 

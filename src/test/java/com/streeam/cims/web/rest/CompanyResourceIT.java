@@ -477,9 +477,11 @@ public class CompanyResourceIT {
     public void getAllCompanies() throws Exception {
         // Initialize the database
         companyRepository.saveAndFlush(company);
+        securityAwareMockMVC();
 
-        // Get all the companyList
-        restCompanyMockMvc.perform(get("/api/companies?sort=id,desc"))
+        // Get all the companyList            .with(user("user"))
+        restCompanyMockMvc.perform(get("/api/companies?sort=id,desc")
+            .with(user("user")))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(company.getId().intValue())))
@@ -535,7 +537,6 @@ public class CompanyResourceIT {
         int databaseSizeBeforeUpdate = companyRepository.findAll().size();
 
         securityAwareMockMVC();
-
 
         // Update the company
         Company updatedCompany = companyRepository.findById(company.getId()).get();

@@ -40,7 +40,7 @@ import static org.mockito.Mockito.*;
  */
 @SpringBootTest(classes = CidApp.class)
 @Transactional
-public class CompanyServiceTestIT {
+public class CompanyEmployeeServiceTestIT {
 
     //**********COMPANY DEFAULT VALUES******************
 
@@ -327,9 +327,6 @@ public class CompanyServiceTestIT {
         assertThat(userService.checkIfUserHasRoles(user2 , AuthoritiesConstants.USER)).isTrue();
     }
 
-
-    //void delete(Long id)
-
     @Test
     @Transactional
     public void assertThatWhenCompanyIsRemovedItRemovesTheUsersRoles() {
@@ -368,6 +365,8 @@ public class CompanyServiceTestIT {
         employeeService.delete(employee2.getId());
     }
 
+
+    //findCompanyWithCurrentUser
 
     private Set<Authority> allocateAuthority(String role, User user) {
         Set<Authority> authorities  = new HashSet<>();

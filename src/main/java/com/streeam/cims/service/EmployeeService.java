@@ -114,10 +114,10 @@ public class EmployeeService {
      */
     public Employee createEmployeeFromUser(User newUser) {
         Employee employee = new Employee();
-            employee.login(newUser.getLogin())
-                .email(newUser.getEmail())
-                .hired(false)
-                .user(newUser);
+        employee.login(newUser.getLogin())
+            .email(newUser.getEmail())
+            .hired(false)
+            .user(newUser);
 
         employee = employeeRepository.save(employee);
         employeeSearchRepository.save(employee);

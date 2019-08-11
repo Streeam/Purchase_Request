@@ -33,6 +33,7 @@ public class CidApp implements InitializingBean {
             // TODO - Have the option to leave a company as an employee and also delete a company as a manager
             // TODO - Request to join an existing company (if already in a company cannot see this feature)
             // TODO - Send email to the manager for approval. If approved obtains ROLE_EMPLOYEE and receives a link to signin (activated)
+            // TODO - VERY IMPORTANT WHEN THE USER CHANGES EMAIL OR LOGIN SO DOES THE EMPLOYEE AND VICE VERSA
 
     //TODO  ****API'S****
         //TODO 1. api/companies

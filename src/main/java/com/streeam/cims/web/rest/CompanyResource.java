@@ -5,17 +5,18 @@ import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
-import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.CompanyService;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.web.rest.errors.BadRequestAlertException;
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
+import org.elasticsearch.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -132,13 +134,21 @@ public class CompanyResource {
     @GetMapping("/companies")
     public ResponseEntity<List<CompanyDTO>> getAllCompanies(Pageable pageable) {
         log.debug("REST request to get a page of Companies");
-        Page<CompanyDTO> page;
-        if (SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)){
+
+        Page<CompanyDTO> page = new PageImpl<>(new ArrayList<>());
+
+        Optional<User> user = companyService.findCurrentUser();
+        if(!user.isPresent()){
+            throw new ResourceNotFoundException("No user logged in.");
+        }
+
+        if(companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)){
             page = companyService.findAll(pageable);
         }
-        else {
-            page = companyService.findAll(pageable);
+        if (companyService.checkUserHasRoles(user.get(),AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)){
+            page = companyService.findCompanyWithCurrentUser(user.get(), pageable);
         }
+
 
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());

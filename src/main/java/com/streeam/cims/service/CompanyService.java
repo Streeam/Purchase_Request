@@ -15,13 +15,12 @@ import com.streeam.cims.service.mapper.UserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
@@ -215,14 +214,19 @@ public class CompanyService {
      * @return an optional of the current user
      */
     public Optional<User> findCurrentUser() {
-
         return userService.getCurrentUser();
     }
 
     public Optional<Employee> findEmployeeFromUser(User user) {
-
-
-
         return userService.findLinkedEmployee(user);
+    }
+
+
+    public Page<CompanyDTO> findCompanyWithCurrentUser(User user, Pageable pageable) {
+        Optional<Employee> employee = employeeService.findOneByLogin(user.getLogin());
+        Optional<Company> company = companyRepository.findOneByEmployees(Collections.singleton(employee.get()));
+        CompanyDTO companyDTO = companyMapper.toDto(company.get());
+
+        return new PageImpl<>(Arrays.asList(companyDTO));
     }
 }
