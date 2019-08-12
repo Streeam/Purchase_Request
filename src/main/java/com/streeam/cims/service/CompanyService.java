@@ -229,4 +229,16 @@ public class CompanyService {
 
         return new PageImpl<>(Arrays.asList(companyDTO));
     }
+
+    public String getCompaniesManagerEmail(Long companyId) {
+
+        Optional<Company> company = companyRepository.findOneById(companyId);
+        if(!company.isPresent()){return "No company with this id found.";}
+
+        Optional<Employee> manager = company.get().getEmployees().stream()
+            .filter(employee -> employee.getUser().getAuthorities().stream().anyMatch(authority-> authority.getName().equals(AuthoritiesConstants.MANAGER))).findAny();
+        if(!manager.isPresent()){return "No user with the role of manager found at this company.";}
+
+        return manager.get().getEmail();
+    }
 }

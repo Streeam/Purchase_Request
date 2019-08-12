@@ -6,6 +6,7 @@ import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.CompanyService;
+import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.web.rest.errors.BadRequestAlertException;
 import io.github.jhipster.web.util.HeaderUtil;
@@ -47,11 +48,14 @@ public class CompanyResource {
 
     private final CompanyService companyService;
 
+    private final MailService mailService;
+
     private final AuthorityRepository authorityRepository;
 
-    public CompanyResource(CompanyService companyService, AuthorityRepository authorityRepository) {
+    public CompanyResource(CompanyService companyService, AuthorityRepository authorityRepository, MailService mailService) {
         this.companyService = companyService;
         this.authorityRepository = authorityRepository;
+        this.mailService = mailService;
     }
 
     /**
@@ -207,6 +211,40 @@ public class CompanyResource {
 
 
 
+
+    /**
+     * {@code POST  /companies/:id/request-to-join} : request to join a company/companyID
+     *
+     * @param companyId the id of the companyDTO to to which the user wants to join.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
+     */
+    @PostMapping("companies/{companyId}/request-to-join")
+    public ResponseEntity<CompanyDTO> requestToJoinCompany(@PathVariable Long companyId) {
+        log.debug("REST request to request to join the company : {}", companyId);
+        // get the user (email and login)
+        Optional<User> user = companyService.findCurrentUser();
+        if (!user.isPresent()) {
+            throw new ResourceNotFoundException("No user logged in.");
+        }
+        if(companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.MANAGER,AuthoritiesConstants.EMPLOYEE)){
+            throw new BadRequestAlertException("You don't have the eligible to request to join a company", ENTITY_NAME, "requesttojoinforbiden");
+        }
+        String managersEmail = companyService.getCompaniesManagerEmail(companyId);
+        if("No company with this id found.".equals(managersEmail)){
+            throw new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid");
+        }
+        if("No user with the role of manager found at this company.".equals(managersEmail)){
+            throw new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "requesttojoinforbiden");
+        }
+
+        mailService.sendRequestToJoinEmail(user.get());
+        // send an email to the manager to inform him of a employee wanting to join the company
+
+        // create a Notification(REQUEST_TO_JOIN) and link it to the manager
+
+        return ResponseUtil.wrapOrNotFound(null);
+    }
+
     /**
      * {@code POST  /companies/{id}/hire-employee/{userEmail} : hire a user to the company
      *
@@ -216,6 +254,20 @@ public class CompanyResource {
     @PostMapping("/companies/{id}/hire-employee/{userEmail}")
     public ResponseEntity<CompanyDTO> hireEmployee(@PathVariable String userEmail) {
         log.debug("REST request to hire the user: {}", userEmail);
+
+
+        return ResponseUtil.wrapOrNotFound(null);
+    }
+
+    /**
+     * {@code POST  /companies/{id}/reject-employee/{userEmail} : reject a user's request to join a company
+     *
+     * @param userEmail the email of the user who wants to join the company.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
+     */
+    @PostMapping("/companies/{id}/reject-employee/{userEmail}")
+    public ResponseEntity<CompanyDTO> rejectEmployee(@PathVariable String userEmail) {
+        log.debug("REST to reject a user's request to join a company.");
 
 
         return ResponseUtil.wrapOrNotFound(null);
