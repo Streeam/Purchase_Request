@@ -204,4 +204,20 @@ public class CompanyResource {
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
+
+
+
+    /**
+     * {@code POST  /companies/{id}/hire-employee/{userEmail} : hire a user to the company
+     *
+     * @param userEmail the email of the user who wants to join the company.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
+     */
+    @PostMapping("/companies/{id}/hire-employee/{userEmail}")
+    public ResponseEntity<CompanyDTO> hireEmployee(@PathVariable String userEmail) {
+        log.debug("REST request to hire the user: {}", userEmail);
+
+
+        return ResponseUtil.wrapOrNotFound(null);
+    }
 }

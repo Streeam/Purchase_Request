@@ -6,21 +6,26 @@ import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.UserService;
+import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.dto.PasswordChangeDTO;
 import com.streeam.cims.service.dto.UserDTO;
-import com.streeam.cims.web.rest.errors.*;
+import com.streeam.cims.web.rest.errors.EmailAlreadyUsedException;
+import com.streeam.cims.web.rest.errors.EmailNotFoundException;
+import com.streeam.cims.web.rest.errors.InvalidPasswordException;
+import com.streeam.cims.web.rest.errors.LoginAlreadyUsedException;
 import com.streeam.cims.web.rest.vm.KeyAndPasswordVM;
 import com.streeam.cims.web.rest.vm.ManagedUserVM;
-
+import io.github.jhipster.web.util.ResponseUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.*;
+import java.util.Optional;
 
 /**
  * REST controller for managing the current user's account.
@@ -175,6 +180,29 @@ public class AccountResource {
             throw new AccountResourceException("No user was found for this reset key");
         }
     }
+
+
+
+
+    /**
+     * {@code POST  /companies/:id/request-to-join} : request to join a company/companyID
+     *
+     * @param companyName the name of the companyDTO to to which the user wants to join.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
+     */
+    @PostMapping("/request-to-join/{companyName}")
+    public ResponseEntity<CompanyDTO> requestToJoinCompany(@PathVariable String companyName) {
+        log.debug("REST request to request to join the company : {}", companyName);
+        // get the user (email and login)
+        // check if he is not a manager or a employee
+        // get the company
+        // find the manager of the company and his email
+        // send an email to the manager to inform him of a employee wanting to join the company
+        // create a Notification(REQUEST_TO_JOIN) and link it to the manager
+
+        return ResponseUtil.wrapOrNotFound(null);
+    }
+
 
     private static boolean checkPasswordLength(String password) {
         return !StringUtils.isEmpty(password) &&
