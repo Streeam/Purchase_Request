@@ -2,6 +2,7 @@ package com.streeam.cims.service;
 
 import com.streeam.cims.config.Constants;
 import com.streeam.cims.domain.Authority;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.repository.UserRepository;
@@ -49,6 +50,8 @@ public class UserService {
 
     private final CacheManager cacheManager;
 
+
+
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserSearchRepository userSearchRepository,
                        AuthorityRepository authorityRepository, CacheManager cacheManager, EmployeeService employeeService) {
         this.userRepository = userRepository;
@@ -62,8 +65,6 @@ public class UserService {
     public Optional<User> activateRegistration(String key) {
         log.debug("Activating user for activation key {}", key);
 
-        //TODO use user details to create an employee
-
         Optional<User> activatedUser = userRepository.findOneByActivationKey(key)
             .map(user -> {
                 // activate given user for the registration key.
@@ -76,6 +77,7 @@ public class UserService {
             });
 
         if(activatedUser.isPresent()){
+            log.debug("Create and link an employee to the activated user.");
             employeeService.createEmployeeFromUser(activatedUser.get());
         }
 
@@ -181,6 +183,8 @@ public class UserService {
         }
         userRepository.save(user);
         userSearchRepository.save(user);
+        employeeService.createEmployeeFromUser(user);
+
         this.clearUserCaches(user);
         log.debug("Created Information for User: {}", user);
         return user;
@@ -217,7 +221,8 @@ public class UserService {
      * @return updated user.
      */
     public Optional<UserDTO> updateUser(UserDTO userDTO) {
-        return Optional.of(userRepository
+
+        Optional<UserDTO> userToUpdate = Optional.of(userRepository
             .findById(userDTO.getId()))
             .filter(Optional::isPresent)
             .map(Optional::get)
@@ -243,6 +248,8 @@ public class UserService {
                 return user;
             })
             .map(UserDTO::new);
+
+        return userToUpdate;
     }
 
     public void deleteUser(String login) {
@@ -308,9 +315,7 @@ public class UserService {
 
     public Optional<User> getCurrentUser(){
 
-        String login = SecurityUtils.getCurrentUserLogin().orElse("for testing");
-
-        return userRepository.findOneByLogin(login);
+        return userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().get());
     }
 
     /**
@@ -327,6 +332,12 @@ public class UserService {
         Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
     }
 
+    /**
+     * Check if the user has any of the specified roles
+     * @param user
+     * @param roles
+     * @return true if it has any roles false otherwise
+     */
     public boolean checkIfUserHasRoles(User user,String... roles) {
         List<Authority> authorities = Arrays.stream(roles).map(role -> {
             Authority authority = new Authority();
@@ -334,6 +345,29 @@ public class UserService {
             return authority;
         }).collect(Collectors.toList());
 
-        return user.getAuthorities().stream().anyMatch(authorities::contains);
+        Set<String> authoritiesString =  user.getAuthorities().stream().map(authority ->  authority.getName()).collect(Collectors.toSet());
+
+        return Arrays.stream(roles).anyMatch(authoritiesString::contains);
+        }
+
+    public Optional<Employee> findLinkedEmployee(User user) {
+
+        return employeeService.findOneByLogin(user.getLogin());
     }
+
+    public Optional<User> findOneByLogin(String login) {
+
+        return userRepository.findOneByLogin(login);
+    }
+
+
+    public Set<Authority> allocateAuthority(String role, User user) {
+        Set<Authority> authorities  = new HashSet<>();
+        Authority authority = new Authority();
+        authority.setName(role);
+        authorities.add(authority);
+        user.getAuthorities().add(authority);
+        return authorities;
+    }
+
 }

@@ -59,8 +59,8 @@ public class Employee implements Serializable {
     @Column(name = "image_content_type")
     private String imageContentType;
 
-    @OneToOne(optional = false)    @NotNull
-
+    @OneToOne(optional = false)
+    @NotNull
     @JoinColumn(unique = true)
     private User user;
 
@@ -68,7 +68,8 @@ public class Employee implements Serializable {
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Notification> notifications = new HashSet<>();
 
-    @ManyToOne
+    @ManyToOne(cascade={CascadeType.REFRESH, CascadeType.PERSIST})
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @JsonIgnoreProperties("employees")
     private Company company;
 

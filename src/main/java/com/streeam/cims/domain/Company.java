@@ -68,7 +68,7 @@ public class Company implements Serializable {
     @Column(name = "company_logo_content_type")
     private String companyLogoContentType;
 
-    @OneToMany(mappedBy = "company")
+    @OneToMany(mappedBy = "company" , cascade={CascadeType.REFRESH, CascadeType.PERSIST})
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Employee> employees = new HashSet<>();
 

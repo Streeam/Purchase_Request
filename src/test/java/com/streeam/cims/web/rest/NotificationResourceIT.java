@@ -43,7 +43,7 @@ import com.streeam.cims.domain.enumeration.NotificationType;
  * Integration tests for the {@link NotificationResource} REST controller.
  */
 @SpringBootTest(classes = CidApp.class)
-public class NotificationResourceIT {
+ class NotificationResourceIT {
 
     private static final String DEFAULT_COMMENT = "AAAAAAAAAA";
     private static final String UPDATED_COMMENT = "BBBBBBBBBB";
@@ -95,7 +95,7 @@ public class NotificationResourceIT {
     private Notification notification;
 
     @BeforeEach
-    public void setup() {
+     void setup() {
         MockitoAnnotations.initMocks(this);
         final NotificationResource notificationResource = new NotificationResource(notificationService);
         this.restNotificationMockMvc = MockMvcBuilders.standaloneSetup(notificationResource)
@@ -112,7 +112,7 @@ public class NotificationResourceIT {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static Notification createEntity(EntityManager em) {
+     static Notification createEntity(EntityManager em) {
         Notification notification = new Notification()
             .comment(DEFAULT_COMMENT)
             .sentDate(DEFAULT_SENT_DATE)
@@ -126,7 +126,7 @@ public class NotificationResourceIT {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static Notification createUpdatedEntity(EntityManager em) {
+     static Notification createUpdatedEntity(EntityManager em) {
         Notification notification = new Notification()
             .comment(UPDATED_COMMENT)
             .sentDate(UPDATED_SENT_DATE)
@@ -136,13 +136,13 @@ public class NotificationResourceIT {
     }
 
     @BeforeEach
-    public void initTest() {
+     void initTest() {
         notification = createEntity(em);
     }
 
     @Test
     @Transactional
-    public void createNotification() throws Exception {
+     void createNotification() throws Exception {
         int databaseSizeBeforeCreate = notificationRepository.findAll().size();
 
         // Create the Notification
@@ -167,7 +167,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void createNotificationWithExistingId() throws Exception {
+     void createNotificationWithExistingId() throws Exception {
         int databaseSizeBeforeCreate = notificationRepository.findAll().size();
 
         // Create the Notification with an existing ID
@@ -191,7 +191,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void checkSentDateIsRequired() throws Exception {
+     void checkSentDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = notificationRepository.findAll().size();
         // set the field null
         notification.setSentDate(null);
@@ -210,7 +210,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void checkReadIsRequired() throws Exception {
+     void checkReadIsRequired() throws Exception {
         int databaseSizeBeforeTest = notificationRepository.findAll().size();
         // set the field null
         notification.setRead(null);
@@ -229,7 +229,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void checkFormatIsRequired() throws Exception {
+     void checkFormatIsRequired() throws Exception {
         int databaseSizeBeforeTest = notificationRepository.findAll().size();
         // set the field null
         notification.setFormat(null);
@@ -248,7 +248,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void getAllNotifications() throws Exception {
+     void getAllNotifications() throws Exception {
         // Initialize the database
         notificationRepository.saveAndFlush(notification);
 
@@ -262,10 +262,10 @@ public class NotificationResourceIT {
             .andExpect(jsonPath("$.[*].read").value(hasItem(DEFAULT_READ.booleanValue())))
             .andExpect(jsonPath("$.[*].format").value(hasItem(DEFAULT_FORMAT.toString())));
     }
-    
+
     @Test
     @Transactional
-    public void getNotification() throws Exception {
+     void getNotification() throws Exception {
         // Initialize the database
         notificationRepository.saveAndFlush(notification);
 
@@ -282,7 +282,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void getNonExistingNotification() throws Exception {
+     void getNonExistingNotification() throws Exception {
         // Get the notification
         restNotificationMockMvc.perform(get("/api/notifications/{id}", Long.MAX_VALUE))
             .andExpect(status().isNotFound());
@@ -290,7 +290,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void updateNotification() throws Exception {
+     void updateNotification() throws Exception {
         // Initialize the database
         notificationRepository.saveAndFlush(notification);
 
@@ -327,7 +327,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void updateNonExistingNotification() throws Exception {
+     void updateNonExistingNotification() throws Exception {
         int databaseSizeBeforeUpdate = notificationRepository.findAll().size();
 
         // Create the Notification
@@ -349,7 +349,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void deleteNotification() throws Exception {
+     void deleteNotification() throws Exception {
         // Initialize the database
         notificationRepository.saveAndFlush(notification);
 
@@ -370,7 +370,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void searchNotification() throws Exception {
+     void searchNotification() throws Exception {
         // Initialize the database
         notificationRepository.saveAndFlush(notification);
         when(mockNotificationSearchRepository.search(queryStringQuery("id:" + notification.getId()), PageRequest.of(0, 20)))
@@ -388,7 +388,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void equalsVerifier() throws Exception {
+     void equalsVerifier() throws Exception {
         TestUtil.equalsVerifier(Notification.class);
         Notification notification1 = new Notification();
         notification1.setId(1L);
@@ -403,7 +403,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void dtoEqualsVerifier() throws Exception {
+     void dtoEqualsVerifier() throws Exception {
         TestUtil.equalsVerifier(NotificationDTO.class);
         NotificationDTO notificationDTO1 = new NotificationDTO();
         notificationDTO1.setId(1L);
@@ -419,7 +419,7 @@ public class NotificationResourceIT {
 
     @Test
     @Transactional
-    public void testEntityFromId() {
+     void testEntityFromId() {
         assertThat(notificationMapper.fromId(42L).getId()).isEqualTo(42);
         assertThat(notificationMapper.fromId(null)).isNull();
     }

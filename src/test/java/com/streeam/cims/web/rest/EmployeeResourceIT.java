@@ -9,7 +9,6 @@ import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.service.mapper.EmployeeMapper;
 import com.streeam.cims.web.rest.errors.ExceptionTranslator;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -42,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for the {@link EmployeeResource} REST controller.
  */
 @SpringBootTest(classes = CidApp.class)
-public class EmployeeResourceIT {
+class EmployeeResourceIT {
 
     private static final String DEFAULT_LOGIN = "AAAAAAAAAA";
     private static final String UPDATED_LOGIN = "BBBBBBBBBB";
@@ -101,7 +100,7 @@ public class EmployeeResourceIT {
     private Employee employee;
 
     @BeforeEach
-    public void setup() {
+     void setup() {
         MockitoAnnotations.initMocks(this);
         final EmployeeResource employeeResource = new EmployeeResource(employeeService);
         this.restEmployeeMockMvc = MockMvcBuilders.standaloneSetup(employeeResource)
@@ -118,7 +117,7 @@ public class EmployeeResourceIT {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static Employee createEntity(EntityManager em) {
+     static Employee createEntity(EntityManager em) {
         Employee employee = new Employee()
             .login(DEFAULT_LOGIN)
             .firstName(DEFAULT_FIRST_NAME)
@@ -140,7 +139,7 @@ public class EmployeeResourceIT {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static Employee createUpdatedEntity(EntityManager em) {
+     static Employee createUpdatedEntity(EntityManager em) {
         Employee employee = new Employee()
             .login(UPDATED_LOGIN)
             .firstName(UPDATED_FIRST_NAME)
@@ -158,13 +157,13 @@ public class EmployeeResourceIT {
     }
 
     @BeforeEach
-    public void initTest() {
+     void initTest() {
         employee = createEntity(em);
     }
 
     @Test
     @Transactional
-    public void createEmployee() throws Exception {
+     void createEmployee() throws Exception {
         int databaseSizeBeforeCreate = employeeRepository.findAll().size();
 
         // Create the Employee
@@ -192,7 +191,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void createEmployeeWithExistingId() throws Exception {
+     void createEmployeeWithExistingId() throws Exception {
         int databaseSizeBeforeCreate = employeeRepository.findAll().size();
 
         // Create the Employee with an existing ID
@@ -216,7 +215,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void checkLoginIsRequired() throws Exception {
+     void checkLoginIsRequired() throws Exception {
         int databaseSizeBeforeTest = employeeRepository.findAll().size();
         // set the field null
         employee.setLogin(null);
@@ -235,7 +234,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void checkEmailIsRequired() throws Exception {
+     void checkEmailIsRequired() throws Exception {
         int databaseSizeBeforeTest = employeeRepository.findAll().size();
         // set the field null
         employee.setEmail(null);
@@ -254,7 +253,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void checkHiredIsRequired() throws Exception {
+     void checkHiredIsRequired() throws Exception {
         int databaseSizeBeforeTest = employeeRepository.findAll().size();
         // set the field null
         employee.setHired(null);
@@ -273,7 +272,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void getAllEmployees() throws Exception {
+     void getAllEmployees() throws Exception {
         // Initialize the database
         employeeRepository.saveAndFlush(employee);
 
@@ -290,10 +289,10 @@ public class EmployeeResourceIT {
             .andExpect(jsonPath("$.[*].imageContentType").value(hasItem(DEFAULT_IMAGE_CONTENT_TYPE)))
             .andExpect(jsonPath("$.[*].image").value(hasItem(Base64Utils.encodeToString(DEFAULT_IMAGE))));
     }
-    
+
     @Test
     @Transactional
-    public void getEmployee() throws Exception {
+     void getEmployee() throws Exception {
         // Initialize the database
         employeeRepository.saveAndFlush(employee);
 
@@ -313,7 +312,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void getNonExistingEmployee() throws Exception {
+     void getNonExistingEmployee() throws Exception {
         // Get the employee
         restEmployeeMockMvc.perform(get("/api/employees/{id}", Long.MAX_VALUE))
             .andExpect(status().isNotFound());
@@ -321,7 +320,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void updateEmployee() throws Exception {
+     void updateEmployee() throws Exception {
         // Initialize the database
         employeeRepository.saveAndFlush(employee);
 
@@ -364,7 +363,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void updateNonExistingEmployee() throws Exception {
+     void updateNonExistingEmployee() throws Exception {
         int databaseSizeBeforeUpdate = employeeRepository.findAll().size();
 
         // Create the Employee
@@ -386,7 +385,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void deleteEmployee() throws Exception {
+     void deleteEmployee() throws Exception {
         // Initialize the database
         employeeRepository.saveAndFlush(employee);
 
@@ -407,7 +406,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void searchEmployee() throws Exception {
+     void searchEmployee() throws Exception {
         // Initialize the database
         employeeRepository.saveAndFlush(employee);
         when(mockEmployeeSearchRepository.search(queryStringQuery("id:" + employee.getId()), PageRequest.of(0, 20)))
@@ -428,7 +427,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void equalsVerifier() throws Exception {
+     void equalsVerifier() throws Exception {
         TestUtil.equalsVerifier(Employee.class);
         Employee employee1 = new Employee();
         employee1.setId(1L);
@@ -443,7 +442,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void dtoEqualsVerifier() throws Exception {
+     void dtoEqualsVerifier() throws Exception {
         TestUtil.equalsVerifier(EmployeeDTO.class);
         EmployeeDTO employeeDTO1 = new EmployeeDTO();
         employeeDTO1.setId(1L);
@@ -459,7 +458,7 @@ public class EmployeeResourceIT {
 
     @Test
     @Transactional
-    public void testEntityFromId() {
+     void testEntityFromId() {
         assertThat(employeeMapper.fromId(42L).getId()).isEqualTo(42);
         assertThat(employeeMapper.fromId(null)).isNull();
     }

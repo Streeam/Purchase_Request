@@ -28,19 +28,14 @@
     "clientFramework": "react",
     "clientTheme": "superhero",
     "clientThemeVariant": "light",
-    "testFrameworks": [
-      "protractor"
-    ],
+    "testFrameworks": ["protractor"],
     "jhiPrefix": "jhi",
     "entitySuffix": "",
     "dtoSuffix": "DTO",
     "otherModules": [],
     "enableTranslation": true,
     "nativeLanguage": "en",
-    "languages": [
-      "en",
-      "ro"
-    ],
+    "languages": ["en", "ro"],
     "blueprints": []
   }
 }

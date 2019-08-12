@@ -6,6 +6,7 @@ import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.repository.CompanyRepository;
+import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.service.CompanyService;
 import com.streeam.cims.service.dto.CompanyDTO;
@@ -27,6 +28,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Base64Utils;
 import org.springframework.validation.Validator;
+import org.springframework.web.context.WebApplicationContext;
 
 import javax.persistence.EntityManager;
 import java.util.Collections;
@@ -37,6 +39,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -44,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for the {@link CompanyResource} REST controller.
  */
 @SpringBootTest(classes = CidApp.class)
-public class CompanyResourceIT {
+ class CompanyResourceIT {
 
     private static final String DEFAULT_NAME = "AAAAAAAAAA";
     private static final String UPDATED_NAME = "BBBBBBBBBB";
@@ -77,6 +81,12 @@ public class CompanyResourceIT {
 
     @Autowired
     private CompanyRepository companyRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private WebApplicationContext context;
 
     @Autowired
     private  AuthorityRepository authorityRepository;
@@ -119,7 +129,7 @@ public class CompanyResourceIT {
 
 
     @BeforeEach
-    public void setup() {
+     void setup() {
         MockitoAnnotations.initMocks(this);
 
         final CompanyResource companyResource = new CompanyResource(companyService, authorityRepository);
@@ -137,7 +147,7 @@ public class CompanyResourceIT {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static Company createEntity(EntityManager em) {
+     static Company createEntity(EntityManager em) {
         Company company = new Company()
             .name(DEFAULT_NAME)
             .email(DEFAULT_EMAIL)
@@ -167,7 +177,7 @@ public class CompanyResourceIT {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    public static Company createUpdatedEntity(EntityManager em) {
+     static Company createUpdatedEntity(EntityManager em) {
         Company company = new Company()
             .name(UPDATED_NAME)
             .email(UPDATED_EMAIL)
@@ -193,15 +203,23 @@ public class CompanyResourceIT {
     }
 
     @BeforeEach
-    public void initTest() {
+     void initTest() {
         company = createEntity(em);
     }
 
     @Test
     @Transactional
-    public void createCompany() throws Exception {
+     void createCompany() throws Exception {
+
+        when(mockCompanySearchRepository.save(any(Company.class))).thenReturn(new Company());
+
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
         User user;
+
+
+        // Create security-aware mockMvc
+        securityAwareMockMVC();
+
 
         if(TestUtil.findAll(em, User.class).isEmpty()){
             user = UserResourceIT.createEntity(em);
@@ -212,11 +230,11 @@ public class CompanyResourceIT {
             user = TestUtil.findAll(em, User.class).get(0);
         }
 
-
         // Create the Company
         CompanyDTO companyDTO = companyMapper.toDto(company);
         restCompanyMockMvc.perform(post("/api/companies")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .with(user("user"))
             .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
             .andExpect(status().isCreated());
 
@@ -234,14 +252,16 @@ public class CompanyResourceIT {
         assertThat(testCompany.getPostcode()).isEqualTo(DEFAULT_POSTCODE);
         assertThat(testCompany.getCompanyLogo()).isEqualTo(DEFAULT_COMPANY_LOGO);
         assertThat(testCompany.getCompanyLogoContentType()).isEqualTo(DEFAULT_COMPANY_LOGO_CONTENT_TYPE);
-
+        assertThat(testCompany.getEmployees().stream().findAny().get().getLogin()).isEqualTo("user");
+        assertThat(testCompany.getEmployees().stream().findAny().get().getCompany().getName()).isEqualTo(DEFAULT_NAME);
         // Validate the Company in Elasticsearch
         verify(mockCompanySearchRepository, times(1)).save(testCompany);
+
     }
 
     @Test
     @Transactional
-    public void createCompanyWithExistingId() throws Exception {
+     void createCompanyWithExistingId() throws Exception {
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
 
         // Create the Company with an existing ID
@@ -264,7 +284,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void createCompanyWithExistingEmail() throws Exception {
+     void createCompanyWithExistingEmail() throws Exception {
 
         companyRepository.saveAndFlush(company);
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
@@ -291,7 +311,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void createCompanyWithExistingName() throws Exception {
+     void createCompanyWithExistingName() throws Exception {
 
         companyRepository.saveAndFlush(company);
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
@@ -319,7 +339,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void checkNameIsRequired() throws Exception {
+     void checkNameIsRequired() throws Exception {
 
 
         int databaseSizeBeforeTest = companyRepository.findAll().size();
@@ -340,7 +360,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void checkEmailIsRequired() throws Exception {
+     void checkEmailIsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setEmail(null);
@@ -359,7 +379,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void checkPhoneIsRequired() throws Exception {
+     void checkPhoneIsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setPhone(null);
@@ -378,7 +398,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void checkAddressLine1IsRequired() throws Exception {
+     void checkAddressLine1IsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setAddressLine1(null);
@@ -397,7 +417,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void checkCityIsRequired() throws Exception {
+     void checkCityIsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setCity(null);
@@ -416,7 +436,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void checkCountryIsRequired() throws Exception {
+     void checkCountryIsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setCountry(null);
@@ -435,7 +455,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void checkPostcodeIsRequired() throws Exception {
+     void checkPostcodeIsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setPostcode(null);
@@ -454,12 +474,14 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void getAllCompanies() throws Exception {
+     void getAllCompanies() throws Exception {
         // Initialize the database
         companyRepository.saveAndFlush(company);
+        securityAwareMockMVC();
 
-        // Get all the companyList
-        restCompanyMockMvc.perform(get("/api/companies?sort=id,desc"))
+        // Get all the companyList            .with(user("user"))
+        restCompanyMockMvc.perform(get("/api/companies?sort=id,desc")
+            .with(user("user")))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(company.getId().intValue())))
@@ -477,7 +499,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void getCompany() throws Exception {
+     void getCompany() throws Exception {
         // Initialize the database
         companyRepository.saveAndFlush(company);
 
@@ -500,7 +522,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void getNonExistingCompany() throws Exception {
+     void getNonExistingCompany() throws Exception {
         // Get the company
         restCompanyMockMvc.perform(get("/api/companies/{id}", Long.MAX_VALUE))
             .andExpect(status().isNotFound());
@@ -508,11 +530,13 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void updateCompany() throws Exception {
+     void updateCompany() throws Exception {
         // Initialize the database
         companyRepository.saveAndFlush(company);
 
         int databaseSizeBeforeUpdate = companyRepository.findAll().size();
+
+        securityAwareMockMVC();
 
         // Update the company
         Company updatedCompany = companyRepository.findById(company.getId()).get();
@@ -533,6 +557,7 @@ public class CompanyResourceIT {
 
         restCompanyMockMvc.perform(put("/api/companies")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .with(user("user"))
             .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
             .andExpect(status().isOk());
 
@@ -555,9 +580,17 @@ public class CompanyResourceIT {
         verify(mockCompanySearchRepository, times(1)).save(testCompany);
     }
 
+    private void securityAwareMockMVC() {
+        // Create security-aware mockMvc
+        restCompanyMockMvc = MockMvcBuilders
+            .webAppContextSetup(context)
+            .apply(springSecurity())
+            .build();
+    }
+
     @Test
     @Transactional
-    public void updateNonExistingCompany() throws Exception {
+     void updateNonExistingCompany() throws Exception {
         int databaseSizeBeforeUpdate = companyRepository.findAll().size();
 
         // Create the Company
@@ -579,7 +612,11 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void deleteCompany() throws Exception {
+     void deleteCompany() throws Exception {
+
+        // Create security-aware mockMvc
+        securityAwareMockMVC();
+
         // Initialize the database
         companyRepository.saveAndFlush(company);
 
@@ -587,6 +624,7 @@ public class CompanyResourceIT {
 
         // Delete the company
         restCompanyMockMvc.perform(delete("/api/companies/{id}", company.getId())
+            .with(user("admin"))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isNoContent());
 
@@ -600,7 +638,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void searchCompany() throws Exception {
+     void searchCompany() throws Exception {
         // Initialize the database
         companyRepository.saveAndFlush(company);
         when(mockCompanySearchRepository.search(queryStringQuery("id:" + company.getId()), PageRequest.of(0, 20)))
@@ -624,7 +662,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void equalsVerifier() throws Exception {
+     void equalsVerifier() throws Exception {
         TestUtil.equalsVerifier(Company.class);
         Company company1 = new Company();
         company1.setId(1L);
@@ -639,7 +677,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void dtoEqualsVerifier() throws Exception {
+     void dtoEqualsVerifier() throws Exception {
         TestUtil.equalsVerifier(CompanyDTO.class);
         CompanyDTO companyDTO1 = new CompanyDTO();
         companyDTO1.setId(1L);
@@ -655,7 +693,7 @@ public class CompanyResourceIT {
 
     @Test
     @Transactional
-    public void testEntityFromId() {
+     void testEntityFromId() {
         assertThat(companyMapper.fromId(42L).getId()).isEqualTo(42);
         assertThat(companyMapper.fromId(null)).isNull();
     }

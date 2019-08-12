@@ -1,5 +1,6 @@
 package com.streeam.cims.service;
 
+import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.EmployeeRepository;
@@ -106,14 +107,17 @@ public class EmployeeService {
             .map(employeeMapper::toDto);
     }
 
+    /**
+     *  Create and save a employee and link it to a user
+     * @param newUser
+     * @return Employee with the same details as the user
+     */
     public Employee createEmployeeFromUser(User newUser) {
         Employee employee = new Employee();
-            employee.login(newUser.getLogin())
-                .firstName(newUser.getFirstName())
-                .lastName(newUser.getLastName())
-                .email(newUser.getEmail())
-                .hired(false)
-                .user(newUser);
+        employee.login(newUser.getLogin())
+            .email(newUser.getEmail())
+            .hired(false)
+            .user(newUser);
 
         employee = employeeRepository.save(employee);
         employeeSearchRepository.save(employee);
@@ -121,15 +125,19 @@ public class EmployeeService {
         return employee;
     }
 
+    public Optional<Employee> findOneByLogin(String login) {
+        return employeeRepository.findByLogin(login);
+    }
+
+
     /**
-     *     private String login;
-     *     private String firstName;
-     *     private String lastName;
-     *     private String email;
-     *     private Boolean hired;
-     *     private byte[] image;
-     *     private String imageContentType;
-     *     private User user;
-     *     private Company company;
+     *  Creates and saves a employee and links it to a company
+     * @param employee
+     * @param company
      */
+    public void saveWithCompany(Employee employee, Company company) {
+        employee.company(company);
+        employee = employeeRepository.save(employee);
+        employeeSearchRepository.save(employee);
+    }
 }

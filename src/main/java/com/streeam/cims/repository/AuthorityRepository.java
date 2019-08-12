@@ -1,7 +1,6 @@
 package com.streeam.cims.repository;
 
 import com.streeam.cims.domain.Authority;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**

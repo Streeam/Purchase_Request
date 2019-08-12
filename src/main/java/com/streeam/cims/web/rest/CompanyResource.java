@@ -1,6 +1,7 @@
 package com.streeam.cims.web.rest;
 
 import com.streeam.cims.domain.Authority;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
@@ -10,10 +11,12 @@ import com.streeam.cims.web.rest.errors.BadRequestAlertException;
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
+import org.elasticsearch.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +26,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -71,30 +75,23 @@ public class CompanyResource {
             throw new BadRequestAlertException("This company name is already being used", ENTITY_NAME, "emailexists");
         }
 
+        Optional<Employee> employee = Optional.empty();
+        Optional<User> user = companyService.findCurrentUser();
+        if(user.isPresent()){
 
-        if(companyService.findCurrentUser().isPresent()){
-
-            User user = companyService.findCurrentUser().get();
-            if(companyService.checkUserHasRoles(user , AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER)){
+            if(companyService.checkUserHasRoles(user.get() , AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER,
+                AuthoritiesConstants.ADMIN)){
                 throw new BadRequestAlertException("You can't create a company if you already have a company or are employed by another", ENTITY_NAME, "wrongrole");
             }
 
-            Set<Authority> authorities = user.getAuthorities();
+            Set<Authority> authorities = user.get().getAuthorities();
             authorityRepository.findById(AuthoritiesConstants.MANAGER).ifPresent(authorities::add);
-            user.setAuthorities(authorities);
-
+            user.get().setAuthorities(authorities);
+            employee =  companyService.findEmployeeFromUser(user.get());
         }
 
-            //companyService.saveAndLinkUserToEmployee(user);
+        CompanyDTO result = companyService.saveWithEmployee(companyDTO,employee);
 
-
-        //!SecurityUtils.isCurrentUserInRole(AuthoritiesConstants.ADMIN)
-
-
-        // TODO Use the user to find the employee
-        // TODO Link the employee to the company
-
-        CompanyDTO result = companyService.save(companyDTO);
         return ResponseEntity.created(new URI("/api/companies/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
@@ -115,7 +112,14 @@ public class CompanyResource {
         if (companyDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
-        CompanyDTO result = companyService.save(companyDTO);
+
+        Optional<Employee> employee = Optional.empty();
+        Optional<User> user = companyService.findCurrentUser();
+        if(user.isPresent()){
+            employee =  companyService.findEmployeeFromUser(user.get());
+        }
+
+        CompanyDTO result = companyService.saveWithEmployee(companyDTO, employee);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyDTO.getId().toString()))
             .body(result);
@@ -130,7 +134,22 @@ public class CompanyResource {
     @GetMapping("/companies")
     public ResponseEntity<List<CompanyDTO>> getAllCompanies(Pageable pageable) {
         log.debug("REST request to get a page of Companies");
-        Page<CompanyDTO> page = companyService.findAll(pageable);
+
+        Page<CompanyDTO> page = new PageImpl<>(new ArrayList<>());
+
+        Optional<User> user = companyService.findCurrentUser();
+        if(!user.isPresent()){
+            throw new ResourceNotFoundException("No user logged in.");
+        }
+
+        if(companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)){
+            page = companyService.findAll(pageable);
+        }
+        if (companyService.checkUserHasRoles(user.get(),AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)){
+            page = companyService.findCompanyWithCurrentUser(user.get());
+        }
+
+
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -156,8 +175,16 @@ public class CompanyResource {
      */
     @DeleteMapping("/companies/{id}")
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
+        Optional<User> user = companyService.findCurrentUser();
+
+        if(user.isPresent() && !companyService.checkUserHasRoles(user.get() , AuthoritiesConstants.MANAGER,
+            AuthoritiesConstants.ADMIN)){
+            throw new BadRequestAlertException("You don't have the authority to delete this company", ENTITY_NAME, "companyremoveforbiden");
+        }
+
         log.debug("REST request to delete Company : {}", id);
         companyService.delete(id);
+
         return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString())).build();
     }
 

@@ -1,19 +1,27 @@
 package com.streeam.cims.service;
 
+import com.streeam.cims.domain.Authority;
 import com.streeam.cims.domain.Company;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.CompanyRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
+import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.dto.CompanyDTO;
+import com.streeam.cims.service.dto.UserDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
+import com.streeam.cims.service.mapper.EmployeeMapper;
+import com.streeam.cims.service.mapper.UserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
@@ -34,23 +42,61 @@ public class CompanyService {
 
     private final UserService userService;
 
-    public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserService userService, CompanySearchRepository companySearchRepository) {
+    private final UserMapper userMapper;
+
+    private final EmployeeService employeeService;
+
+    private final EmployeeMapper employeeMapper;
+
+    public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserService userService,
+                          CompanySearchRepository companySearchRepository, EmployeeService employeeService, EmployeeMapper employeeMapper,
+                          UserMapper userMapper) {
         this.userService = userService;
+        this.userMapper = userMapper;
         this.companyRepository = companyRepository;
         this.companyMapper = companyMapper;
         this.companySearchRepository = companySearchRepository;
+        this.employeeService = employeeService;
+        this.employeeMapper = employeeMapper;
     }
+
+//    /**
+//     * Save a company.
+//     *
+//     * @param companyDTO the entity to save.
+//     * @return the persisted entity.
+//     */
+//    public CompanyDTO save(CompanyDTO companyDTO) {
+//        log.debug("Request to save Company : {}", companyDTO);
+//        Company company = companyMapper.toEntity(companyDTO);
+//        company = companyRepository.save(company);
+//        CompanyDTO result = companyMapper.toDto(company);
+//        companySearchRepository.save(company);
+//        return result;
+//    }
+
 
     /**
      * Save a company.
      *
      * @param companyDTO the entity to save.
+     * @param employee
      * @return the persisted entity.
      */
-    public CompanyDTO save(CompanyDTO companyDTO) {
+    public CompanyDTO saveWithEmployee(CompanyDTO companyDTO, Optional<Employee> employee) {
         log.debug("Request to save Company : {}", companyDTO);
         Company company = companyMapper.toEntity(companyDTO);
-        company = companyRepository.save(company);
+        if(employee.isPresent()) {
+            employee.get().setHired(true);
+            Set<Employee> employees = company.getEmployees();
+            employees.add(employee.get());
+            company.setEmployees(employees);
+            company = companyRepository.save(company);
+            employeeService.saveWithCompany(employee.get(), company);
+            log.debug("Request to save Company with employee: {}", employee.get().getLogin());
+        }
+
+
         CompanyDTO result = companyMapper.toDto(company);
         companySearchRepository.save(company);
         return result;
@@ -88,8 +134,32 @@ public class CompanyService {
      *
      * @param id the id of the entity.
      */
+
     public void delete(Long id) {
         log.debug("Request to delete Company : {}", id);
+
+        // Find all employees from the company and the manager and remove the ROLE_EMPLOYEE and ROLE_MANAGER
+
+        Optional<Company> company = companyRepository.findOneById(id);
+        Set<Employee> employees = new HashSet<>();
+        if(company.isPresent()){
+            employees = company.get().getEmployees();
+            employees.stream().filter(employee-> {
+                Optional<User> user = userService.findOneByLogin(employee.getLogin());
+                boolean managersAndEmployees = userService.checkIfUserHasRoles(user.get(), AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE);
+
+                Set<Authority> authorities = user.get().getAuthorities().stream().
+                    filter(authority -> !authority.getName().equals(AuthoritiesConstants.MANAGER) && !authority.getName().equals(AuthoritiesConstants.EMPLOYEE)).
+                    collect(Collectors.toSet());
+                user.get().setAuthorities(authorities);
+                UserDTO userDTO = userMapper.userToUserDTO(user.get());
+                userService.updateUser(userDTO);
+
+                return managersAndEmployees;
+            }).forEach(employee -> employee.setHired(false));
+
+        }
+
         companyRepository.deleteById(id);
         companySearchRepository.deleteById(id);
     }
@@ -144,7 +214,19 @@ public class CompanyService {
      * @return an optional of the current user
      */
     public Optional<User> findCurrentUser() {
-
         return userService.getCurrentUser();
+    }
+
+    public Optional<Employee> findEmployeeFromUser(User user) {
+        return userService.findLinkedEmployee(user);
+    }
+
+
+    public Page<CompanyDTO> findCompanyWithCurrentUser(User user) {
+        Optional<Employee> employee = employeeService.findOneByLogin(user.getLogin());
+        Optional<Company> company = companyRepository.findOneByEmployees(Collections.singleton(employee.get()));
+        CompanyDTO companyDTO = companyMapper.toDto(company.get());
+
+        return new PageImpl<>(Arrays.asList(companyDTO));
     }
 }

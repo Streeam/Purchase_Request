@@ -3,10 +3,14 @@ package com.streeam.cims.web.rest;
 import com.streeam.cims.CidApp;
 import com.streeam.cims.config.Constants;
 import com.streeam.cims.domain.Authority;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.repository.UserRepository;
+import com.streeam.cims.repository.search.EmployeeSearchRepository;
+import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
+import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.UserService;
 import com.streeam.cims.service.dto.PasswordChangeDTO;
@@ -15,7 +19,6 @@ import com.streeam.cims.web.rest.errors.ExceptionTranslator;
 import com.streeam.cims.web.rest.vm.KeyAndPasswordVM;
 import com.streeam.cims.web.rest.vm.ManagedUserVM;
 import org.apache.commons.lang3.RandomStringUtils;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -31,29 +34,42 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Integration tests for the {@link AccountResource} REST controller.
  */
 @SpringBootTest(classes = CidApp.class)
-public class AccountResourceIT {
+ class AccountResourceIT {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EmployeeSearchRepository mockEmployeeSearchRepository;
+
+    @Autowired
+    private UserSearchRepository mockUserSearchRepository;
 
     @Autowired
     private AuthorityRepository authorityRepository;
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private EmployeeService employeeService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -75,9 +91,11 @@ public class AccountResourceIT {
     private MockMvc restUserMockMvc;
 
     @BeforeEach
-    public void setup() {
+     void setup() {
         MockitoAnnotations.initMocks(this);
         doNothing().when(mockMailService).sendActivationEmail(any());
+        when(mockEmployeeSearchRepository.save(any(Employee.class))).thenReturn(new Employee());
+        when(mockUserSearchRepository.save(any(User.class))).thenReturn(new User());
         AccountResource accountResource =
             new AccountResource(userRepository, userService, mockMailService);
 
@@ -93,7 +111,7 @@ public class AccountResourceIT {
     }
 
     @Test
-    public void testNonAuthenticatedUser() throws Exception {
+     void testNonAuthenticatedUser() throws Exception {
         restUserMockMvc.perform(get("/api/authenticate")
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -101,7 +119,7 @@ public class AccountResourceIT {
     }
 
     @Test
-    public void testAuthenticatedUser() throws Exception {
+     void testAuthenticatedUser() throws Exception {
         restUserMockMvc.perform(get("/api/authenticate")
             .with(request -> {
                 request.setRemoteUser("test");
@@ -113,7 +131,7 @@ public class AccountResourceIT {
     }
 
     @Test
-    public void testGetExistingAccount() throws Exception {
+     void testGetExistingAccount() throws Exception {
         Set<Authority> authorities = new HashSet<>();
         Authority authority = new Authority();
         authority.setName(AuthoritiesConstants.ADMIN);
@@ -143,7 +161,7 @@ public class AccountResourceIT {
     }
 
     @Test
-    public void testGetUnknownAccount() throws Exception {
+     void testGetUnknownAccount() throws Exception {
         when(mockUserService.getUserWithAuthorities()).thenReturn(Optional.empty());
 
         restUserMockMvc.perform(get("/api/account")
@@ -153,7 +171,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testRegisterValid() throws Exception {
+     void testRegisterValid() throws Exception {
         ManagedUserVM validUser = new ManagedUserVM();
         validUser.setLogin("test-register-valid");
         validUser.setPassword("password");
@@ -176,7 +194,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testRegisterInvalidLogin() throws Exception {
+     void testRegisterInvalidLogin() throws Exception {
         ManagedUserVM invalidUser = new ManagedUserVM();
         invalidUser.setLogin("funky-log!n");// <-- invalid
         invalidUser.setPassword("password");
@@ -200,7 +218,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testRegisterInvalidEmail() throws Exception {
+     void testRegisterInvalidEmail() throws Exception {
         ManagedUserVM invalidUser = new ManagedUserVM();
         invalidUser.setLogin("bob");
         invalidUser.setPassword("password");
@@ -224,7 +242,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testRegisterInvalidPassword() throws Exception {
+     void testRegisterInvalidPassword() throws Exception {
         ManagedUserVM invalidUser = new ManagedUserVM();
         invalidUser.setLogin("bob");
         invalidUser.setPassword("123");// password with only 3 digits
@@ -248,7 +266,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testRegisterNullPassword() throws Exception {
+     void testRegisterNullPassword() throws Exception {
         ManagedUserVM invalidUser = new ManagedUserVM();
         invalidUser.setLogin("bob");
         invalidUser.setPassword(null);// invalid null password
@@ -272,7 +290,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testRegisterDuplicateLogin() throws Exception {
+     void testRegisterDuplicateLogin() throws Exception {
         // First registration
         ManagedUserVM firstUser = new ManagedUserVM();
         firstUser.setLogin("alice");
@@ -328,7 +346,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testRegisterDuplicateEmail() throws Exception {
+     void testRegisterDuplicateEmail() throws Exception {
         // First user
         ManagedUserVM firstUser = new ManagedUserVM();
         firstUser.setLogin("test-register-duplicate-email");
@@ -410,7 +428,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testRegisterAdminIsIgnored() throws Exception {
+     void testRegisterAdminIsIgnored() throws Exception {
         ManagedUserVM validUser = new ManagedUserVM();
         validUser.setLogin("badguy");
         validUser.setPassword("password");
@@ -436,7 +454,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testActivateAccount() throws Exception {
+     void testActivateAccount() throws Exception {
         final String activationKey = "some activation key";
         User user = new User();
         user.setLogin("activate-account");
@@ -447,16 +465,24 @@ public class AccountResourceIT {
 
         userRepository.saveAndFlush(user);
 
+
         restMvc.perform(get("/api/activate?key={activationKey}", activationKey))
             .andExpect(status().isOk());
 
+
         user = userRepository.findOneByLogin(user.getLogin()).orElse(null);
+        Employee employee = employeeService.createEmployeeFromUser(user);
         assertThat(user.getActivated()).isTrue();
+        assertThat(user).isEqualTo(employee.getUser());
+        assertThat(user.getEmail()).isEqualTo(employee.getEmail());
+        assertThat(user.getLogin()).isEqualTo(employee.getLogin());
+
+
     }
 
     @Test
     @Transactional
-    public void testActivateAccountWithWrongKey() throws Exception {
+     void testActivateAccountWithWrongKey() throws Exception {
         restMvc.perform(get("/api/activate?key=wrongActivationKey"))
             .andExpect(status().isInternalServerError());
     }
@@ -464,7 +490,7 @@ public class AccountResourceIT {
     @Test
     @Transactional
     @WithMockUser("save-account")
-    public void testSaveAccount() throws Exception {
+     void testSaveAccount() throws Exception {
         User user = new User();
         user.setLogin("save-account");
         user.setEmail("save-account@example.com");
@@ -503,7 +529,7 @@ public class AccountResourceIT {
     @Test
     @Transactional
     @WithMockUser("save-invalid-email")
-    public void testSaveInvalidEmail() throws Exception {
+     void testSaveInvalidEmail() throws Exception {
         User user = new User();
         user.setLogin("save-invalid-email");
         user.setEmail("save-invalid-email@example.com");
@@ -534,7 +560,7 @@ public class AccountResourceIT {
     @Test
     @Transactional
     @WithMockUser("save-existing-email")
-    public void testSaveExistingEmail() throws Exception {
+     void testSaveExistingEmail() throws Exception {
         User user = new User();
         user.setLogin("save-existing-email");
         user.setEmail("save-existing-email@example.com");
@@ -574,7 +600,7 @@ public class AccountResourceIT {
     @Test
     @Transactional
     @WithMockUser("save-existing-email-and-login")
-    public void testSaveExistingEmailAndLogin() throws Exception {
+     void testSaveExistingEmailAndLogin() throws Exception {
         User user = new User();
         user.setLogin("save-existing-email-and-login");
         user.setEmail("save-existing-email-and-login@example.com");
@@ -606,7 +632,7 @@ public class AccountResourceIT {
     @Test
     @Transactional
     @WithMockUser("change-password-wrong-existing-password")
-    public void testChangePasswordWrongExistingPassword() throws Exception {
+     void testChangePasswordWrongExistingPassword() throws Exception {
         User user = new User();
         String currentPassword = RandomStringUtils.random(60);
         user.setPassword(passwordEncoder.encode(currentPassword));
@@ -627,7 +653,7 @@ public class AccountResourceIT {
     @Test
     @Transactional
     @WithMockUser("change-password")
-    public void testChangePassword() throws Exception {
+     void testChangePassword() throws Exception {
         User user = new User();
         String currentPassword = RandomStringUtils.random(60);
         user.setPassword(passwordEncoder.encode(currentPassword));
@@ -647,7 +673,7 @@ public class AccountResourceIT {
     @Test
     @Transactional
     @WithMockUser("change-password-too-small")
-    public void testChangePasswordTooSmall() throws Exception {
+     void testChangePasswordTooSmall() throws Exception {
         User user = new User();
         String currentPassword = RandomStringUtils.random(60);
         user.setPassword(passwordEncoder.encode(currentPassword));
@@ -669,7 +695,7 @@ public class AccountResourceIT {
     @Test
     @Transactional
     @WithMockUser("change-password-too-long")
-    public void testChangePasswordTooLong() throws Exception {
+     void testChangePasswordTooLong() throws Exception {
         User user = new User();
         String currentPassword = RandomStringUtils.random(60);
         user.setPassword(passwordEncoder.encode(currentPassword));
@@ -691,7 +717,7 @@ public class AccountResourceIT {
     @Test
     @Transactional
     @WithMockUser("change-password-empty")
-    public void testChangePasswordEmpty() throws Exception {
+     void testChangePasswordEmpty() throws Exception {
         User user = new User();
         String currentPassword = RandomStringUtils.random(60);
         user.setPassword(passwordEncoder.encode(currentPassword));
@@ -710,7 +736,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testRequestPasswordReset() throws Exception {
+     void testRequestPasswordReset() throws Exception {
         User user = new User();
         user.setPassword(RandomStringUtils.random(60));
         user.setActivated(true);
@@ -725,7 +751,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testRequestPasswordResetUpperCaseEmail() throws Exception {
+     void testRequestPasswordResetUpperCaseEmail() throws Exception {
         User user = new User();
         user.setPassword(RandomStringUtils.random(60));
         user.setActivated(true);
@@ -739,7 +765,7 @@ public class AccountResourceIT {
     }
 
     @Test
-    public void testRequestPasswordResetWrongEmail() throws Exception {
+     void testRequestPasswordResetWrongEmail() throws Exception {
         restMvc.perform(
             post("/api/account/reset-password/init")
                 .content("password-reset-wrong-email@example.com"))
@@ -748,7 +774,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testFinishPasswordReset() throws Exception {
+     void testFinishPasswordReset() throws Exception {
         User user = new User();
         user.setPassword(RandomStringUtils.random(60));
         user.setLogin("finish-password-reset");
@@ -773,7 +799,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testFinishPasswordResetTooSmall() throws Exception {
+     void testFinishPasswordResetTooSmall() throws Exception {
         User user = new User();
         user.setPassword(RandomStringUtils.random(60));
         user.setLogin("finish-password-reset-too-small");
@@ -799,7 +825,7 @@ public class AccountResourceIT {
 
     @Test
     @Transactional
-    public void testFinishPasswordResetWrongKey() throws Exception {
+     void testFinishPasswordResetWrongKey() throws Exception {
         KeyAndPasswordVM keyAndPassword = new KeyAndPasswordVM();
         keyAndPassword.setKey("wrong reset key");
         keyAndPassword.setNewPassword("new password");

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+
+      <changeSet id="20190807193905-1-insert" author="Streeam" >
+          <insert tableName="employee">
+              <column name="id"  value="1"/>
+              <column name="login" value="system"/>
+              <column name="first_name" value="System"/>
+              <column name="last_name" value="System"/>
+              <column name="email" value="system@system.com"/>
+              <column name="hired" value="true"/>
+              <column name="user_id" value="1"/>
+              <column name="company_id" value="1"/>
+          </insert>
+          <insert tableName="employee">
+              <column name="id"  value="2"/>
+              <column name="login" value="anonymoususer"/>
+              <column name="first_name" value="Anonymous"/>
+              <column name="last_name" value="User"/>
+              <column name="email" value="anonymous@localhost.com"/>
+              <column name="hired" value="true"/>
+              <column name="user_id" value="2"/>
+              <column name="company_id" value="1"/>
+          </insert>
+          <insert tableName="employee">
+              <column name="id"  value="3"/>
+              <column name="login" value="admin"/>
+              <column name="first_name" value="Administrator"/>
+              <column name="last_name" value="Administrator"/>
+              <column name="email" value="admin@localhost.com"/>
+              <column name="hired" value="true"/>
+              <column name="user_id" value="3"/>
+              <column name="company_id" value="1"/>
+          </insert>
+          <insert tableName="employee">
+              <column name="id"  value="4"/>
+              <column name="login" value="user"/>
+              <column name="first_name" value="User"/>
+              <column name="last_name" value="User"/>
+              <column name="email" value="user@localhost.com"/>
+              <column name="hired" value="true"/>
+              <column name="user_id" value="4"/>
+              <column name="company_id" value="1"/>
+          </insert>
+      </changeSet>
+
+</databaseChangeLog>
+
