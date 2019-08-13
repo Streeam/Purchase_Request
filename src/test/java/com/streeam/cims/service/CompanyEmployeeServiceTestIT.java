@@ -220,6 +220,7 @@ class CompanyEmployeeServiceTestIT {
     @Autowired
     private EmployeeService employeeService;
 
+
     /**
      * This repository is mocked in the com.streeam.cims.repository.search test package.
      *
@@ -358,48 +359,6 @@ class CompanyEmployeeServiceTestIT {
         auditingHandler.setDateTimeProvider(dateTimeProvider);
     }
 
-    @Test
-    @Transactional
-    void assertThatCompanyEmailAlreadyExists() {
-
-        userRepository.saveAndFlush(user1);
-        userRepository.saveAndFlush(user2);
-
-        employeeRepository.saveAndFlush(employee1);
-        employeeRepository.saveAndFlush(employee2);
-
-
-        companyRepository.saveAndFlush(company);
-
-
-
-        assertThat(companyService.companyEmailAlreadyExists(DEFAULT_COMPANY_EMAIL)).isTrue();
-        assertThat(companyService.companyNameAlreadyExists(DEFAULT_NAME)).isTrue();
-
-        userRepository.delete(user1);
-        employeeRepository.delete(employee1);
-        companyRepository.delete(company);
-
-
-
-    }
-
-    @Test
-    @Transactional
-    void assertThatCreateEmployeeFromUser() {
-        userRepository.saveAndFlush(user1);
-
-        Employee employee = employeeService.createEmployeeFromUser(user1);
-        assertThat(employee.getLogin()).isEqualTo(DEFAULT_USER_LOGIN);
-        assertThat(employee.isHired()).isFalse();
-        assertThat(employeeService.findOneByLogin(user1.getLogin())).isPresent();
-
-        verify(mockEmployeeSearchRepository, times(1)).save(employee);
-
-        employeeService.delete(employee.getId());
-
-        verify(mockEmployeeSearchRepository, times(1)).deleteById(employee.getId());
-    }
 
     @Test
     @Transactional

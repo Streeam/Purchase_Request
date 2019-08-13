@@ -1,6 +1,7 @@
 package com.streeam.cims.web.rest;
 
 import com.streeam.cims.CidApp;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.Notification;
 import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.NotificationRepository;
@@ -140,6 +141,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             .sentDate(Instant.now())
             .read(false)
             .format(NotificationType.REQUEST_TO_JOIN);
+
+        /**
+         *         User user = UserResourceIT.createEntity(em);
+         *         em.persist(user);
+         *         em.flush();
+         *         employee.setUser(user);
+         */
+        Employee employee = EmployeeResourceIT.createRandomEmployee(em);
+        em.persist(employee);
+        em.flush();
+        notification.setEmployee(employee);
         return notification;
     }
 

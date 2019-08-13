@@ -6,6 +6,7 @@ import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.repository.CompanyRepository;
+import com.streeam.cims.repository.EmployeeRepository;
 import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.service.CompanyService;
@@ -35,6 +36,7 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.persistence.EntityManager;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static com.streeam.cims.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -132,6 +134,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     @Mock
     private CompanyService mockCompanyService;
 
+    @Mock
+    private EmployeeRepository employeeRepository;
+
+    @Mock
+    private CompanyRepository mockCompanyRepository;
+
 
     @BeforeEach
      void setup() {
@@ -226,14 +234,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             .companyLogo(TestUtil.createByteArray(1, "1"))
             .companyLogoContentType(RandomStringUtils.randomAlphabetic(8));
         // Add required entity
-        Employee employee;
-        if (TestUtil.findAll(em, Employee.class).isEmpty()) {
-            employee = EmployeeResourceIT.createUpdatedEntity(em);
-            em.persist(employee);
-            em.flush();
-        } else {
-            employee = TestUtil.findAll(em, Employee.class).get(0);
-        }
+        Employee employee = EmployeeResourceIT.createUpdatedEntity(em);
+        em.persist(employee);
+        em.flush();
         company.getEmployees().add(employee);
         return company;
     }
@@ -249,13 +252,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
         when(mockCompanySearchRepository.save(any(Company.class))).thenReturn(new Company());
 
-        int databaseSizeBeforeCreate = companyRepository.findAll().size();
-        User user;
+        Employee employee = EmployeeResourceIT.createRandomEmployee(em);
+        int employeesBeforeCreate = company.getEmployees().size();
 
+        company.getEmployees().add(employee);
+        int databaseSizeBeforeCreate = companyRepository.findAll().size();
+
+        User user;
 
         // Create security-aware mockMvc
         securityAwareMockMVC();
-
 
         if(TestUtil.findAll(em, User.class).isEmpty()){
             user = UserResourceIT.createEntity(em);
@@ -288,8 +294,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         assertThat(testCompany.getPostcode()).isEqualTo(DEFAULT_POSTCODE);
         assertThat(testCompany.getCompanyLogo()).isEqualTo(DEFAULT_COMPANY_LOGO);
         assertThat(testCompany.getCompanyLogoContentType()).isEqualTo(DEFAULT_COMPANY_LOGO_CONTENT_TYPE);
+        Optional<Employee> testEmployee = testCompany.getEmployees().stream().filter(employee1 -> employee1.getEmail().equalsIgnoreCase(employee.getEmail())).findFirst();
+        assertThat(testEmployee).isPresent();
+        //TODO Do the same for the user
+
         assertThat(testCompany.getEmployees().stream().findAny().get().getLogin()).isEqualTo("user");
         assertThat(testCompany.getEmployees().stream().findAny().get().getCompany().getName()).isEqualTo(DEFAULT_NAME);
+        //assertThat(testCompany.getEmployees().)
+
         // Validate the Company in Elasticsearch
         verify(mockCompanySearchRepository, times(1)).save(testCompany);
 
@@ -314,6 +326,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         List<Company> companyList = companyRepository.findAll();
         assertThat(companyList).hasSize(databaseSizeBeforeCreate);
 
+        verify(mockCompanyRepository, times(0)).save(company);
         // Validate the Company in Elasticsearch
         verify(mockCompanySearchRepository, times(0)).save(company);
     }
@@ -341,6 +354,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         List<Company> companyList = companyRepository.findAll();
         assertThat(companyList).hasSize(databaseSizeBeforeCreate);
 
+        verify(mockCompanyRepository, times(0)).save(company);
         // Validate the Company in Elasticsearch
         verify(mockCompanySearchRepository, times(0)).save(updatedCompany);
     }
@@ -616,14 +630,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         verify(mockCompanySearchRepository, times(1)).save(testCompany);
     }
 
-    private void securityAwareMockMVC() {
-        // Create security-aware mockMvc
-        restCompanyMockMvc = MockMvcBuilders
-            .webAppContextSetup(context)
-            .apply(springSecurity())
-            .build();
-    }
-
     @Test
     @Transactional
      void updateNonExistingCompany() throws Exception {
@@ -732,5 +738,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
      void testEntityFromId() {
         assertThat(companyMapper.fromId(42L).getId()).isEqualTo(42);
         assertThat(companyMapper.fromId(null)).isNull();
+    }
+
+
+    private void securityAwareMockMVC() {
+        // Create security-aware mockMvc
+        restCompanyMockMvc = MockMvcBuilders
+            .webAppContextSetup(context)
+            .apply(springSecurity())
+            .build();
     }
 }

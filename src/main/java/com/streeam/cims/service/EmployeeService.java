@@ -113,8 +113,8 @@ public class EmployeeService {
      * @return Employee with the same details as the user
      */
     public Employee createEmployeeFromUser(User newUser) {
-        Employee employee = new Employee();
-        employee.login(newUser.getLogin())
+        Employee employee = new Employee().
+            login(newUser.getLogin())
             .email(newUser.getEmail())
             .hired(false)
             .user(newUser);

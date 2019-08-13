@@ -135,7 +135,7 @@ class UserResourceIT {
         user.setLangKey(DEFAULT_LANGKEY);
         return user;
     }
-    static User createRandomUser() {
+    public static User createRandomUser() {
         User user = new User();
         user.setLogin(DEFAULT_LOGIN + RandomStringUtils.randomAlphabetic(5));
         user.setPassword(RandomStringUtils.random(60));
