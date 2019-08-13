@@ -33,6 +33,7 @@
             "relationshipType": "many-to-one",
             "otherEntityName": "employee",
             "otherEntityRelationshipName": "notification",
+            "relationshipValidateRules": "required",
             "relationshipName": "employee",
             "otherEntityField": "id"
         }

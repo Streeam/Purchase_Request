@@ -1,9 +1,7 @@
 package com.streeam.cims.web.rest;
 
-import com.streeam.cims.domain.Authority;
-import com.streeam.cims.domain.Company;
-import com.streeam.cims.domain.Employee;
-import com.streeam.cims.domain.User;
+import com.streeam.cims.domain.*;
+import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.CompanyService;
@@ -22,6 +20,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -118,13 +117,7 @@ public class CompanyResource {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
 
-        Optional<Employee> employee = Optional.empty();
-        Optional<User> user = companyService.findCurrentUser();
-        if(user.isPresent()){
-            employee =  companyService.findEmployeeFromUser(user.get());
-        }
-
-        CompanyDTO result = companyService.saveWithEmployee(companyDTO, employee);
+        CompanyDTO result = companyService.save(companyDTO);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyDTO.getId().toString()))
             .body(result);
@@ -216,39 +209,30 @@ public class CompanyResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
     @PostMapping("companies/{companyId}/requestToJoin")
-    public ResponseEntity<CompanyDTO> requestToJoinCompany(@PathVariable Long companyId) {
+    public void requestToJoinCompany(@PathVariable Long companyId) {
         log.debug("REST request to join the company : {}", companyId);
 
-        Optional<User> user = companyService.findCurrentUser();
+        // find the latest rejected notification. If it has been less then 48h since
 
-        if (!user.isPresent()) {
-            throw new ResourceNotFoundException("No user logged in.");
-        }
-        if(companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.MANAGER,AuthoritiesConstants.EMPLOYEE)){
+        User user =  companyService.findCurrentUser().orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
+
+        if(companyService.checkUserHasRoles(user, AuthoritiesConstants.MANAGER,AuthoritiesConstants.EMPLOYEE)){
             throw new BadRequestAlertException("You don't have the eligible to request to join a company", ENTITY_NAME, "requesttojoinforbiden");
         }
 
-        Optional<Company> company = companyService.findCompanyById(companyId);
+        Company company = companyService.findCompanyById(companyId).orElseThrow(()-> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
-        if(!company.isPresent()){
-            throw new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid");
-        }
+        Employee manager = companyService.getCompanysManager(company).orElseThrow(() -> new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
 
-        Optional<Employee> manager = companyService.getCompanysManager(company.get());
 
-        if(!manager.isPresent()){
-            throw new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager");
-        }
-
-        String managersEmail = companyService.getEmployeeEmail(manager.get());
+        String managersEmail = companyService.getEmployeeEmail(manager);
 
         // send an email to the manager to inform him of a employee wanting to join the company
-        mailService.sendRequestToJoinEmail(managersEmail, user.get());
+        mailService.sendRequestToJoinEmail(managersEmail, user);
 
         // create a Notification(REQUEST_TO_JOIN) and link it to the manager
-        companyService.sendNotificationToEmployee(manager.get());
+        companyService.sendNotificationToEmployee(manager, NotificationType.REQUEST_TO_JOIN, "A user submitted a request to join your company.");
 
-        return ResponseUtil.wrapOrNotFound(null);
     }
 
     /**
@@ -257,10 +241,16 @@ public class CompanyResource {
      * @param userEmail the email of the user who wants to join the company.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
-    @PostMapping("/companies/{id}/hire-employee/{userEmail}")
-    public ResponseEntity<CompanyDTO> hireEmployee(@PathVariable String userEmail) {
+    @PostMapping("/companies/{companyId}/hire-employee/{userEmail}")
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.MANAGER + "\")")
+    public ResponseEntity<CompanyDTO> hireEmployee(@PathVariable Long companyId ,@PathVariable String userEmail) {
         log.debug("REST request to hire the user: {}", userEmail);
 
+        // find the user and make him EMPLOYEE
+
+        // Update the user, the employee and the company
+
+        // send a notification and an email to the user to inform him.
 
         return ResponseUtil.wrapOrNotFound(null);
     }
@@ -271,11 +261,29 @@ public class CompanyResource {
      * @param userEmail the email of the user who wants to join the company.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
-    @PostMapping("/companies/{id}/reject-employee/{userEmail}")
-    public ResponseEntity<CompanyDTO> rejectEmployee(@PathVariable String userEmail) {
+    @PostMapping("/companies/{companyId}/reject-employee/{userEmail}/notifications/{id}")
+    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.MANAGER + "\")")
+    public void rejectEmployee(@PathVariable Long companyId,@PathVariable String userEmail, @PathVariable Long id){
         log.debug("REST to reject a user's request to join a company.");
 
+        Company company = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid") );
 
-        return ResponseUtil.wrapOrNotFound(null);
+        User user =  companyService.findCurrentUser().orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
+
+        mailService.sendRequestToJoinEmail(userEmail, user);
+
+        Employee employee = companyService.findEmployeeFromUser(user).orElseThrow(()-> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+        companyService.sendNotificationToEmployee(employee, NotificationType.REJECT_INVITE, "Your application to join " +company.getName() + " has been rejected!");
+
+        // obtain the user notification, set it to true and save it
+
+        Notification managersNotification = employee.getNotifications().stream().filter(notification -> notification.getId().equals(id)).findFirst()
+            .orElseThrow(()-> new BadRequestAlertException("No notification found for this id number: " + id, ENTITY_NAME, "notificationnotfound"));
+
+
+
     }
+
+
 }

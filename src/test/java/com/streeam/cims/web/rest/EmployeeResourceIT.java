@@ -9,6 +9,7 @@ import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.service.mapper.EmployeeMapper;
 import com.streeam.cims.web.rest.errors.ExceptionTranslator;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for the {@link EmployeeResource} REST controller.
  */
 @SpringBootTest(classes = CidApp.class)
-class EmployeeResourceIT {
+public class EmployeeResourceIT {
 
     private static final String DEFAULT_LOGIN = "AAAAAAAAAA";
     private static final String UPDATED_LOGIN = "BBBBBBBBBB";
@@ -58,6 +59,9 @@ class EmployeeResourceIT {
 
     private static final Boolean DEFAULT_HIRED = false;
     private static final Boolean UPDATED_HIRED = true;
+
+    private static final String DEFAULT_LANGUAGE = "AAAAAAAAAA";
+    private static final String UPDATED_LANGUAGE = "BBBBBBBBBB";
 
     private static final byte[] DEFAULT_IMAGE = TestUtil.createByteArray(1, "0");
     private static final byte[] UPDATED_IMAGE = TestUtil.createByteArray(1, "1");
@@ -101,7 +105,7 @@ class EmployeeResourceIT {
     private Employee employee;
 
     @BeforeEach
-     void setup() {
+    public void setup() {
         MockitoAnnotations.initMocks(this);
         final EmployeeResource employeeResource = new EmployeeResource(employeeService);
         this.restEmployeeMockMvc = MockMvcBuilders.standaloneSetup(employeeResource)
@@ -118,13 +122,14 @@ class EmployeeResourceIT {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-     static Employee createEntity(EntityManager em) {
+    public static Employee createEntity(EntityManager em) {
         Employee employee = new Employee()
             .login(DEFAULT_LOGIN)
             .firstName(DEFAULT_FIRST_NAME)
             .lastName(DEFAULT_LAST_NAME)
             .email(DEFAULT_EMAIL)
             .hired(DEFAULT_HIRED)
+            .language(DEFAULT_LANGUAGE)
             .image(DEFAULT_IMAGE)
             .imageContentType(DEFAULT_IMAGE_CONTENT_TYPE);
         // Add required entity
@@ -140,13 +145,14 @@ class EmployeeResourceIT {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-     static Employee createUpdatedEntity(EntityManager em) {
+    public static Employee createUpdatedEntity(EntityManager em) {
         Employee employee = new Employee()
             .login(UPDATED_LOGIN)
             .firstName(UPDATED_FIRST_NAME)
             .lastName(UPDATED_LAST_NAME)
             .email(UPDATED_EMAIL)
             .hired(UPDATED_HIRED)
+            .language(UPDATED_LANGUAGE)
             .image(UPDATED_IMAGE)
             .imageContentType(UPDATED_IMAGE_CONTENT_TYPE);
         // Add required entity
@@ -175,13 +181,13 @@ class EmployeeResourceIT {
     }
 
     @BeforeEach
-     void initTest() {
+    public void initTest() {
         employee = createEntity(em);
     }
 
     @Test
     @Transactional
-     void createEmployee() throws Exception {
+    public void createEmployee() throws Exception {
         int databaseSizeBeforeCreate = employeeRepository.findAll().size();
 
         // Create the Employee
@@ -200,6 +206,7 @@ class EmployeeResourceIT {
         assertThat(testEmployee.getLastName()).isEqualTo(DEFAULT_LAST_NAME);
         assertThat(testEmployee.getEmail()).isEqualTo(DEFAULT_EMAIL);
         assertThat(testEmployee.isHired()).isEqualTo(DEFAULT_HIRED);
+        assertThat(testEmployee.getLanguage()).isEqualTo(DEFAULT_LANGUAGE);
         assertThat(testEmployee.getImage()).isEqualTo(DEFAULT_IMAGE);
         assertThat(testEmployee.getImageContentType()).isEqualTo(DEFAULT_IMAGE_CONTENT_TYPE);
 
@@ -209,7 +216,7 @@ class EmployeeResourceIT {
 
     @Test
     @Transactional
-     void createEmployeeWithExistingId() throws Exception {
+    public void createEmployeeWithExistingId() throws Exception {
         int databaseSizeBeforeCreate = employeeRepository.findAll().size();
 
         // Create the Employee with an existing ID
@@ -233,7 +240,7 @@ class EmployeeResourceIT {
 
     @Test
     @Transactional
-     void checkLoginIsRequired() throws Exception {
+    public void checkLoginIsRequired() throws Exception {
         int databaseSizeBeforeTest = employeeRepository.findAll().size();
         // set the field null
         employee.setLogin(null);
@@ -252,7 +259,7 @@ class EmployeeResourceIT {
 
     @Test
     @Transactional
-     void checkEmailIsRequired() throws Exception {
+    public void checkEmailIsRequired() throws Exception {
         int databaseSizeBeforeTest = employeeRepository.findAll().size();
         // set the field null
         employee.setEmail(null);
@@ -271,7 +278,7 @@ class EmployeeResourceIT {
 
     @Test
     @Transactional
-     void checkHiredIsRequired() throws Exception {
+    public void checkHiredIsRequired() throws Exception {
         int databaseSizeBeforeTest = employeeRepository.findAll().size();
         // set the field null
         employee.setHired(null);
@@ -290,7 +297,7 @@ class EmployeeResourceIT {
 
     @Test
     @Transactional
-     void getAllEmployees() throws Exception {
+    public void getAllEmployees() throws Exception {
         // Initialize the database
         employeeRepository.saveAndFlush(employee);
 
@@ -304,13 +311,14 @@ class EmployeeResourceIT {
             .andExpect(jsonPath("$.[*].lastName").value(hasItem(DEFAULT_LAST_NAME.toString())))
             .andExpect(jsonPath("$.[*].email").value(hasItem(DEFAULT_EMAIL.toString())))
             .andExpect(jsonPath("$.[*].hired").value(hasItem(DEFAULT_HIRED.booleanValue())))
+            .andExpect(jsonPath("$.[*].language").value(hasItem(DEFAULT_LANGUAGE.toString())))
             .andExpect(jsonPath("$.[*].imageContentType").value(hasItem(DEFAULT_IMAGE_CONTENT_TYPE)))
             .andExpect(jsonPath("$.[*].image").value(hasItem(Base64Utils.encodeToString(DEFAULT_IMAGE))));
     }
 
     @Test
     @Transactional
-     void getEmployee() throws Exception {
+    public void getEmployee() throws Exception {
         // Initialize the database
         employeeRepository.saveAndFlush(employee);
 
@@ -324,13 +332,14 @@ class EmployeeResourceIT {
             .andExpect(jsonPath("$.lastName").value(DEFAULT_LAST_NAME.toString()))
             .andExpect(jsonPath("$.email").value(DEFAULT_EMAIL.toString()))
             .andExpect(jsonPath("$.hired").value(DEFAULT_HIRED.booleanValue()))
+            .andExpect(jsonPath("$.language").value(DEFAULT_LANGUAGE.toString()))
             .andExpect(jsonPath("$.imageContentType").value(DEFAULT_IMAGE_CONTENT_TYPE))
             .andExpect(jsonPath("$.image").value(Base64Utils.encodeToString(DEFAULT_IMAGE)));
     }
 
     @Test
     @Transactional
-     void getNonExistingEmployee() throws Exception {
+    public void getNonExistingEmployee() throws Exception {
         // Get the employee
         restEmployeeMockMvc.perform(get("/api/employees/{id}", Long.MAX_VALUE))
             .andExpect(status().isNotFound());
@@ -338,7 +347,7 @@ class EmployeeResourceIT {
 
     @Test
     @Transactional
-     void updateEmployee() throws Exception {
+    public void updateEmployee() throws Exception {
         // Initialize the database
         employeeRepository.saveAndFlush(employee);
 
@@ -354,6 +363,7 @@ class EmployeeResourceIT {
             .lastName(UPDATED_LAST_NAME)
             .email(UPDATED_EMAIL)
             .hired(UPDATED_HIRED)
+            .language(UPDATED_LANGUAGE)
             .image(UPDATED_IMAGE)
             .imageContentType(UPDATED_IMAGE_CONTENT_TYPE);
         EmployeeDTO employeeDTO = employeeMapper.toDto(updatedEmployee);
@@ -372,6 +382,7 @@ class EmployeeResourceIT {
         assertThat(testEmployee.getLastName()).isEqualTo(UPDATED_LAST_NAME);
         assertThat(testEmployee.getEmail()).isEqualTo(UPDATED_EMAIL);
         assertThat(testEmployee.isHired()).isEqualTo(UPDATED_HIRED);
+        assertThat(testEmployee.getLanguage()).isEqualTo(UPDATED_LANGUAGE);
         assertThat(testEmployee.getImage()).isEqualTo(UPDATED_IMAGE);
         assertThat(testEmployee.getImageContentType()).isEqualTo(UPDATED_IMAGE_CONTENT_TYPE);
 
@@ -381,7 +392,7 @@ class EmployeeResourceIT {
 
     @Test
     @Transactional
-     void updateNonExistingEmployee() throws Exception {
+    public void updateNonExistingEmployee() throws Exception {
         int databaseSizeBeforeUpdate = employeeRepository.findAll().size();
 
         // Create the Employee
@@ -403,7 +414,7 @@ class EmployeeResourceIT {
 
     @Test
     @Transactional
-     void deleteEmployee() throws Exception {
+    public void deleteEmployee() throws Exception {
         // Initialize the database
         employeeRepository.saveAndFlush(employee);
 
@@ -424,7 +435,7 @@ class EmployeeResourceIT {
 
     @Test
     @Transactional
-     void searchEmployee() throws Exception {
+    public void searchEmployee() throws Exception {
         // Initialize the database
         employeeRepository.saveAndFlush(employee);
         when(mockEmployeeSearchRepository.search(queryStringQuery("id:" + employee.getId()), PageRequest.of(0, 20)))
@@ -439,13 +450,14 @@ class EmployeeResourceIT {
             .andExpect(jsonPath("$.[*].lastName").value(hasItem(DEFAULT_LAST_NAME)))
             .andExpect(jsonPath("$.[*].email").value(hasItem(DEFAULT_EMAIL)))
             .andExpect(jsonPath("$.[*].hired").value(hasItem(DEFAULT_HIRED.booleanValue())))
+            .andExpect(jsonPath("$.[*].language").value(hasItem(DEFAULT_LANGUAGE)))
             .andExpect(jsonPath("$.[*].imageContentType").value(hasItem(DEFAULT_IMAGE_CONTENT_TYPE)))
             .andExpect(jsonPath("$.[*].image").value(hasItem(Base64Utils.encodeToString(DEFAULT_IMAGE))));
     }
 
     @Test
     @Transactional
-     void equalsVerifier() throws Exception {
+    public void equalsVerifier() throws Exception {
         TestUtil.equalsVerifier(Employee.class);
         Employee employee1 = new Employee();
         employee1.setId(1L);
@@ -460,7 +472,7 @@ class EmployeeResourceIT {
 
     @Test
     @Transactional
-     void dtoEqualsVerifier() throws Exception {
+    public void dtoEqualsVerifier() throws Exception {
         TestUtil.equalsVerifier(EmployeeDTO.class);
         EmployeeDTO employeeDTO1 = new EmployeeDTO();
         employeeDTO1.setId(1L);
@@ -476,7 +488,7 @@ class EmployeeResourceIT {
 
     @Test
     @Transactional
-     void testEntityFromId() {
+    public void testEntityFromId() {
         assertThat(employeeMapper.fromId(42L).getId()).isEqualTo(42);
         assertThat(employeeMapper.fromId(null)).isNull();
     }

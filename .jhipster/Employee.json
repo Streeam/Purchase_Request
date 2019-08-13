@@ -47,6 +47,10 @@
             ]
         },
         {
+            "fieldName": "language",
+            "fieldType": "String"
+        },
+        {
             "fieldName": "image",
             "fieldType": "byte[]",
             "fieldTypeBlobContent": "image"

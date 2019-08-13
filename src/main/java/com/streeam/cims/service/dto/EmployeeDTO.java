@@ -1,10 +1,8 @@
 package com.streeam.cims.service.dto;
-import javax.persistence.Lob;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.util.Objects;
+import javax.persistence.Lob;
 
 /**
  * A DTO for the {@link com.streeam.cims.domain.Employee} entity.
@@ -30,6 +28,8 @@ public class EmployeeDTO implements Serializable {
 
     @NotNull
     private Boolean hired;
+
+    private String language;
 
     @Lob
     private byte[] image;
@@ -90,6 +90,14 @@ public class EmployeeDTO implements Serializable {
 
     public void setHired(Boolean hired) {
         this.hired = hired;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public byte[] getImage() {
@@ -170,6 +178,7 @@ public class EmployeeDTO implements Serializable {
             ", lastName='" + getLastName() + "'" +
             ", email='" + getEmail() + "'" +
             ", hired='" + isHired() + "'" +
+            ", language='" + getLanguage() + "'" +
             ", image='" + getImage() + "'" +
             ", user=" + getUserId() +
             ", user='" + getUserLogin() + "'" +

@@ -151,8 +151,7 @@ export class NotificationUpdate extends React.Component<INotificationUpdateProps
                   <Label for="notification-employee">
                     <Translate contentKey="cidApp.notification.employee">Employee</Translate>
                   </Label>
-                  <AvInput id="notification-employee" type="select" className="form-control" name="employeeId">
-                    <option value="" key="0" />
+                  <AvInput id="notification-employee" type="select" className="form-control" name="employeeId" required>
                     {employees
                       ? employees.map(otherEntity => (
                           <option value={otherEntity.id} key={otherEntity.id}>
@@ -161,6 +160,9 @@ export class NotificationUpdate extends React.Component<INotificationUpdateProps
                         ))
                       : null}
                   </AvInput>
+                  <AvFeedback>
+                    <Translate contentKey="entity.validation.required">This field is required.</Translate>
+                  </AvFeedback>
                 </AvGroup>
                 <Button tag={Link} id="cancel-save" to="/entity/notification" replace color="info">
                   <FontAwesomeIcon icon="arrow-left" />

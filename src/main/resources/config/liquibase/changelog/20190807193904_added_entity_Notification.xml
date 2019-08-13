@@ -32,7 +32,7 @@
             </column>
 
             <column name="employee_id" type="bigint">
-                <constraints nullable="true" />
+                <constraints nullable="false" />
             </column>
 
             <!-- jhipster-needle-liquibase-add-column - JHipster will add columns here, do not remove-->
@@ -64,6 +64,7 @@
             <column name="sent_date" type="datetime"/>
             <column name="read" type="boolean"/>
             <column name="format" type="string"/>
+            <column name="employee_id" type="numeric"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here, do not remove-->
         </loadData>
     </changeSet>

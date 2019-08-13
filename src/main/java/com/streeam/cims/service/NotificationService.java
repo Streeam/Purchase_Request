@@ -107,15 +107,14 @@ public class NotificationService {
             .map(notificationMapper::toDto);
     }
 
-    NotificationDTO saveWithEmployee(Employee employee) {
+    NotificationDTO saveWithEmployee(Employee employee, NotificationType notificationType, String comment) {
         Instant now = Instant.now();
         NotificationDTO notificationDTO = new NotificationDTO();
         notificationDTO.setSentDate(now);
-        notificationDTO.setFormat(NotificationType.REQUEST_TO_JOIN);
+        notificationDTO.setFormat(notificationType);
         notificationDTO.setEmployeeId(employee.getId());
         notificationDTO.setRead(false);
-        notificationDTO.setComment("A user is requesting to join your company.");
+        notificationDTO.setComment(comment);
 
-        return this.save(notificationDTO);
-    }
+        return this.save(notificationDTO);}
 }

@@ -52,6 +52,9 @@ public class Employee implements Serializable {
     @Column(name = "hired", nullable = false)
     private Boolean hired;
 
+    @Column(name = "language")
+    private String language;
+
     @Lob
     @Column(name = "image")
     private byte[] image;
@@ -59,8 +62,8 @@ public class Employee implements Serializable {
     @Column(name = "image_content_type")
     private String imageContentType;
 
-    @OneToOne(optional = false)
-    @NotNull
+    @OneToOne(optional = false)    @NotNull
+
     @JoinColumn(unique = true)
     private User user;
 
@@ -68,8 +71,7 @@ public class Employee implements Serializable {
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Notification> notifications = new HashSet<>();
 
-    @ManyToOne(cascade={CascadeType.REFRESH, CascadeType.PERSIST})
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    @ManyToOne
     @JsonIgnoreProperties("employees")
     private Company company;
 
@@ -145,6 +147,19 @@ public class Employee implements Serializable {
 
     public void setHired(Boolean hired) {
         this.hired = hired;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public Employee language(String language) {
+        this.language = language;
+        return this;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public byte[] getImage() {
@@ -250,6 +265,7 @@ public class Employee implements Serializable {
             ", lastName='" + getLastName() + "'" +
             ", email='" + getEmail() + "'" +
             ", hired='" + isHired() + "'" +
+            ", language='" + getLanguage() + "'" +
             ", image='" + getImage() + "'" +
             ", imageContentType='" + getImageContentType() + "'" +
             "}";

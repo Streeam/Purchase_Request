@@ -1,16 +1,14 @@
 package com.streeam.cims.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.streeam.cims.domain.enumeration.NotificationType;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import javax.persistence.*;
-import javax.validation.constraints.*;
-
-import org.springframework.data.elasticsearch.annotations.FieldType;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Instant;
-
-import com.streeam.cims.domain.enumeration.NotificationType;
 
 /**
  * A Notification.
@@ -45,7 +43,8 @@ public class Notification implements Serializable {
     @Column(name = "format", nullable = false)
     private NotificationType format;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
+    @NotNull
     @JsonIgnoreProperties("notifications")
     private Employee employee;
 

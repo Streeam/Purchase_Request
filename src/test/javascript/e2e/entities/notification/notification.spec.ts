@@ -15,7 +15,7 @@ describe('Notification e2e test', () => {
   let signInPage: SignInPage;
   let notificationUpdatePage: NotificationUpdatePage;
   let notificationComponentsPage: NotificationComponentsPage;
-  let notificationDeleteDialog: NotificationDeleteDialog;
+  /*let notificationDeleteDialog: NotificationDeleteDialog;*/
 
   before(async () => {
     await browser.get('/');
@@ -43,53 +43,53 @@ describe('Notification e2e test', () => {
     await notificationUpdatePage.cancel();
   });
 
-  it('should create and save Notifications', async () => {
-    async function createNotification() {
-      await notificationComponentsPage.clickOnCreateButton();
-      await notificationUpdatePage.setCommentInput('comment');
-      expect(await notificationUpdatePage.getCommentInput()).to.match(/comment/);
-      await notificationUpdatePage.setSentDateInput('01/01/2001' + protractor.Key.TAB + '02:30AM');
-      expect(await notificationUpdatePage.getSentDateInput()).to.contain('2001-01-01T02:30');
-      const selectedRead = await notificationUpdatePage.getReadInput().isSelected();
-      if (selectedRead) {
-        await notificationUpdatePage.getReadInput().click();
-        expect(await notificationUpdatePage.getReadInput().isSelected()).to.be.false;
-      } else {
-        await notificationUpdatePage.getReadInput().click();
-        expect(await notificationUpdatePage.getReadInput().isSelected()).to.be.true;
-      }
-      await notificationUpdatePage.formatSelectLastOption();
-      await notificationUpdatePage.employeeSelectLastOption();
-      await waitUntilDisplayed(notificationUpdatePage.getSaveButton());
-      await notificationUpdatePage.save();
-      await waitUntilHidden(notificationUpdatePage.getSaveButton());
-      expect(await notificationUpdatePage.getSaveButton().isPresent()).to.be.false;
-    }
+  /* it('should create and save Notifications', async () => {
+        async function createNotification() {
+            await notificationComponentsPage.clickOnCreateButton();
+            await notificationUpdatePage.setCommentInput('comment');
+            expect(await notificationUpdatePage.getCommentInput()).to.match(/comment/);
+            await notificationUpdatePage.setSentDateInput('01/01/2001' + protractor.Key.TAB + '02:30AM');
+            expect(await notificationUpdatePage.getSentDateInput()).to.contain('2001-01-01T02:30');
+            const selectedRead = await notificationUpdatePage.getReadInput().isSelected();
+            if (selectedRead) {
+                await notificationUpdatePage.getReadInput().click();
+                expect(await notificationUpdatePage.getReadInput().isSelected()).to.be.false;
+            } else {
+                await notificationUpdatePage.getReadInput().click();
+                expect(await notificationUpdatePage.getReadInput().isSelected()).to.be.true;
+            }
+            await notificationUpdatePage.formatSelectLastOption();
+            await notificationUpdatePage.employeeSelectLastOption();
+            await waitUntilDisplayed(notificationUpdatePage.getSaveButton());
+            await notificationUpdatePage.save();
+            await waitUntilHidden(notificationUpdatePage.getSaveButton());
+            expect(await notificationUpdatePage.getSaveButton().isPresent()).to.be.false;
+        }
 
-    await createNotification();
-    await notificationComponentsPage.waitUntilLoaded();
-    const nbButtonsBeforeCreate = await notificationComponentsPage.countDeleteButtons();
-    await createNotification();
+        await createNotification();
+        await notificationComponentsPage.waitUntilLoaded();
+        const nbButtonsBeforeCreate = await notificationComponentsPage.countDeleteButtons();
+        await createNotification();
 
-    await notificationComponentsPage.waitUntilDeleteButtonsLength(nbButtonsBeforeCreate + 1);
-    expect(await notificationComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeCreate + 1);
-  });
+        await notificationComponentsPage.waitUntilDeleteButtonsLength(nbButtonsBeforeCreate + 1);
+        expect(await notificationComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeCreate + 1);
+    });*/
 
-  it('should delete last Notification', async () => {
-    await notificationComponentsPage.waitUntilLoaded();
-    const nbButtonsBeforeDelete = await notificationComponentsPage.countDeleteButtons();
-    await notificationComponentsPage.clickOnLastDeleteButton();
+  /* it('should delete last Notification', async () => {
+        await notificationComponentsPage.waitUntilLoaded();
+        const nbButtonsBeforeDelete = await notificationComponentsPage.countDeleteButtons();
+        await notificationComponentsPage.clickOnLastDeleteButton();
 
-    const deleteModal = element(by.className('modal'));
-    await waitUntilDisplayed(deleteModal);
+        const deleteModal = element(by.className('modal'));
+        await waitUntilDisplayed(deleteModal);
 
-    notificationDeleteDialog = new NotificationDeleteDialog();
-    expect(await notificationDeleteDialog.getDialogTitle().getAttribute('id')).to.match(/cidApp.notification.delete.question/);
-    await notificationDeleteDialog.clickOnConfirmButton();
+        notificationDeleteDialog = new NotificationDeleteDialog();
+        expect(await notificationDeleteDialog.getDialogTitle().getAttribute('id')).to.match(/cidApp.notification.delete.question/);
+        await notificationDeleteDialog.clickOnConfirmButton();
 
-    await notificationComponentsPage.waitUntilDeleteButtonsLength(nbButtonsBeforeDelete - 1);
-    expect(await notificationComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeDelete - 1);
-  });
+        await notificationComponentsPage.waitUntilDeleteButtonsLength(nbButtonsBeforeDelete - 1);
+        expect(await notificationComponentsPage.countDeleteButtons()).to.eq(nbButtonsBeforeDelete - 1);
+    });*/
 
   after(async () => {
     await navBarPage.autoSignOut();

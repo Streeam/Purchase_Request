@@ -142,6 +142,9 @@ export class Employee extends React.Component<IEmployeeProps, IEmployeeState> {
                   <th className="hand" onClick={this.sort('hired')}>
                     <Translate contentKey="cidApp.employee.hired">Hired</Translate> <FontAwesomeIcon icon="sort" />
                   </th>
+                  <th className="hand" onClick={this.sort('language')}>
+                    <Translate contentKey="cidApp.employee.language">Language</Translate> <FontAwesomeIcon icon="sort" />
+                  </th>
                   <th className="hand" onClick={this.sort('image')}>
                     <Translate contentKey="cidApp.employee.image">Image</Translate> <FontAwesomeIcon icon="sort" />
                   </th>
@@ -167,6 +170,7 @@ export class Employee extends React.Component<IEmployeeProps, IEmployeeState> {
                     <td>{employee.lastName}</td>
                     <td>{employee.email}</td>
                     <td>{employee.hired ? 'true' : 'false'}</td>
+                    <td>{employee.language}</td>
                     <td>
                       {employee.image ? (
                         <div>

@@ -4,6 +4,7 @@ import com.streeam.cims.domain.Authority;
 import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
+import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.CompanyRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
@@ -21,7 +22,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
@@ -64,20 +68,20 @@ public class CompanyService {
         this.employeeMapper = employeeMapper;
     }
 
-//    /**
-//     * Save a company.
-//     *
-//     * @param companyDTO the entity to save.
-//     * @return the persisted entity.
-//     */
-//    public CompanyDTO save(CompanyDTO companyDTO) {
-//        log.debug("Request to save Company : {}", companyDTO);
-//        Company company = companyMapper.toEntity(companyDTO);
-//        company = companyRepository.save(company);
-//        CompanyDTO result = companyMapper.toDto(company);
-//        companySearchRepository.save(company);
-//        return result;
-//    }
+    /**
+     * Save a company.
+     *
+     * @param companyDTO the entity to save.
+     * @return the persisted entity.
+     */
+    public CompanyDTO save(CompanyDTO companyDTO) {
+        log.debug("Request to save Company : {}", companyDTO);
+        Company company = companyMapper.toEntity(companyDTO);
+        company = companyRepository.save(company);
+        CompanyDTO result = companyMapper.toDto(company);
+        companySearchRepository.save(company);
+        return result;
+    }
 
 
     /**
@@ -249,9 +253,18 @@ public class CompanyService {
         return companyRepository.findOneById(companyId);
     }
 
-    public void sendNotificationToEmployee(Employee employee) {
+    public NotificationDTO   sendNotificationToEmployee(Employee employee, NotificationType notificationType, String comment) {
 
-       NotificationDTO notificationDTO =  notificationService.saveWithEmployee(employee);
+       return notificationService.saveWithEmployee(employee, notificationType, comment);
 
+    }
+
+    public Optional<Employee> getCurrentEmployee(User user) {
+
+        return  employeeService.findOneByLogin(user.getLogin());
+    }
+
+    public NotificationDTO saveNotification(NotificationDTO result) {
+        return notificationService.save(result);
     }
 }

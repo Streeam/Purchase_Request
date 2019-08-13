@@ -176,6 +176,12 @@ export class EmployeeUpdate extends React.Component<IEmployeeUpdateProps, IEmplo
                   </Label>
                 </AvGroup>
                 <AvGroup>
+                  <Label id="languageLabel" for="employee-language">
+                    <Translate contentKey="cidApp.employee.language">Language</Translate>
+                  </Label>
+                  <AvField id="employee-language" type="text" name="language" />
+                </AvGroup>
+                <AvGroup>
                   <AvGroup>
                     <Label id="imageLabel" for="image">
                       <Translate contentKey="cidApp.employee.image">Image</Translate>

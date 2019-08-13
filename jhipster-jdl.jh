@@ -34,6 +34,8 @@ entity Employee {
     hired Boolean required
     language String
     image ImageBlob
+        // manager Boolean required
+    // manager Boolean required
 }
 
 //entity Authorities{
@@ -44,7 +46,7 @@ entity Employee {
 relationship OneToMany {
     Company{employees(id) required} to 
     Employee{company(name)}
-    Employee{notification(id)} to Notification{employee(id)}
+    Employee{notification(id)} to Notification{employee(id) required}
 
 }
 

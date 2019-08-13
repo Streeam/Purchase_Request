@@ -112,9 +112,15 @@ public class MailService {
         sendEmailFromTemplate(user, "mail/passwordResetEmail", "email.reset.title");
     }
 
-    public void sendRequestToJoinEmail(String to ,User user) {
+    public void sendRequestToJoinEmail(String managersEmail ,User userRequestingToJoin) {
 
-        log.debug("Sending a employment request notification email to '{}'", to);
-        sendEmailFromTemplate(to ,user, "mail/requestToJoinEmail", "email.request.to.join");
+        log.debug("Sending a employment request notification email to '{}'", managersEmail);
+        sendEmailFromTemplate(managersEmail ,userRequestingToJoin, "mail/requestToJoinEmail", "email.request.to.join");
+    }
+
+    public void sendRejectionEmail(String rejectedUserEmail ,User manager) {
+
+        log.debug("Sending a rejection notification email to '{}'", rejectedUserEmail);
+        sendEmailFromTemplate(rejectedUserEmail ,manager, "mail/rejectionEmail", "email.reject.application");
     }
 }

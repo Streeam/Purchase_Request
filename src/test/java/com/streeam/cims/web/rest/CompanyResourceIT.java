@@ -36,7 +36,6 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.persistence.EntityManager;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static com.streeam.cims.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -252,10 +251,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
         when(mockCompanySearchRepository.save(any(Company.class))).thenReturn(new Company());
 
-        Employee employee = EmployeeResourceIT.createRandomEmployee(em);
-        int employeesBeforeCreate = company.getEmployees().size();
-
-        company.getEmployees().add(employee);
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
 
         User user;
@@ -294,13 +289,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         assertThat(testCompany.getPostcode()).isEqualTo(DEFAULT_POSTCODE);
         assertThat(testCompany.getCompanyLogo()).isEqualTo(DEFAULT_COMPANY_LOGO);
         assertThat(testCompany.getCompanyLogoContentType()).isEqualTo(DEFAULT_COMPANY_LOGO_CONTENT_TYPE);
-        Optional<Employee> testEmployee = testCompany.getEmployees().stream().filter(employee1 -> employee1.getEmail().equalsIgnoreCase(employee.getEmail())).findFirst();
-        assertThat(testEmployee).isPresent();
-        //TODO Do the same for the user
-
-        assertThat(testCompany.getEmployees().stream().findAny().get().getLogin()).isEqualTo("user");
-        assertThat(testCompany.getEmployees().stream().findAny().get().getCompany().getName()).isEqualTo(DEFAULT_NAME);
-        //assertThat(testCompany.getEmployees().)
 
         // Validate the Company in Elasticsearch
         verify(mockCompanySearchRepository, times(1)).save(testCompany);
@@ -529,7 +517,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         companyRepository.saveAndFlush(company);
         securityAwareMockMVC();
 
-        // Get all the companyList            .with(user("user"))
+        // Get all the companyList
         restCompanyMockMvc.perform(get("/api/companies?sort=id,desc")
             .with(user("user")))
             .andExpect(status().isOk())

@@ -9,6 +9,7 @@ export default class EmployeeUpdatePage {
   lastNameInput: ElementFinder = element(by.css('input#employee-lastName'));
   emailInput: ElementFinder = element(by.css('input#employee-email'));
   hiredInput: ElementFinder = element(by.css('input#employee-hired'));
+  languageInput: ElementFinder = element(by.css('input#employee-language'));
   imageInput: ElementFinder = element(by.css('input#file_image'));
   userSelect: ElementFinder = element(by.css('select#employee-user'));
   companySelect: ElementFinder = element(by.css('select#employee-company'));
@@ -52,6 +53,14 @@ export default class EmployeeUpdatePage {
   getHiredInput() {
     return this.hiredInput;
   }
+  async setLanguageInput(language) {
+    await this.languageInput.sendKeys(language);
+  }
+
+  async getLanguageInput() {
+    return this.languageInput.getAttribute('value');
+  }
+
   async setImageInput(image) {
     await this.imageInput.sendKeys(image);
   }

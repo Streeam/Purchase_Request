@@ -73,13 +73,10 @@ public class UserService {
                 userSearchRepository.save(user);
                 this.clearUserCaches(user);
                 log.debug("Activated user: {}", user);
+                log.debug("Create and link an employee to the activated user.");
+                employeeService.createEmployeeFromUser(user);
                 return user;
             });
-
-        if(activatedUser.isPresent()){
-            log.debug("Create and link an employee to the activated user.");
-            employeeService.createEmployeeFromUser(activatedUser.get());
-        }
 
         return activatedUser;
     }

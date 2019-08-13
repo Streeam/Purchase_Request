@@ -59,6 +59,12 @@ export class EmployeeDetail extends React.Component<IEmployeeDetailProps> {
             </dt>
             <dd>{employeeEntity.hired ? 'true' : 'false'}</dd>
             <dt>
+              <span id="language">
+                <Translate contentKey="cidApp.employee.language">Language</Translate>
+              </span>
+            </dt>
+            <dd>{employeeEntity.language}</dd>
+            <dt>
               <span id="image">
                 <Translate contentKey="cidApp.employee.image">Image</Translate>
               </span>

@@ -1,11 +1,11 @@
-id;comment;sent_date;read;format
-1;Nevada;2019-08-07T17:24:10;true;OTHERS
-2;Strategist target;2019-08-06T22:14:31;true;REJECT_INVITE
-3;North Dakota Cambridgeshire;2019-08-07T14:57:54;false;COMPANY_DELETED
-4;Chips;2019-08-06T21:04:48;false;FIRED
-5;Tactics architectures Planner;2019-08-06T20:31:27;true;INVITATION
-6;infrastructure;2019-08-07T15:34:59;false;COMPANY_DELETED
-7;Arkansas Intelligent Credit Card Account;2019-08-06T19:53:23;false;INVITATION
-8;FTP;2019-08-07T01:52:21;true;OTHERS
-9;redundant;2019-08-07T00:12:30;false;NEW_EMPLOYEE
-10;digital deposit;2019-08-07T02:48:14;false;OTHERS
+id;comment;sent_date;read;format;employee_id
+1;mobile Fish;2019-08-13T00:19:09;true;NEW_EMPLOYEE;1
+2;Trace;2019-08-13T11:01:21;true;ACCEPT_INVITE;2
+3;Tasty Metal Bacon;2019-08-12T20:30:23;false;OTHERS;3
+4;Money Market Account;2019-08-13T04:21:07;true;INVITATION;4
+5;Namibia;2019-08-13T09:26:06;false;FIRED;5
+6;Multi-channelled Licensed;2019-08-13T04:11:26;false;OTHERS;6
+7;HDD;2019-08-13T02:42:16;false;COMPANY_DELETED;7
+8;envisioneer Music Public-key;2019-08-13T13:14:49;false;LEFT_COMPANY;8
+9;incentivize Tuna copy;2019-08-13T08:49:40;true;FIRED;9
+10;Industrial;2019-08-12T22:49:01;true;NEW_EMPLOYEE;10

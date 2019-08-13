@@ -65,6 +65,8 @@ describe('Employee e2e test', () => {
                 await employeeUpdatePage.getHiredInput().click();
                 expect(await employeeUpdatePage.getHiredInput().isSelected()).to.be.true;
             }
+            await employeeUpdatePage.setLanguageInput('language');
+            expect(await employeeUpdatePage.getLanguageInput()).to.match(/language/);
             await employeeUpdatePage.setImageInput(absolutePath);
             await employeeUpdatePage.userSelectLastOption();
             await employeeUpdatePage.companySelectLastOption();

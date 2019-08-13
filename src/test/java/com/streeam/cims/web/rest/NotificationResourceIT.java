@@ -1,16 +1,15 @@
 package com.streeam.cims.web.rest;
 
 import com.streeam.cims.CidApp;
-import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.Notification;
-import com.streeam.cims.domain.enumeration.NotificationType;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.repository.NotificationRepository;
 import com.streeam.cims.repository.search.NotificationSearchRepository;
 import com.streeam.cims.service.NotificationService;
 import com.streeam.cims.service.dto.NotificationDTO;
 import com.streeam.cims.service.mapper.NotificationMapper;
 import com.streeam.cims.web.rest.errors.ExceptionTranslator;
-import org.apache.commons.lang3.RandomStringUtils;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -39,11 +38,13 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import com.streeam.cims.domain.enumeration.NotificationType;
 /**
  * Integration tests for the {@link NotificationResource} REST controller.
  */
 @SpringBootTest(classes = CidApp.class)
- class NotificationResourceIT {
+public class NotificationResourceIT {
 
     private static final String DEFAULT_COMMENT = "AAAAAAAAAA";
     private static final String UPDATED_COMMENT = "BBBBBBBBBB";
@@ -95,7 +96,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private Notification notification;
 
     @BeforeEach
-     void setup() {
+    public void setup() {
         MockitoAnnotations.initMocks(this);
         final NotificationResource notificationResource = new NotificationResource(notificationService);
         this.restNotificationMockMvc = MockMvcBuilders.standaloneSetup(notificationResource)
@@ -112,12 +113,22 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-     static Notification createEntity(EntityManager em) {
+    public static Notification createEntity(EntityManager em) {
         Notification notification = new Notification()
             .comment(DEFAULT_COMMENT)
             .sentDate(DEFAULT_SENT_DATE)
             .read(DEFAULT_READ)
             .format(DEFAULT_FORMAT);
+        // Add required entity
+        Employee employee;
+        if (TestUtil.findAll(em, Employee.class).isEmpty()) {
+            employee = EmployeeResourceIT.createEntity(em);
+            em.persist(employee);
+            em.flush();
+        } else {
+            employee = TestUtil.findAll(em, Employee.class).get(0);
+        }
+        notification.setEmployee(employee);
         return notification;
     }
     /**
@@ -126,43 +137,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-     static Notification createUpdatedEntity(EntityManager em) {
+    public static Notification createUpdatedEntity(EntityManager em) {
         Notification notification = new Notification()
             .comment(UPDATED_COMMENT)
             .sentDate(UPDATED_SENT_DATE)
             .read(UPDATED_READ)
             .format(UPDATED_FORMAT);
-        return notification;
-    }
-
-    static Notification createRandomNotification(EntityManager em) {
-        Notification notification = new Notification()
-            .comment(RandomStringUtils.randomAlphabetic(45))
-            .sentDate(Instant.now())
-            .read(false)
-            .format(NotificationType.REQUEST_TO_JOIN);
-
-        /**
-         *         User user = UserResourceIT.createEntity(em);
-         *         em.persist(user);
-         *         em.flush();
-         *         employee.setUser(user);
-         */
-        Employee employee = EmployeeResourceIT.createRandomEmployee(em);
-        em.persist(employee);
-        em.flush();
+        // Add required entity
+        Employee employee;
+        if (TestUtil.findAll(em, Employee.class).isEmpty()) {
+            employee = EmployeeResourceIT.createUpdatedEntity(em);
+            em.persist(employee);
+            em.flush();
+        } else {
+            employee = TestUtil.findAll(em, Employee.class).get(0);
+        }
         notification.setEmployee(employee);
         return notification;
     }
 
     @BeforeEach
-     void initTest() {
+    public void initTest() {
         notification = createEntity(em);
     }
 
     @Test
     @Transactional
-     void createNotification() throws Exception {
+    public void createNotification() throws Exception {
         int databaseSizeBeforeCreate = notificationRepository.findAll().size();
 
         // Create the Notification
@@ -187,7 +188,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void createNotificationWithExistingId() throws Exception {
+    public void createNotificationWithExistingId() throws Exception {
         int databaseSizeBeforeCreate = notificationRepository.findAll().size();
 
         // Create the Notification with an existing ID
@@ -211,7 +212,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void checkSentDateIsRequired() throws Exception {
+    public void checkSentDateIsRequired() throws Exception {
         int databaseSizeBeforeTest = notificationRepository.findAll().size();
         // set the field null
         notification.setSentDate(null);
@@ -230,7 +231,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void checkReadIsRequired() throws Exception {
+    public void checkReadIsRequired() throws Exception {
         int databaseSizeBeforeTest = notificationRepository.findAll().size();
         // set the field null
         notification.setRead(null);
@@ -249,7 +250,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void checkFormatIsRequired() throws Exception {
+    public void checkFormatIsRequired() throws Exception {
         int databaseSizeBeforeTest = notificationRepository.findAll().size();
         // set the field null
         notification.setFormat(null);
@@ -268,7 +269,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void getAllNotifications() throws Exception {
+    public void getAllNotifications() throws Exception {
         // Initialize the database
         notificationRepository.saveAndFlush(notification);
 
@@ -282,10 +283,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             .andExpect(jsonPath("$.[*].read").value(hasItem(DEFAULT_READ.booleanValue())))
             .andExpect(jsonPath("$.[*].format").value(hasItem(DEFAULT_FORMAT.toString())));
     }
-
+    
     @Test
     @Transactional
-     void getNotification() throws Exception {
+    public void getNotification() throws Exception {
         // Initialize the database
         notificationRepository.saveAndFlush(notification);
 
@@ -302,7 +303,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void getNonExistingNotification() throws Exception {
+    public void getNonExistingNotification() throws Exception {
         // Get the notification
         restNotificationMockMvc.perform(get("/api/notifications/{id}", Long.MAX_VALUE))
             .andExpect(status().isNotFound());
@@ -310,7 +311,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void updateNotification() throws Exception {
+    public void updateNotification() throws Exception {
         // Initialize the database
         notificationRepository.saveAndFlush(notification);
 
@@ -347,7 +348,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void updateNonExistingNotification() throws Exception {
+    public void updateNonExistingNotification() throws Exception {
         int databaseSizeBeforeUpdate = notificationRepository.findAll().size();
 
         // Create the Notification
@@ -369,7 +370,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void deleteNotification() throws Exception {
+    public void deleteNotification() throws Exception {
         // Initialize the database
         notificationRepository.saveAndFlush(notification);
 
@@ -390,7 +391,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void searchNotification() throws Exception {
+    public void searchNotification() throws Exception {
         // Initialize the database
         notificationRepository.saveAndFlush(notification);
         when(mockNotificationSearchRepository.search(queryStringQuery("id:" + notification.getId()), PageRequest.of(0, 20)))
@@ -408,7 +409,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void equalsVerifier() throws Exception {
+    public void equalsVerifier() throws Exception {
         TestUtil.equalsVerifier(Notification.class);
         Notification notification1 = new Notification();
         notification1.setId(1L);
@@ -423,7 +424,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void dtoEqualsVerifier() throws Exception {
+    public void dtoEqualsVerifier() throws Exception {
         TestUtil.equalsVerifier(NotificationDTO.class);
         NotificationDTO notificationDTO1 = new NotificationDTO();
         notificationDTO1.setId(1L);
@@ -439,7 +440,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void testEntityFromId() {
+    public void testEntityFromId() {
         assertThat(notificationMapper.fromId(42L).getId()).isEqualTo(42);
         assertThat(notificationMapper.fromId(null)).isNull();
     }

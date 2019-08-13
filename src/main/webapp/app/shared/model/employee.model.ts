@@ -7,6 +7,7 @@ export interface IEmployee {
   lastName?: string;
   email?: string;
   hired?: boolean;
+  language?: string;
   imageContentType?: string;
   image?: any;
   userLogin?: string;
