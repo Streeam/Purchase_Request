@@ -9,9 +9,11 @@ import com.streeam.cims.repository.CompanyRepository;
 import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.service.CompanyService;
+import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
 import com.streeam.cims.web.rest.errors.ExceptionTranslator;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -92,6 +94,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private  AuthorityRepository authorityRepository;
 
     @Autowired
+    private MailService mailService;
+
+    @Autowired
     private CompanyMapper companyMapper;
 
     @Autowired
@@ -132,7 +137,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
      void setup() {
         MockitoAnnotations.initMocks(this);
 
-        final CompanyResource companyResource = new CompanyResource(companyService, authorityRepository);
+        final CompanyResource companyResource = new CompanyResource(companyService, authorityRepository, mailService);
         this.restCompanyMockMvc = MockMvcBuilders.standaloneSetup(companyResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -189,6 +194,37 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             .postcode(UPDATED_POSTCODE)
             .companyLogo(UPDATED_COMPANY_LOGO)
             .companyLogoContentType(UPDATED_COMPANY_LOGO_CONTENT_TYPE);
+        // Add required entity
+        Employee employee;
+        if (TestUtil.findAll(em, Employee.class).isEmpty()) {
+            employee = EmployeeResourceIT.createUpdatedEntity(em);
+            em.persist(employee);
+            em.flush();
+        } else {
+            employee = TestUtil.findAll(em, Employee.class).get(0);
+        }
+        company.getEmployees().add(employee);
+        return company;
+    }
+
+    /**
+     * Create an updated entity for this test.
+     *
+     * This is a static method, as tests for other entities might also need it,
+     * if they test an entity which requires the current entity.
+     */
+    static Company createRandomCompany(EntityManager em) {
+        Company company = new Company()
+            .name(RandomStringUtils.randomAlphabetic(8))
+            .email(RandomStringUtils.randomAlphabetic(8) + "@localhost.com")
+            .phone(RandomStringUtils.randomNumeric(9))
+            .addressLine1(RandomStringUtils.randomAlphabetic(8))
+            .addressLine2(RandomStringUtils.randomAlphabetic(8))
+            .city(RandomStringUtils.randomAlphabetic(7))
+            .country(RandomStringUtils.randomAlphabetic(8))
+            .postcode(RandomStringUtils.randomAlphabetic(8))
+            .companyLogo(TestUtil.createByteArray(1, "1"))
+            .companyLogoContentType(RandomStringUtils.randomAlphabetic(8));
         // Add required entity
         Employee employee;
         if (TestUtil.findAll(em, Employee.class).isEmpty()) {

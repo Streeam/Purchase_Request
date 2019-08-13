@@ -1,6 +1,7 @@
 package com.streeam.cims.web.rest;
 
 import com.streeam.cims.domain.Authority;
+import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
@@ -208,39 +209,44 @@ public class CompanyResource {
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
-
-
-
-
     /**
      * {@code POST  /companies/:id/request-to-join} : request to join a company/companyID
      *
-     * @param companyId the id of the companyDTO to to which the user wants to join.
+     * @param companyId the id of the companyDTO to to which the user wants to  join.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
-    @PostMapping("companies/{companyId}/request-to-join")
+    @PostMapping("companies/{companyId}/requestToJoin")
     public ResponseEntity<CompanyDTO> requestToJoinCompany(@PathVariable Long companyId) {
-        log.debug("REST request to request to join the company : {}", companyId);
-        // get the user (email and login)
+        log.debug("REST request to join the company : {}", companyId);
+
         Optional<User> user = companyService.findCurrentUser();
+
         if (!user.isPresent()) {
             throw new ResourceNotFoundException("No user logged in.");
         }
         if(companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.MANAGER,AuthoritiesConstants.EMPLOYEE)){
             throw new BadRequestAlertException("You don't have the eligible to request to join a company", ENTITY_NAME, "requesttojoinforbiden");
         }
-        String managersEmail = companyService.getCompaniesManagerEmail(companyId);
-        if("No company with this id found.".equals(managersEmail)){
+
+        Optional<Company> company = companyService.findCompanyById(companyId);
+
+        if(!company.isPresent()){
             throw new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid");
         }
-        if("No user with the role of manager found at this company.".equals(managersEmail)){
-            throw new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "requesttojoinforbiden");
+
+        Optional<Employee> manager = companyService.getCompanysManager(company.get());
+
+        if(!manager.isPresent()){
+            throw new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager");
         }
 
-        mailService.sendRequestToJoinEmail(user.get());
+        String managersEmail = companyService.getEmployeeEmail(manager.get());
+
         // send an email to the manager to inform him of a employee wanting to join the company
+        mailService.sendRequestToJoinEmail(managersEmail, user.get());
 
         // create a Notification(REQUEST_TO_JOIN) and link it to the manager
+        companyService.sendNotificationToEmployee(manager.get());
 
         return ResponseUtil.wrapOrNotFound(null);
     }

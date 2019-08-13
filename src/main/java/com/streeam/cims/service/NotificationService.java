@@ -1,21 +1,23 @@
 package com.streeam.cims.service;
 
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.Notification;
+import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.NotificationRepository;
 import com.streeam.cims.repository.search.NotificationSearchRepository;
 import com.streeam.cims.service.dto.NotificationDTO;
 import com.streeam.cims.service.mapper.NotificationMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Optional;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
 /**
  * Service Implementation for managing {@link Notification}.
@@ -103,5 +105,17 @@ public class NotificationService {
         log.debug("Request to search for a page of Notifications for query {}", query);
         return notificationSearchRepository.search(queryStringQuery(query), pageable)
             .map(notificationMapper::toDto);
+    }
+
+    NotificationDTO saveWithEmployee(Employee employee) {
+        Instant now = Instant.now();
+        NotificationDTO notificationDTO = new NotificationDTO();
+        notificationDTO.setSentDate(now);
+        notificationDTO.setFormat(NotificationType.REQUEST_TO_JOIN);
+        notificationDTO.setEmployeeId(employee.getId());
+        notificationDTO.setRead(false);
+        notificationDTO.setComment("A user is requesting to join your company.");
+
+        return this.save(notificationDTO);
     }
 }

@@ -2,13 +2,14 @@ package com.streeam.cims.web.rest;
 
 import com.streeam.cims.CidApp;
 import com.streeam.cims.domain.Notification;
+import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.NotificationRepository;
 import com.streeam.cims.repository.search.NotificationSearchRepository;
 import com.streeam.cims.service.NotificationService;
 import com.streeam.cims.service.dto.NotificationDTO;
 import com.streeam.cims.service.mapper.NotificationMapper;
 import com.streeam.cims.web.rest.errors.ExceptionTranslator;
-
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -37,8 +38,6 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import com.streeam.cims.domain.enumeration.NotificationType;
 /**
  * Integration tests for the {@link NotificationResource} REST controller.
  */
@@ -132,6 +131,15 @@ import com.streeam.cims.domain.enumeration.NotificationType;
             .sentDate(UPDATED_SENT_DATE)
             .read(UPDATED_READ)
             .format(UPDATED_FORMAT);
+        return notification;
+    }
+
+    static Notification createRandomNotification(EntityManager em) {
+        Notification notification = new Notification()
+            .comment(RandomStringUtils.randomAlphabetic(45))
+            .sentDate(Instant.now())
+            .read(false)
+            .format(NotificationType.REQUEST_TO_JOIN);
         return notification;
     }
 

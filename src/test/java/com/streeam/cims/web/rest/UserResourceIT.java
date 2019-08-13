@@ -43,6 +43,8 @@ class UserResourceIT {
 
     private static final String DEFAULT_LOGIN = "johndoe";
     private static final String UPDATED_LOGIN = "jhipster";
+    private static final String DEFAULT_USER2_LOGIN = "legolas";
+    private static final String DEFAULT_USER3_LOGIN = "boromir";
 
     private static final Long DEFAULT_ID = 1L;
 
@@ -105,8 +107,8 @@ class UserResourceIT {
 
     @BeforeEach
     void setup() {
-        cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).clear();
-        cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE).clear();
+        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).clear();
+        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).clear();
         UserResource userResource = new UserResource(userService, userRepository, mailService, mockUserSearchRepository);
 
         this.restUserMockMvc = MockMvcBuilders.standaloneSetup(userResource)
@@ -118,7 +120,6 @@ class UserResourceIT {
 
     /**
      * Create a User.
-     *
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which has a required relationship to the User entity.
      */
@@ -132,6 +133,18 @@ class UserResourceIT {
         user.setLastName(DEFAULT_LASTNAME);
         user.setImageUrl(DEFAULT_IMAGEURL);
         user.setLangKey(DEFAULT_LANGKEY);
+        return user;
+    }
+    static User createRandomUser() {
+        User user = new User();
+        user.setLogin(DEFAULT_LOGIN + RandomStringUtils.randomAlphabetic(5));
+        user.setPassword(RandomStringUtils.random(60));
+        user.setActivated(false);
+        user.setEmail(RandomStringUtils.randomAlphabetic(5) + DEFAULT_EMAIL);
+        user.setFirstName(RandomStringUtils.randomAlphabetic(8));
+        user.setLastName(RandomStringUtils.randomAlphabetic(8));
+        user.setImageUrl(RandomStringUtils.randomAlphabetic(10));
+        user.setLangKey(RandomStringUtils.randomAlphabetic(5));
         return user;
     }
 
@@ -291,7 +304,7 @@ class UserResourceIT {
         userRepository.saveAndFlush(user);
         mockUserSearchRepository.save(user);
 
-        assertThat(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).get(user.getLogin())).isNull();
+        assertThat(Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).get(user.getLogin())).isNull();
 
         // Get the user
         restUserMockMvc.perform(get("/api/users/{login}", user.getLogin()))
@@ -304,7 +317,7 @@ class UserResourceIT {
             .andExpect(jsonPath("$.imageUrl").value(DEFAULT_IMAGEURL))
             .andExpect(jsonPath("$.langKey").value(DEFAULT_LANGKEY));
 
-        assertThat(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE).get(user.getLogin())).isNotNull();
+        assertThat(Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).get(user.getLogin())).isNotNull();
     }
 
     @Test

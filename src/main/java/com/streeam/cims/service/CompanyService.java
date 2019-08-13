@@ -8,6 +8,7 @@ import com.streeam.cims.repository.CompanyRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.dto.CompanyDTO;
+import com.streeam.cims.service.dto.NotificationDTO;
 import com.streeam.cims.service.dto.UserDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
 import com.streeam.cims.service.mapper.EmployeeMapper;
@@ -48,10 +49,13 @@ public class CompanyService {
 
     private final EmployeeMapper employeeMapper;
 
+    private final NotificationService notificationService;
+
     public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserService userService,
                           CompanySearchRepository companySearchRepository, EmployeeService employeeService, EmployeeMapper employeeMapper,
-                          UserMapper userMapper) {
+                          UserMapper userMapper, NotificationService notificationService) {
         this.userService = userService;
+        this.notificationService = notificationService;
         this.userMapper = userMapper;
         this.companyRepository = companyRepository;
         this.companyMapper = companyMapper;
@@ -141,9 +145,8 @@ public class CompanyService {
         // Find all employees from the company and the manager and remove the ROLE_EMPLOYEE and ROLE_MANAGER
 
         Optional<Company> company = companyRepository.findOneById(id);
-        Set<Employee> employees = new HashSet<>();
         if(company.isPresent()){
-            employees = company.get().getEmployees();
+            Set<Employee>   employees = company.get().getEmployees();
             employees.stream().filter(employee-> {
                 Optional<User> user = userService.findOneByLogin(employee.getLogin());
                 boolean managersAndEmployees = userService.checkIfUserHasRoles(user.get(), AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE);
@@ -230,15 +233,25 @@ public class CompanyService {
         return new PageImpl<>(Arrays.asList(companyDTO));
     }
 
-    public String getCompaniesManagerEmail(Long companyId) {
+    public Optional<Employee> getCompanysManager(Company company) {
 
-        Optional<Company> company = companyRepository.findOneById(companyId);
-        if(!company.isPresent()){return "No company with this id found.";}
-
-        Optional<Employee> manager = company.get().getEmployees().stream()
+        return company.getEmployees().stream()
             .filter(employee -> employee.getUser().getAuthorities().stream().anyMatch(authority-> authority.getName().equals(AuthoritiesConstants.MANAGER))).findAny();
-        if(!manager.isPresent()){return "No user with the role of manager found at this company.";}
 
-        return manager.get().getEmail();
+    }
+
+    public String getEmployeeEmail(Employee employee) {
+        log.debug("Retrieving the employee email address:{}", employee.getEmail());
+        return employee.getEmail();
+    }
+
+    public Optional<Company> findCompanyById(Long companyId) {
+        return companyRepository.findOneById(companyId);
+    }
+
+    public void sendNotificationToEmployee(Employee employee) {
+
+       NotificationDTO notificationDTO =  notificationService.saveWithEmployee(employee);
+
     }
 }

@@ -82,6 +82,18 @@ public class MailService {
         sendEmail(user.getEmail(), subject, content, false, true);
     }
 
+
+    @Async
+    private void sendEmailFromTemplate(String sendTo, User user, String templateName, String titleKey) {
+        Locale locale = Locale.forLanguageTag(user.getLangKey());
+        Context context = new Context(locale);
+        context.setVariable(USER, user);
+        context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
+        String content = templateEngine.process(templateName, context);
+        String subject = messageSource.getMessage(titleKey, null, locale);
+        sendEmail(sendTo, subject, content, false, true);
+    }
+
     @Async
     public void sendActivationEmail(User user) {
         log.debug("Sending activation email to '{}'", user.getEmail());
@@ -100,9 +112,9 @@ public class MailService {
         sendEmailFromTemplate(user, "mail/passwordResetEmail", "email.reset.title");
     }
 
-    public void sendRequestToJoinEmail(User user) {
+    public void sendRequestToJoinEmail(String to ,User user) {
 
-        log.debug("Sending a employment request notification email to '{}'", user.getEmail());
-        //sendEmailFromTemplate(user, "mail/passwordResetEmail", "email.request.to.join");
+        log.debug("Sending a employment request notification email to '{}'", to);
+        sendEmailFromTemplate(to ,user, "mail/requestToJoinEmail", "email.request.to.join");
     }
 }
