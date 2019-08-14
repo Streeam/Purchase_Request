@@ -9,6 +9,7 @@ import com.streeam.cims.repository.CompanyRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.dto.CompanyDTO;
+import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.service.dto.NotificationDTO;
 import com.streeam.cims.service.dto.UserDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
@@ -87,26 +88,24 @@ public class CompanyService {
     /**
      * Save a company.
      *
-     * @param companyDTO the entity to save.
+     * @param company the entity to save.
      * @param employee
      * @return the persisted entity.
      */
-    public CompanyDTO saveWithEmployee(CompanyDTO companyDTO, Optional<Employee> employee) {
-        log.debug("Request to save Company : {}", companyDTO);
-        Company company = companyMapper.toEntity(companyDTO);
-        if(employee.isPresent()) {
-            employee.get().setHired(true);
-            Set<Employee> employees = company.getEmployees();
-            employees.add(employee.get());
-            company.setEmployees(employees);
-            company = companyRepository.save(company);
-            employeeService.saveWithCompany(employee.get(), company);
-            log.debug("Request to save Company with employee: {}", employee.get().getLogin());
-        }
+    public CompanyDTO saveWithEmployee(Company company, Employee employee) {
+
+        employee.setHired(true);
+        company.getEmployees().add(employee);
+        EmployeeDTO employeeDTO = employeeService.saveWithCompany(employee, company);
+
+        Company updatedCompany = companyRepository.save(company);
 
 
-        CompanyDTO result = companyMapper.toDto(company);
-        companySearchRepository.save(company);
+        log.debug("Request to save Company with employee: {}", employeeDTO);
+
+        CompanyDTO result = companyMapper.toDto(updatedCompany);
+        companySearchRepository.save(updatedCompany);
+        log.debug("Request to save Company : {}", result);
         return result;
     }
 
@@ -266,5 +265,22 @@ public class CompanyService {
 
     public NotificationDTO saveNotification(NotificationDTO result) {
         return notificationService.save(result);
+    }
+
+    public Optional<Employee> findEmployeeByLogin(String userEmail) {
+        return  employeeService.findOneByLogin(userEmail);
+    }
+
+    public Optional<User> findUserByLogin(String userEmail) {
+        return userService.findOneByLogin(userEmail);
+    }
+
+    public CompanyDTO saveUserEmployeeAndComapany(Employee employee, User user, Company company) {
+
+        UserDTO userDTO = userService.save(user);
+        User updatedUser = userMapper.userDTOToUser(userDTO);
+
+       CompanyDTO companyDTO = saveWithEmployee(company, employee);
+        return  companyDTO;
     }
 }

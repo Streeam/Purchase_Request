@@ -7,6 +7,7 @@ import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.CompanyService;
 import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.dto.CompanyDTO;
+import com.streeam.cims.service.mapper.CompanyMapper;
 import com.streeam.cims.web.rest.errors.BadRequestAlertException;
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
@@ -14,6 +15,7 @@ import io.github.jhipster.web.util.ResponseUtil;
 import org.elasticsearch.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -50,6 +52,9 @@ public class CompanyResource {
 
     private final MailService mailService;
 
+    @Autowired
+    private CompanyMapper companyMapper;
+
     private final AuthorityRepository authorityRepository;
 
     public CompanyResource(CompanyService companyService, AuthorityRepository authorityRepository, MailService mailService) {
@@ -66,6 +71,7 @@ public class CompanyResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/companies")
+    @PreAuthorize("hasAnyRole(\"" + AuthoritiesConstants.USER + "\" , \"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<CompanyDTO> createCompany(@Valid @RequestBody CompanyDTO companyDTO) throws URISyntaxException {
         log.debug("REST request to save Company : {}", companyDTO);
         if (companyDTO.getId() != null) {
@@ -79,22 +85,22 @@ public class CompanyResource {
             throw new BadRequestAlertException("This company name is already being used", ENTITY_NAME, "emailexists");
         }
 
-        Optional<Employee> employee = Optional.empty();
-        Optional<User> user = companyService.findCurrentUser();
-        if(user.isPresent()){
+        User user = companyService.findCurrentUser().orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
 
-            if(companyService.checkUserHasRoles(user.get() , AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER,
-                AuthoritiesConstants.ADMIN)){
-                throw new BadRequestAlertException("You can't create a company if you already have a company or are employed by another", ENTITY_NAME, "wrongrole");
-            }
+        Employee employee = companyService.findEmployeeFromUser(user).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
-            Set<Authority> authorities = user.get().getAuthorities();
-            authorityRepository.findById(AuthoritiesConstants.MANAGER).ifPresent(authorities::add);
-            user.get().setAuthorities(authorities);
-            employee =  companyService.findEmployeeFromUser(user.get());
+        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN)) {
+            throw new BadRequestAlertException("You can't create a company if you already have a company or are employed by another", ENTITY_NAME, "wrongrole");
         }
 
-        CompanyDTO result = companyService.saveWithEmployee(companyDTO,employee);
+        Set<Authority> authorities = user.getAuthorities();
+        authorityRepository.findById(AuthoritiesConstants.MANAGER).ifPresent(authorities::add);
+        user.setAuthorities(authorities);
+        employee.setUser(user);
+
+        Company company = companyMapper.toEntity(companyDTO);
+
+        CompanyDTO result = companyService.saveUserEmployeeAndComapany(employee,user,company);
 
         return ResponseEntity.created(new URI("/api/companies/" + result.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
@@ -136,14 +142,14 @@ public class CompanyResource {
         Page<CompanyDTO> page = new PageImpl<>(new ArrayList<>());
 
         Optional<User> user = companyService.findCurrentUser();
-        if(!user.isPresent()){
+        if (!user.isPresent()) {
             throw new ResourceNotFoundException("No user logged in.");
         }
 
-        if(companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)){
+        if (companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)) {
             page = companyService.findAll(pageable);
         }
-        if (companyService.checkUserHasRoles(user.get(),AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)){
+        if (companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
             page = companyService.findCompanyWithCurrentUser(user.get());
         }
 
@@ -175,8 +181,8 @@ public class CompanyResource {
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
         Optional<User> user = companyService.findCurrentUser();
 
-        if(user.isPresent() && !companyService.checkUserHasRoles(user.get() , AuthoritiesConstants.MANAGER,
-            AuthoritiesConstants.ADMIN)){
+        if (user.isPresent() && !companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.MANAGER,
+            AuthoritiesConstants.ADMIN)) {
             throw new BadRequestAlertException("You don't have the authority to delete this company", ENTITY_NAME, "companyremoveforbiden");
         }
 
@@ -214,13 +220,13 @@ public class CompanyResource {
 
         // find the latest rejected notification. If it has been less then 48h since
 
-        User user =  companyService.findCurrentUser().orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
+        User user = companyService.findCurrentUser().orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
 
-        if(companyService.checkUserHasRoles(user, AuthoritiesConstants.MANAGER,AuthoritiesConstants.EMPLOYEE)){
+        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
             throw new BadRequestAlertException("You don't have the eligible to request to join a company", ENTITY_NAME, "requesttojoinforbiden");
         }
 
-        Company company = companyService.findCompanyById(companyId).orElseThrow(()-> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+        Company company = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
         Employee manager = companyService.getCompanysManager(company).orElseThrow(() -> new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
 
@@ -243,16 +249,26 @@ public class CompanyResource {
      */
     @PostMapping("/companies/{companyId}/hire-employee/{userEmail}")
     @PreAuthorize("hasRole(\"" + AuthoritiesConstants.MANAGER + "\")")
-    public ResponseEntity<CompanyDTO> hireEmployee(@PathVariable Long companyId ,@PathVariable String userEmail) {
+    public ResponseEntity<CompanyDTO> hireEmployee(@PathVariable Long companyId, @PathVariable String userEmail) {
         log.debug("REST request to hire the user: {}", userEmail);
 
+        Company company = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
         // find the user and make him EMPLOYEE
+        Employee employee = companyService.findEmployeeByLogin(userEmail).orElseThrow(() -> new BadRequestAlertException("No employee linked to this login", ENTITY_NAME, "noemployeewithlogin"));
 
         // Update the user, the employee and the company
 
+        User user = companyService.findUserByLogin(userEmail).orElseThrow(() -> new BadRequestAlertException("User with " + userEmail + " login not found.", ENTITY_NAME, "nouserwithlogin"));
+
+        Authority employeeRole = new Authority();
+        employeeRole.setName(AuthoritiesConstants.EMPLOYEE);
+        user.getAuthorities().add(employeeRole);
+        CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(employee, user, company);
         // send a notification and an email to the user to inform him.
 
-        return ResponseUtil.wrapOrNotFound(null);
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))
+            .body(companyDTO);
     }
 
     /**
@@ -263,27 +279,24 @@ public class CompanyResource {
      */
     @PostMapping("/companies/{companyId}/reject-employee/{userEmail}/notifications/{id}")
     @PreAuthorize("hasRole(\"" + AuthoritiesConstants.MANAGER + "\")")
-    public void rejectEmployee(@PathVariable Long companyId,@PathVariable String userEmail, @PathVariable Long id){
+    public void rejectEmployee(@PathVariable Long companyId, @PathVariable String userEmail, @PathVariable Long id) {
         log.debug("REST to reject a user's request to join a company.");
 
-        Company company = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid") );
+        Company company = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
-        User user =  companyService.findCurrentUser().orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
+        User user = companyService.findCurrentUser().orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
 
         mailService.sendRequestToJoinEmail(userEmail, user);
 
-        Employee employee = companyService.findEmployeeFromUser(user).orElseThrow(()-> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+        Employee employee = companyService.findEmployeeFromUser(user).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
-        companyService.sendNotificationToEmployee(employee, NotificationType.REJECT_INVITE, "Your application to join " +company.getName() + " has been rejected!");
+        companyService.sendNotificationToEmployee(employee, NotificationType.REJECT_INVITE, "Your application to join " + company.getName() + " has been rejected!");
 
         // obtain the user notification, set it to true and save it
 
         Notification managersNotification = employee.getNotifications().stream().filter(notification -> notification.getId().equals(id)).findFirst()
-            .orElseThrow(()-> new BadRequestAlertException("No notification found for this id number: " + id, ENTITY_NAME, "notificationnotfound"));
-
-
+            .orElseThrow(() -> new BadRequestAlertException("No notification found for this id number: " + id, ENTITY_NAME, "notificationnotfound"));
 
     }
-
 
 }

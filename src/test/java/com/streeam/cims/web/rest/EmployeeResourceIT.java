@@ -492,4 +492,5 @@ public class EmployeeResourceIT {
         assertThat(employeeMapper.fromId(42L).getId()).isEqualTo(42);
         assertThat(employeeMapper.fromId(null)).isNull();
     }
+
 }

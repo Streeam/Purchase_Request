@@ -10,6 +10,7 @@ import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.dto.UserDTO;
+import com.streeam.cims.service.mapper.UserMapper;
 import com.streeam.cims.service.util.RandomUtil;
 import com.streeam.cims.web.rest.errors.EmailAlreadyUsedException;
 import com.streeam.cims.web.rest.errors.InvalidPasswordException;
@@ -40,6 +41,8 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final UserMapper userMapper;
+
     private final PasswordEncoder passwordEncoder;
 
     private final UserSearchRepository userSearchRepository;
@@ -53,7 +56,8 @@ public class UserService {
 
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserSearchRepository userSearchRepository,
-                       AuthorityRepository authorityRepository, CacheManager cacheManager, EmployeeService employeeService) {
+                       AuthorityRepository authorityRepository, CacheManager cacheManager, EmployeeService employeeService, UserMapper userMapper) {
+        this.userMapper = userMapper;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userSearchRepository = userSearchRepository;
@@ -358,7 +362,7 @@ public class UserService {
     }
 
 
-    public Set<Authority> allocateAuthority(String role, User user) {
+    public static Set<Authority> allocateAuthority(String role, User user) {
         Set<Authority> authorities  = new HashSet<>();
         Authority authority = new Authority();
         authority.setName(role);
@@ -367,4 +371,12 @@ public class UserService {
         return authorities;
     }
 
+    public UserDTO save(User user) {
+        User updatedUser = userRepository.save(user);
+        UserDTO result = userMapper.userToUserDTO(updatedUser);
+        userSearchRepository.save(user);
+        log.debug("Save User : {}", result);
+
+        return result;
+    }
 }

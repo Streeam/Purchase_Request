@@ -1,6 +1,7 @@
 package com.streeam.cims.web.rest;
 
 import com.streeam.cims.CidApp;
+import com.streeam.cims.domain.Authority;
 import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
@@ -9,7 +10,9 @@ import com.streeam.cims.repository.CompanyRepository;
 import com.streeam.cims.repository.EmployeeRepository;
 import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
+import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.CompanyService;
+import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
@@ -103,6 +106,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     @Autowired
     private CompanyService companyService;
 
+    @Autowired
+    private EmployeeService employeeService;
+
     /**
      * This repository is mocked in the com.streeam.cims.repository.search test package.
      *
@@ -130,10 +136,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     private Company company;
 
-    @Mock
-    private CompanyService mockCompanyService;
-
-    @Mock
+    @Autowired
     private EmployeeRepository employeeRepository;
 
     @Mock
@@ -220,7 +223,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-    static Company createRandomCompany(EntityManager em) {
+    static Company createRandomCompany(EntityManager em, Employee employee) {
         Company company = new Company()
             .name(RandomStringUtils.randomAlphabetic(8))
             .email(RandomStringUtils.randomAlphabetic(8) + "@localhost.com")
@@ -233,9 +236,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             .companyLogo(TestUtil.createByteArray(1, "1"))
             .companyLogoContentType(RandomStringUtils.randomAlphabetic(8));
         // Add required entity
-        Employee employee = EmployeeResourceIT.createUpdatedEntity(em);
-        em.persist(employee);
-        em.flush();
+        if (TestUtil.findAll(em, Employee.class).isEmpty()) {
+            employee = EmployeeResourceIT.createUpdatedEntity(em);
+            em.persist(employee);
+            em.flush();
+        } else {
+            employee = TestUtil.findAll(em, Employee.class).get(0);
+        }
         company.getEmployees().add(employee);
         return company;
     }
@@ -252,20 +259,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         when(mockCompanySearchRepository.save(any(Company.class))).thenReturn(new Company());
 
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
-
-        User user;
+        int employeesInTheCompanyBeforeCreate = company.getEmployees().size();
 
         // Create security-aware mockMvc
         securityAwareMockMVC();
-
-        if(TestUtil.findAll(em, User.class).isEmpty()){
-            user = UserResourceIT.createEntity(em);
+        User user = UserResourceIT.createEntity(em);
             em.persist(user);
             em.flush();
-        }
-        else {
-            user = TestUtil.findAll(em, User.class).get(0);
-        }
 
         // Create the Company
         CompanyDTO companyDTO = companyMapper.toDto(company);
@@ -317,6 +317,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         verify(mockCompanyRepository, times(0)).save(company);
         // Validate the Company in Elasticsearch
         verify(mockCompanySearchRepository, times(0)).save(company);
+    }
+
+    @Test
+    @Transactional
+    void createCompanyWithWrongRole() throws Exception {
+
+        securityAwareMockMVC();
+        User currentUser = UserResourceIT.createEntity(em);
+        Authority manager = new Authority();
+        manager.setName(AuthoritiesConstants.MANAGER);
+        currentUser.getAuthorities().add(manager);
+
+        em.persist(currentUser);
+        em.flush();
+
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        // An entity with an existing ID cannot be created, so this API call must fail
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .with(user(currentUser.getLogin()))
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
     }
 
     @Test
@@ -735,5 +759,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             .webAppContextSetup(context)
             .apply(springSecurity())
             .build();
+    }
+
+
+    private Employee saveEmployeeFromUser(User user) {
+        Employee employee = new Employee();
+        employee.
+            login(user.getLogin())
+            .email(user.getEmail())
+            .hired(false)
+            .user(user);
+        return employee;
     }
 }
