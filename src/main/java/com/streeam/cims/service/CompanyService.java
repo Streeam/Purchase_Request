@@ -96,9 +96,11 @@ public class CompanyService {
 
         employee.setHired(true);
         company.getEmployees().add(employee);
-        EmployeeDTO employeeDTO = employeeService.saveWithCompany(employee, company);
 
         Company updatedCompany = companyRepository.save(company);
+        EmployeeDTO employeeDTO = employeeService.saveWithCompany(employee, updatedCompany);
+
+
 
 
         log.debug("Request to save Company with employee: {}", employeeDTO);

@@ -24,15 +24,14 @@ import java.util.Collection;
 @EnableConfigurationProperties({LiquibaseProperties.class, ApplicationProperties.class})
 public class CidApp implements InitializingBean {
 
-    //TODO  ****SUMMARY****
     //TODO 1. Create Company, Notification and Employee entities.                                                        *********DONE***********
     //TODO 2. In the companyController API:
-            // TODO - Create an API that send emails to people to  invite them to join the company
-            // TODO - Create a notification entity linked to an employee and every time it sends an email sends a notifications as well
+            // TODO - Create an API that send emails to people to  invite them to join the company                       *********DONE***********
+            // TODO - Create a notification entity linked to an employee and every time it sends an email sends a notifications as well *****DONE******
             // TODO - Have the option to leave a company as an employee and also delete a company as a manager
-            // TODO - Request to join an existing company (if already in a company cannot see this feature)
+            // TODO - Request to join an existing company (if already in a company cannot see this feature)             *****DONE*********
             // TODO - Send email to the manager for approval. If approved obtains ROLE_EMPLOYEE and receives a link to signin (activated)
-            // TODO - VERY IMPORTANT WHEN THE USER CHANGES EMAIL OR LOGIN SO DOES THE EMPLOYEE AND VICE VERSA
+            // TODO - VERY IMPORTANT WHEN THE EMPLOYEE CHANGES EMAIL OR LOGIN SO DOES THE USER AND VICE VERSA
 
     //TODO 3.  ****API'S****
         //TODO 1. api/companies
@@ -64,11 +63,7 @@ public class CidApp implements InitializingBean {
         //TODO 8. api/users
                 // POST When admin creates a user also creates an employee
 
-    /**
-     *
 
-     }
-     */
 
     private static final Logger log = LoggerFactory.getLogger(CidApp.class);
 
