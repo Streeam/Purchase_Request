@@ -5,8 +5,12 @@ import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.domain.enumeration.NotificationType;
+import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.repository.CompanyRepository;
+import com.streeam.cims.repository.EmployeeRepository;
+import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
+import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.dto.EmployeeDTO;
@@ -23,11 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
@@ -48,25 +48,37 @@ public class CompanyService {
 
     private final UserService userService;
 
+    private  final UserRepository userRepository;
+
     private final UserMapper userMapper;
 
     private final EmployeeService employeeService;
+
+    private  final EmployeeRepository employeeRepository;
+
+    private final UserSearchRepository userSearchRepository;
 
     private final EmployeeMapper employeeMapper;
 
     private final NotificationService notificationService;
 
-    public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserService userService,
-                          CompanySearchRepository companySearchRepository, EmployeeService employeeService, EmployeeMapper employeeMapper,
-                          UserMapper userMapper, NotificationService notificationService) {
+    private final AuthorityRepository authorityRepository;
+
+    public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserService userService,UserRepository userRepository,
+                          CompanySearchRepository companySearchRepository, EmployeeService employeeService, EmployeeMapper employeeMapper, UserSearchRepository userSearchRepository,
+                          EmployeeRepository employeeRepository,UserMapper userMapper, NotificationService notificationService, AuthorityRepository authorityRepository) {
         this.userService = userService;
-        this.notificationService = notificationService;
+        this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.authorityRepository = authorityRepository;
+        this.notificationService = notificationService;
         this.companyRepository = companyRepository;
         this.companyMapper = companyMapper;
         this.companySearchRepository = companySearchRepository;
         this.employeeService = employeeService;
         this.employeeMapper = employeeMapper;
+        this.employeeRepository = employeeRepository;
+        this.userSearchRepository = userSearchRepository;
     }
 
     /**
@@ -139,7 +151,7 @@ public class CompanyService {
     }
 
     /**
-     * Delete the company by id.
+     * Delete the company by email.
      *
      * @param id the id of the entity.
      */
@@ -149,27 +161,45 @@ public class CompanyService {
 
         // Find all employees from the company and the manager and remove the ROLE_EMPLOYEE and ROLE_MANAGER
 
-        Optional<Company> company = companyRepository.findOneById(id);
-        if(company.isPresent()){
-            Set<Employee>   employees = company.get().getEmployees();
-            employees.stream().filter(employee-> {
-                Optional<User> user = userService.findOneByLogin(employee.getLogin());
-                boolean managersAndEmployees = userService.checkIfUserHasRoles(user.get(), AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE);
-
-                Set<Authority> authorities = user.get().getAuthorities().stream().
-                    filter(authority -> !authority.getName().equals(AuthoritiesConstants.MANAGER) && !authority.getName().equals(AuthoritiesConstants.EMPLOYEE)).
-                    collect(Collectors.toSet());
-                user.get().setAuthorities(authorities);
-                UserDTO userDTO = userMapper.userToUserDTO(user.get());
-                userService.updateUser(userDTO);
-
-                return managersAndEmployees;
-            }).forEach(employee -> employee.setHired(false));
-
-        }
-
-        companyRepository.deleteById(id);
-        companySearchRepository.deleteById(id);
+        Optional.of(companyRepository
+            .findOneById(id))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(company -> {
+                company.getEmployees().stream()
+                    .map(Employee::getLogin)
+                    .map(employeeRepository::findByLogin)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .forEach(employee -> {
+                        Optional.of(userRepository
+                        .findOneByLogin(employee.getLogin()))
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .map(user1 -> {
+                                Set<Authority> managedAuthorities = new HashSet<>();
+                                //managedAuthorities.clear(); // Clear all old authorities
+                                user1.getAuthorities().stream()
+                                    .map(Authority::getName)
+                                    .map(authorityRepository::findOneByName)
+                                    .filter(Optional::isPresent)
+                                    .map(Optional::get)
+                                    .filter(authority ->
+                                            !AuthoritiesConstants.MANAGER.equals( authority.getName())&&
+                                            !AuthoritiesConstants.EMPLOYEE.equals( authority.getName())
+                                    )
+                                    .forEach(managedAuthorities::add);
+                                user1.setAuthorities(managedAuthorities);
+                               // userRepository.save(user1);
+                                userSearchRepository.save(user1);
+                                userService.clearUserCaches(user1);
+                                return user1;
+                            });
+                         employee.setHired(false);
+                    });
+                companySearchRepository.delete(company);
+                return company;
+            }).ifPresent(companyRepository::delete);
     }
 
     /**

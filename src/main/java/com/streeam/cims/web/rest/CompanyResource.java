@@ -189,7 +189,7 @@ public class CompanyResource {
         log.debug("REST request to delete Company : {}", id);
         companyService.delete(id);
 
-        return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString())).build();
+        return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, user.get().getId().toString())).build();
     }
 
     /**

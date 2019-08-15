@@ -20,4 +20,5 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     Optional<Company> findOneByEmployees(Set<Employee> employees);
 
+    Optional<Company> findOneByEmail(String email);
 }

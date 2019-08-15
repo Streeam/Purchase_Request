@@ -686,8 +686,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         List<Company> companyList = companyRepository.findAll();
         assertThat(companyList).hasSize(databaseSizeBeforeDelete - 1);
 
+
         // Validate the Company in Elasticsearch
-        verify(mockCompanySearchRepository, times(1)).deleteById(company.getId());
+        verify(mockCompanySearchRepository, times(1)).delete(company);
     }
 
     @Test
