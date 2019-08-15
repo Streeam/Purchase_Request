@@ -24,27 +24,27 @@ import java.util.Collection;
 @EnableConfigurationProperties({LiquibaseProperties.class, ApplicationProperties.class})
 public class CidApp implements InitializingBean {
 
-    //TODO 1. Create Company, Notification and Employee entities.                                                        *********DONE***********
+    //TODO 1. Create Company, Notification and Employee entities.                                                                                *********DONE***********
     //TODO 2. In the companyController API:
-            // TODO - Create an API that send emails to people to  invite them to join the company                       *********DONE***********
-            // TODO - Create a notification entity linked to an employee and every time it sends an email sends a notifications as well *****DONE******
+            // TODO - Create an API that send emails to people to  invite them to join the company                                                *********DONE***********
+            // TODO - Create a notification entity linked to an employee and every time it sends an email sends a notifications as well             *****DONE******
             // TODO - Have the option to leave a company as an employee and also delete a company as a manager
-            // TODO - Request to join an existing company (if already in a company cannot see this feature)             *****DONE*********
+            // TODO - Request to join an existing company (if already in a company cannot see this feature)                                       *****DONE*********
             // TODO - Send email to the manager for approval. If approved obtains ROLE_EMPLOYEE and receives a link to signin (activated)
             // TODO - VERY IMPORTANT WHEN THE EMPLOYEE CHANGES EMAIL OR LOGIN SO DOES THE USER AND VICE VERSA
 
     //TODO 3.  ****API'S****
         //TODO 1. api/companies
-            //TODO POST Create a company and automatically become the manager                                                  *****DONE********
+            //TODO POST Create a company and automatically become the manager                                                                        *****DONE********
                     // * If the user is ROLE_MANAGER or ROLE_EMPLOYEE he cannot see this option otherwise he can
-            //TODO GET List all the companies details (manager can see only his company, admin can see all companies)       *********DONE********
+            //TODO GET List all the companies details (manager can see only his company, admin can see all companies)                               *********DONE********
 
-            //TODO DELETE Delete a company  (manager can delete only his company, admin can delete any companies)           **********DONE********
+            //TODO DELETE Delete a company  (manager can delete only his company, admin can delete any companies)                                   **********DONE********
                     // Get all the employees from the company and remove the employee role. Remove the managers roles
 
             //TODO PUT Update a company (manager his , admin any)
 
-        //TODO 2. api/activate                                                                                                  ********DONE********
+        //TODO 2. api/activate                                                                                                                      ********DONE********
                 // GET When activating the user also create and links to an employee (NEEDS TEST)
         //TODO 3. api/employee/employeeId/request-to-join (no restriction)
             //TODO POST(companyName) Request to join a company

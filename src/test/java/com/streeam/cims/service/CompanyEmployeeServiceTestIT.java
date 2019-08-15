@@ -294,7 +294,9 @@ class CompanyEmployeeServiceTestIT {
             .hired(DEFAULT_HIRED)
             .image(DEFAULT_EMPLOYEE_IMAGE)
             .imageContentType(DEFAULT_EMPLOYEE_IMAGE_CONTENT_TYPE)
-            .user(user1);
+            .user(user1)
+            .company(company);
+        employee1.setId(1l);
 
         employee2 = new Employee()
             .login(DEFAULT_USER2_LOGIN)
@@ -304,7 +306,9 @@ class CompanyEmployeeServiceTestIT {
             .hired(UPDATED_HIRED)
             .image(UPDATED_EMPLOYEE_IMAGE)
             .imageContentType(UPDATED_EMPLOYEE_IMAGE_CONTENT_TYPE)
-            .user(user2);
+            .user(user2)
+            .company(company);
+        employee2.setId(2l);
 
         employee3 = new Employee()
             .login(DEFAULT_USER3_LOGIN)
@@ -315,6 +319,7 @@ class CompanyEmployeeServiceTestIT {
             .image(DEFAULT_EMPLOYEE2_IMAGE)
             .imageContentType(DEFAULT_EMPLOYEE2_IMAGE_CONTENT_TYPE)
             .user(user3);
+        employee3.setId(3l);
 
         employee4 = new Employee()
             .login(DEFAULT_USER4_LOGIN)
@@ -325,6 +330,7 @@ class CompanyEmployeeServiceTestIT {
             .image(UPDATED_EMPLOYEE_IMAGE)
             .imageContentType(UPDATED_EMPLOYEE_IMAGE_CONTENT_TYPE)
             .user(user4);
+        employee4.setId(4l);
 
         company = new Company()
             .name(DEFAULT_NAME)
@@ -339,6 +345,7 @@ class CompanyEmployeeServiceTestIT {
             .companyLogoContentType(DEFAULT_COMPANY_LOGO_CONTENT_TYPE)
             .addEmployees(employee1)
             .addEmployees(employee2);
+        company.setId(1L);
 
         company2 = new Company()
             .name(UPDATED_NAME)
@@ -353,7 +360,7 @@ class CompanyEmployeeServiceTestIT {
             .companyLogoContentType(UPDATED_COMPANY_LOGO_CONTENT_TYPE)
             .addEmployees(employee3)
             .addEmployees(employee4);
-
+        company2.setId(2L);
         when(dateTimeProvider.getNow()).thenReturn(Optional.of(LocalDateTime.now()));
         auditingHandler.setDateTimeProvider(dateTimeProvider);
     }
@@ -391,42 +398,53 @@ class CompanyEmployeeServiceTestIT {
         assertThat(userService.checkIfUserHasRoles(user2 , AuthoritiesConstants.USER)).isTrue();
     }
 
-//    @Test
-//    @Transactional
-//    void assertThatWhenCompanyIsRemovedItRemovesTheUsersRoles() {
-//
-//        int initialEmployeesInACompany = company.getEmployees().size();
-//
-//        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
-//
-//        userRepository.saveAndFlush(user1);
-//
-//        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user2);
-//
-//        userRepository.saveAndFlush(user2);
-//        employeeRepository.saveAndFlush(employee2);
-//
-//        assertThat(companyRepository.findOneById(company.getId()).get().getEmployees().size()).isEqualTo(initialEmployeesInACompany);
-//        assertThat(companyRepository.findOneById(company.getId()).get().getEmployees().stream().findAny()).isPresent();
-//        assertThat(userRepository.findOneByLogin(employee1.getLogin())).isPresent();
-//
-//        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.EMPLOYEE)).isTrue();
-//        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.MANAGER)).isTrue();
-//        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.USER)).isTrue();
-//        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.USER)).isTrue();
-//
-//        companyService.delete(company.getId());
-//
-//        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.MANAGER)).isFalse();
-//        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.EMPLOYEE)).isFalse();
-//        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.USER)).isTrue();
-//        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.USER)).isTrue();
-//
-//
-//
-//        employeeService.delete(employee1.getId());
-//        employeeService.delete(employee2.getId());
-//    }
+    @Test
+    @Transactional
+    void assertThatWhenCompanyIsRemovedItRemovesTheUsersRoles() {
+
+        int initialEmployeesInACompany = company.getEmployees().size();
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
+        userRepository.saveAndFlush(user1);
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user2);
+        userRepository.saveAndFlush(user2);
+        companyRepository.saveAndFlush(company);
+        employeeRepository.saveAndFlush(employee1);
+        employeeRepository.saveAndFlush(employee2);
+
+        assertThat(companyRepository.findOneById(company.getId())).isPresent();
+        Company testCompany = companyRepository.findOneById(company.getId()).get();
+
+        assertThat(testCompany.getEmployees().size()).isEqualTo(initialEmployeesInACompany);
+        assertThat(testCompany.getEmployees().stream().findAny()).isPresent();
+        assertThat(userRepository.findOneByLogin(employee1.getLogin())).isPresent();
+        assertThat(employeeRepository.findByLogin(user1.getLogin())).isPresent();
+
+        assertThat(testCompany.getEmployees().size()).isEqualTo(company.getEmployees().size());
+
+        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.EMPLOYEE)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.MANAGER)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.USER)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.USER)).isTrue();
+        assertThat(company.getId()).isNotNull();
+       companyService.delete(company.getId());
+
+       assertThat(userRepository.findOneByLogin(user1.getLogin())).isPresent();
+       assertThat(userRepository.findOneByLogin(user2.getLogin())).isPresent();
+
+       User testUser1 = userRepository.findOneByLogin(user1.getLogin()).get();
+       User testUser2 = userRepository.findOneByLogin(user2.getLogin()).get();
+
+
+        assertThat(userService.checkIfUserHasRoles(testUser1, AuthoritiesConstants.MANAGER)).isFalse();
+        assertThat(userService.checkIfUserHasRoles(testUser2, AuthoritiesConstants.EMPLOYEE)).isFalse();
+        assertThat(userService.checkIfUserHasRoles(testUser2, AuthoritiesConstants.USER)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(testUser1, AuthoritiesConstants.USER)).isTrue();
+
+
+        userRepository.deleteAll();
+        employeeRepository.deleteAll();
+        companyRepository.delete(company);
+    }
 
 //    @Test
 //    @Transactional
