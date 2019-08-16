@@ -17,6 +17,7 @@ import com.streeam.cims.web.rest.errors.InvalidPasswordException;
 import com.streeam.cims.web.rest.errors.LoginAlreadyUsedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +48,8 @@ public class UserService {
 
     private final UserSearchRepository userSearchRepository;
 
-    private final EmployeeService employeeService;
+    @Autowired
+    private  EmployeeService employeeService;
 
     private final AuthorityRepository authorityRepository;
 
@@ -62,9 +64,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
         this.userSearchRepository = userSearchRepository;
         this.authorityRepository = authorityRepository;
-        this.cacheManager = cacheManager;
-        this.employeeService = employeeService;
-    }
+        this.cacheManager = cacheManager;    }
 
     public Optional<User> activateRegistration(String key) {
         log.debug("Activating user for activation key {}", key);

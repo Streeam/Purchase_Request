@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
@@ -45,26 +44,26 @@ public class EmployeeResource {
     }
 
     /**
-     * {@code POST  /employees} : Create a new employee.
+     * {@code POST  /employees} : employees are created only when a user is created.
      *
      * @param employeeDTO the employeeDTO to create.
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new employeeDTO, or with status {@code 400 (Bad Request)} if the employee has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/employees")
-    public ResponseEntity<EmployeeDTO> createEmployee(@Valid @RequestBody EmployeeDTO employeeDTO) throws URISyntaxException {
-        log.debug("REST request to save Employee : {}", employeeDTO);
-        if (employeeDTO.getId() != null) {
-            throw new BadRequestAlertException("A new employee cannot already have an ID", ENTITY_NAME, "idexists");
-        }
-        EmployeeDTO result = employeeService.save(employeeDTO);
-        return ResponseEntity.created(new URI("/api/employees/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-            .body(result);
+    public void createEmployee(@Valid @RequestBody EmployeeDTO employeeDTO) throws URISyntaxException {
+//        log.debug("REST request to save Employee : {}", employeeDTO);
+//        if (employeeDTO.getId() != null) {
+//            throw new BadRequestAlertException("A new employee cannot already have an ID", ENTITY_NAME, "idexists");
+//        }
+//        EmployeeDTO result = employeeService.save(employeeDTO);
+//        return ResponseEntity.created(new URI("/api/employees/" + result.getId()))
+//            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+//            .body(result);
     }
 
     /**
-     * {@code PUT  /employees} : Updates an existing employee.
+     * {@code PUT  /employees} : Updates an existing employee and also update the linked user.
      *
      * @param employeeDTO the employeeDTO to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated employeeDTO,
@@ -75,15 +74,15 @@ public class EmployeeResource {
     @PutMapping("/employees")
     public ResponseEntity<EmployeeDTO> updateEmployee(@Valid @RequestBody EmployeeDTO employeeDTO) throws URISyntaxException {
         log.debug("REST request to update Employee : {}", employeeDTO);
-        if (employeeDTO.getId() == null) {
+        Long employeeId =  employeeDTO.getId();
+        if ( employeeId == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
+        if(employeeService.findOne(employeeId).isPresent()){
 
-
-        Optional<User> user  = employeeService.findLinkedUserByLogin(employeeDTO.getLogin());
-        if(!user.isPresent()){
-            throw new ResourceNotFoundException("No user linked to employee " + employeeDTO.getEmail());
         }
+
+        User linkedUser = employeeService.findLinkedUserByLogin(employeeDTO.getLogin()).orElseThrow(()->new ResourceNotFoundException("No user linked to employee " + employeeDTO.getEmail()));
 
         EmployeeDTO result = employeeService.save(employeeDTO);
         return ResponseEntity.ok()

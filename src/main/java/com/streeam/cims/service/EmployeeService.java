@@ -35,7 +35,7 @@ public class EmployeeService {
     private final EmployeeSearchRepository employeeSearchRepository;
 
 
-
+    @Autowired
     private  UserService userService;
 
     public EmployeeService(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper,
@@ -46,11 +46,6 @@ public class EmployeeService {
         this.employeeSearchRepository = employeeSearchRepository;
     }
 
-    @Autowired
-    public void getUserService(UserService userService){
-        this.userService = userService;
-    }
-
     /**
      * Save a employee.
      *
@@ -58,7 +53,6 @@ public class EmployeeService {
      * @return the persisted entity.
      */
     public EmployeeDTO save(EmployeeDTO employeeDTO) {
-
         log.debug("Request to save Employee : {}", employeeDTO);
         Employee employee = employeeMapper.toEntity(employeeDTO);
         employee = employeeRepository.save(employee);

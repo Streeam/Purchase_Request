@@ -20,6 +20,7 @@ import com.streeam.cims.service.mapper.EmployeeMapper;
 import com.streeam.cims.service.mapper.UserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -45,7 +46,8 @@ public class CompanyService {
 
     private final CompanySearchRepository companySearchRepository;
 
-    private final UserService userService;
+    @Autowired
+    private  UserService userService;
 
     private  final UserRepository userRepository;
 
@@ -63,10 +65,10 @@ public class CompanyService {
 
     private final AuthorityRepository authorityRepository;
 
-    public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserService userService,UserRepository userRepository,
+    public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserRepository userRepository,
                           CompanySearchRepository companySearchRepository, EmployeeService employeeService, EmployeeMapper employeeMapper, UserSearchRepository userSearchRepository,
                           EmployeeRepository employeeRepository,UserMapper userMapper, NotificationService notificationService, AuthorityRepository authorityRepository) {
-        this.userService = userService;
+
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.authorityRepository = authorityRepository;
