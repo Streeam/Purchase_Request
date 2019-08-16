@@ -2,7 +2,7 @@
 
 entity Company {
     name String required unique
-    email String required unique  minlength(5) maxlength(254)  pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/) 
+    email String required unique  minlength(5) maxlength(254)  pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
     phone String required
     addressLine1 String required
     addressLine2 String
@@ -30,7 +30,7 @@ entity Employee {
     firstName String  maxlength(50)
     lastName String  maxlength(50)
      email String required minlength(5) maxlength(254)
-     pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/) 
+     pattern(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)
     hired Boolean required
     language String
     image ImageBlob
@@ -40,11 +40,11 @@ entity Employee {
 
 //entity Authorities{
 //	name String required,
-//    description String 
+//    description String
 //}
 
 relationship OneToMany {
-    Company{employees(id) required} to 
+    Company{employees(name) } to
     Employee{company(name)}
     Employee{notification(id)} to Notification{employee(id) required}
 

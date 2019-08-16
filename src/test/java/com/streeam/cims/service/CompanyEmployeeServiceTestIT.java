@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -342,7 +343,8 @@ class CompanyEmployeeServiceTestIT {
             .postcode(DEFAULT_POSTCODE)
             .companyLogo(DEFAULT_COMPANY_LOGO)
             .companyLogoContentType(DEFAULT_COMPANY_LOGO_CONTENT_TYPE)
-        ;
+            .addEmployees(employee1)
+            .addEmployees(employee2);
 
         company2 = new Company()
             .name(UPDATED_NAME)
@@ -355,7 +357,8 @@ class CompanyEmployeeServiceTestIT {
             .postcode(UPDATED_POSTCODE)
             .companyLogo(UPDATED_COMPANY_LOGO)
             .companyLogoContentType(UPDATED_COMPANY_LOGO_CONTENT_TYPE)
-        ;
+            .addEmployees(employee3)
+            .addEmployees(employee4);
 
         when(dateTimeProvider.getNow()).thenReturn(Optional.of(LocalDateTime.now()));
         auditingHandler.setDateTimeProvider(dateTimeProvider);
@@ -396,22 +399,68 @@ class CompanyEmployeeServiceTestIT {
 
     @Test
     @Transactional
+    void assertThatAnyActivatedUserHasAPairEmployee() {
+
+        List<User> allUsers = userRepository.findAllByActivatedIsTrue();
+        if(!allUsers.isEmpty()){
+            User randomUser = allUsers.stream().findAny().get();
+            assertThat(employeeRepository.findByLogin(randomUser.getLogin())).isPresent();
+
+            Employee linkedEmployee =  employeeRepository.findByLogin(randomUser.getLogin()).get();
+
+            assertThat(randomUser.getEmail()).isEqualTo(linkedEmployee.getEmail());
+        }
+
+    }
+
+
+    @Test
+    @Transactional
+    void assertThatCompanyIsSavedWithEmployee() {
+
+        userService.save(user1);
+        companyService.saveWithEmployee(company, employee1);
+
+        assertThat(userRepository.findOneByLogin(user1.getLogin())).isPresent();
+        assertThat(employeeRepository.findByLogin(user1.getLogin())).isPresent();
+
+        Employee testEmployee = employeeRepository.findByLogin(user1.getLogin()).get();
+
+        assertThat(companyRepository.findOneByEmployees(Collections.singleton(testEmployee))).isPresent();
+
+        Company testCompany = companyRepository.findOneByEmployees(Collections.singleton(testEmployee)).get();
+
+        User testUser = userRepository.findOneByLogin(employee1.getLogin()).get();
+
+        assertThat(testEmployee.getCompany().getName()).isEqualTo(testCompany.getName());
+        assertThat(testUser.getEmail()).isEqualTo(user1.getEmail());
+
+        userRepository.delete(user1);
+        employeeRepository.delete(employee1);
+        companyRepository.delete(company);
+
+    }
+
+
+    @Test
+    @Transactional
     void assertThatWhenCompanyIsRemovedItRemovesTheUsersRoles() {
 
 
-        int initialEmployeesInACompany = company.getEmployees().size();
+
         userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
         userRepository.saveAndFlush(user1);
         userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user2);
         userRepository.saveAndFlush(user2);
         Company updatedCompany = companyRepository.saveAndFlush(company);
+        int initialCompanySize = companyRepository.findAll().size();
         updatedCompany.addEmployees(employee1);
         updatedCompany.addEmployees(employee2);
         employee1.setCompany(updatedCompany);
         employee2.setCompany(updatedCompany);
         employeeRepository.saveAndFlush(employee1);
         employeeRepository.saveAndFlush(employee2);
-
+        int initialEmployeesInACompany = employeeRepository.findAll().size();
 
         assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.EMPLOYEE)).isTrue();
         assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.MANAGER)).isTrue();
@@ -421,9 +470,8 @@ class CompanyEmployeeServiceTestIT {
 
        companyService.delete(updatedCompany.getId());
 
-
-
-        log.error("User Email: {}", user1.getLogin());
+       assertThat(companyRepository.findAll().size()).isEqualTo(initialCompanySize-1);
+       assertThat(initialEmployeesInACompany).isEqualTo(employeeRepository.findAll().size());
        assertThat(userRepository.findOneByLogin(user1.getLogin())).isPresent();
        assertThat(userRepository.findOneByLogin(user2.getLogin())).isPresent();
 

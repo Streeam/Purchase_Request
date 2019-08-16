@@ -62,8 +62,8 @@ public class Employee implements Serializable {
     @Column(name = "image_content_type")
     private String imageContentType;
 
-    @OneToOne(optional = false)    @NotNull
-
+    @OneToOne(optional = false, cascade = CascadeType.ALL)
+    @NotNull
     @JoinColumn(unique = true)
     private User user;
 

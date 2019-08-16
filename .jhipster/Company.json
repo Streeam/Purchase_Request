@@ -73,7 +73,6 @@
             "relationshipType": "one-to-many",
             "otherEntityName": "employee",
             "otherEntityRelationshipName": "company",
-            "relationshipValidateRules": "required",
             "relationshipName": "employees"
         }
     ],

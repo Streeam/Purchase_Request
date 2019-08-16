@@ -15,7 +15,6 @@ import java.util.Set;
 @SuppressWarnings("unused")
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, Long> {
-
     Optional<Company> findOneById(Long id);
 
     Optional<Company> findOneByEmployees(Set<Employee> employees);

@@ -9,6 +9,7 @@ import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.service.mapper.EmployeeMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,10 +34,21 @@ public class EmployeeService {
 
     private final EmployeeSearchRepository employeeSearchRepository;
 
-    public EmployeeService(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper, EmployeeSearchRepository employeeSearchRepository) {
+
+
+    private  UserService userService;
+
+    public EmployeeService(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper,
+                           EmployeeSearchRepository employeeSearchRepository) {
+
         this.employeeRepository = employeeRepository;
         this.employeeMapper = employeeMapper;
         this.employeeSearchRepository = employeeSearchRepository;
+    }
+
+    @Autowired
+    public void getUserService(UserService userService){
+        this.userService = userService;
     }
 
     /**
@@ -46,6 +58,7 @@ public class EmployeeService {
      * @return the persisted entity.
      */
     public EmployeeDTO save(EmployeeDTO employeeDTO) {
+
         log.debug("Request to save Employee : {}", employeeDTO);
         Employee employee = employeeMapper.toEntity(employeeDTO);
         employee = employeeRepository.save(employee);
@@ -141,5 +154,9 @@ public class EmployeeService {
         employeeSearchRepository.save(updatedEmployee);
         EmployeeDTO result = employeeMapper.toDto(updatedEmployee);
         return result;
+    }
+
+    public Optional<User> findLinkedUserByLogin(String login) {
+        return  userService.findOneByLogin(login);
     }
 }

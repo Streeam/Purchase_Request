@@ -15,7 +15,6 @@ import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.service.dto.NotificationDTO;
-import com.streeam.cims.service.dto.UserDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
 import com.streeam.cims.service.mapper.EmployeeMapper;
 import com.streeam.cims.service.mapper.UserMapper;
@@ -309,8 +308,7 @@ public class CompanyService {
 
     public CompanyDTO saveUserEmployeeAndComapany(Employee employee, User user, Company company) {
 
-        UserDTO userDTO = userService.save(user);
-        User updatedUser = userMapper.userDTOToUser(userDTO);
+        userService.save(user);
 
        CompanyDTO companyDTO = saveWithEmployee(company, employee);
         return  companyDTO;

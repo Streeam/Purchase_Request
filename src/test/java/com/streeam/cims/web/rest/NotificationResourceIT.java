@@ -1,15 +1,15 @@
 package com.streeam.cims.web.rest;
 
 import com.streeam.cims.CidApp;
-import com.streeam.cims.domain.Notification;
 import com.streeam.cims.domain.Employee;
+import com.streeam.cims.domain.Notification;
+import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.NotificationRepository;
 import com.streeam.cims.repository.search.NotificationSearchRepository;
 import com.streeam.cims.service.NotificationService;
 import com.streeam.cims.service.dto.NotificationDTO;
 import com.streeam.cims.service.mapper.NotificationMapper;
 import com.streeam.cims.web.rest.errors.ExceptionTranslator;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -38,8 +38,6 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import com.streeam.cims.domain.enumeration.NotificationType;
 /**
  * Integration tests for the {@link NotificationResource} REST controller.
  */
@@ -283,7 +281,7 @@ public class NotificationResourceIT {
             .andExpect(jsonPath("$.[*].read").value(hasItem(DEFAULT_READ.booleanValue())))
             .andExpect(jsonPath("$.[*].format").value(hasItem(DEFAULT_FORMAT.toString())));
     }
-    
+
     @Test
     @Transactional
     public void getNotification() throws Exception {

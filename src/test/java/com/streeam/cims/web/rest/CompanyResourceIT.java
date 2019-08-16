@@ -54,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for the {@link CompanyResource} REST controller.
  */
 @SpringBootTest(classes = CidApp.class)
- class CompanyResourceIT {
+class CompanyResourceIT {
 
     private static final String DEFAULT_NAME = "AAAAAAAAAA";
     private static final String UPDATED_NAME = "BBBBBBBBBB";
@@ -144,7 +144,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
     @BeforeEach
-     void setup() {
+    void setup() {
         MockitoAnnotations.initMocks(this);
 
         final CompanyResource companyResource = new CompanyResource(companyService, authorityRepository, mailService);
@@ -162,7 +162,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-     static Company createEntity(EntityManager em) {
+    static Company createEntity(EntityManager em) {
         Company company = new Company()
             .name(DEFAULT_NAME)
             .email(DEFAULT_EMAIL)
@@ -192,7 +192,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-     static Company createUpdatedEntity(EntityManager em) {
+    static Company createUpdatedEntity(EntityManager em) {
         Company company = new Company()
             .name(UPDATED_NAME)
             .email(UPDATED_EMAIL)
@@ -248,13 +248,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     }
 
     @BeforeEach
-     void initTest() {
+    void initTest() {
         company = createEntity(em);
     }
 
     @Test
     @Transactional
-     void createCompany() throws Exception {
+    void createCompany() throws Exception {
 
         when(mockCompanySearchRepository.save(any(Company.class))).thenReturn(new Company());
 
@@ -264,8 +264,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         // Create security-aware mockMvc
         securityAwareMockMVC();
         User user = UserResourceIT.createEntity(em);
-            em.persist(user);
-            em.flush();
+        em.persist(user);
+        em.flush();
 
         // Create the Company
         CompanyDTO companyDTO = companyMapper.toDto(company);
@@ -297,7 +297,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void createCompanyWithExistingId() throws Exception {
+    void createCompanyWithExistingId() throws Exception {
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
 
         // Create the Company with an existing ID
@@ -345,7 +345,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void createCompanyWithExistingEmail() throws Exception {
+    void createCompanyWithExistingEmail() throws Exception {
 
         companyRepository.saveAndFlush(company);
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
@@ -373,7 +373,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void createCompanyWithExistingName() throws Exception {
+    void createCompanyWithExistingName() throws Exception {
 
         companyRepository.saveAndFlush(company);
         int databaseSizeBeforeCreate = companyRepository.findAll().size();
@@ -401,7 +401,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void checkNameIsRequired() throws Exception {
+    void checkNameIsRequired() throws Exception {
 
 
         int databaseSizeBeforeTest = companyRepository.findAll().size();
@@ -422,7 +422,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void checkEmailIsRequired() throws Exception {
+    void checkEmailIsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setEmail(null);
@@ -441,7 +441,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void checkPhoneIsRequired() throws Exception {
+    void checkPhoneIsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setPhone(null);
@@ -460,7 +460,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void checkAddressLine1IsRequired() throws Exception {
+    void checkAddressLine1IsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setAddressLine1(null);
@@ -479,7 +479,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void checkCityIsRequired() throws Exception {
+    void checkCityIsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setCity(null);
@@ -498,7 +498,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void checkCountryIsRequired() throws Exception {
+    void checkCountryIsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setCountry(null);
@@ -517,7 +517,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void checkPostcodeIsRequired() throws Exception {
+    void checkPostcodeIsRequired() throws Exception {
         int databaseSizeBeforeTest = companyRepository.findAll().size();
         // set the field null
         company.setPostcode(null);
@@ -536,7 +536,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void getAllCompanies() throws Exception {
+    void getAllCompanies() throws Exception {
         // Initialize the database
         companyRepository.saveAndFlush(company);
         securityAwareMockMVC();
@@ -561,7 +561,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void getCompany() throws Exception {
+    void getCompany() throws Exception {
         // Initialize the database
         companyRepository.saveAndFlush(company);
 
@@ -584,7 +584,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void getNonExistingCompany() throws Exception {
+    void getNonExistingCompany() throws Exception {
         // Get the company
         restCompanyMockMvc.perform(get("/api/companies/{id}", Long.MAX_VALUE))
             .andExpect(status().isNotFound());
@@ -592,7 +592,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void updateCompany() throws Exception {
+    void updateCompany() throws Exception {
         // Initialize the database
         companyRepository.saveAndFlush(company);
 
@@ -644,7 +644,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void updateNonExistingCompany() throws Exception {
+    void updateNonExistingCompany() throws Exception {
         int databaseSizeBeforeUpdate = companyRepository.findAll().size();
 
         // Create the Company
@@ -666,7 +666,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void deleteCompany() throws Exception {
+    void deleteCompany() throws Exception {
 
         // Create security-aware mockMvc
         securityAwareMockMVC();
@@ -693,7 +693,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void searchCompany() throws Exception {
+    void searchCompany() throws Exception {
         // Initialize the database
         companyRepository.saveAndFlush(company);
         when(mockCompanySearchRepository.search(queryStringQuery("id:" + company.getId()), PageRequest.of(0, 20)))
@@ -717,7 +717,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void equalsVerifier() throws Exception {
+    void equalsVerifier() throws Exception {
         TestUtil.equalsVerifier(Company.class);
         Company company1 = new Company();
         company1.setId(1L);
@@ -732,7 +732,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void dtoEqualsVerifier() throws Exception {
+    void dtoEqualsVerifier() throws Exception {
         TestUtil.equalsVerifier(CompanyDTO.class);
         CompanyDTO companyDTO1 = new CompanyDTO();
         companyDTO1.setId(1L);
@@ -748,7 +748,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
     @Test
     @Transactional
-     void testEntityFromId() {
+    void testEntityFromId() {
         assertThat(companyMapper.fromId(42L).getId()).isEqualTo(42);
         assertThat(companyMapper.fromId(null)).isNull();
     }
