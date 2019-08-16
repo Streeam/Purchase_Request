@@ -6,6 +6,7 @@ import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.EmployeeRepository;
 import com.streeam.cims.repository.search.EmployeeSearchRepository;
 import com.streeam.cims.service.dto.EmployeeDTO;
+import com.streeam.cims.service.dto.UserDTO;
 import com.streeam.cims.service.mapper.EmployeeMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,5 +153,14 @@ public class EmployeeService {
 
     public Optional<User> findLinkedUserByLogin(String login) {
         return  userService.findOneByLogin(login);
+    }
+
+    public UserDTO mapEmployeeDTOToUser(User linkedUser, EmployeeDTO employeeDTO) {
+
+        linkedUser.setLogin(employeeDTO.getLogin());
+        linkedUser.setFirstName(employeeDTO.getFirstName());
+        linkedUser.setLastName(employeeDTO.getLastName());
+        linkedUser.setLangKey(employeeDTO.getLanguage());
+        return  userService.save(linkedUser);
     }
 }

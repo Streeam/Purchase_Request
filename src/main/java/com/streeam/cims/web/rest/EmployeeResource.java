@@ -76,13 +76,18 @@ public class EmployeeResource {
         log.debug("REST request to update Employee : {}", employeeDTO);
         Long employeeId =  employeeDTO.getId();
         if ( employeeId == null) {
-            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "employeenotfound");
         }
-        if(employeeService.findOne(employeeId).isPresent()){
-
+        String email = employeeService.findOne(employeeId).orElseThrow(()->
+            new BadRequestAlertException("Employee not found.", ENTITY_NAME, "emailexists")).getEmail();
+        if(!email.equalsIgnoreCase(employeeDTO.getEmail())){
+            throw new BadRequestAlertException("You cannot update your email.", ENTITY_NAME, "emailcannotbemodified");
         }
 
         User linkedUser = employeeService.findLinkedUserByLogin(employeeDTO.getLogin()).orElseThrow(()->new ResourceNotFoundException("No user linked to employee " + employeeDTO.getEmail()));
+
+         employeeService.mapEmployeeDTOToUser(linkedUser , employeeDTO);
+        // Link and save the user. Update the user from the employee dto
 
         EmployeeDTO result = employeeService.save(employeeDTO);
         return ResponseEntity.ok()
