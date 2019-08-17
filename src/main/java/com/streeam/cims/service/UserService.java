@@ -58,7 +58,7 @@ public class UserService {
 
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserSearchRepository userSearchRepository,
-                       AuthorityRepository authorityRepository, CacheManager cacheManager, EmployeeService employeeService, UserMapper userMapper) {
+                       AuthorityRepository authorityRepository, CacheManager cacheManager, UserMapper userMapper) {
         this.userMapper = userMapper;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -314,9 +314,9 @@ public class UserService {
             });
     }
 
-    public Optional<User> getCurrentUser(){
+    public Optional<User> getCurrentUser(String login){
 
-        return userRepository.findOneByLogin(SecurityUtils.getCurrentUserLogin().get());
+        return userRepository.findOneByLogin(login);
     }
 
     /**
@@ -375,8 +375,12 @@ public class UserService {
         User updatedUser = userRepository.save(user);
         UserDTO result = userMapper.userToUserDTO(updatedUser);
         userSearchRepository.save(user);
-        log.debug("Save User : {}", result);
+        log.error("Save User : {}", user);
 
         return result;
+    }
+
+    public Optional<User> findOneByEmail(String email) {
+        return  userRepository.findOneByEmailIgnoreCase(email);
     }
 }

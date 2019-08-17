@@ -69,11 +69,11 @@ public class CidApp implements InitializingBean {
         //TODO 8. api/users (Pre-Authorize ROLE_ADMIN)
                 // POST When admin creates a user also creates an employee
                 // DELETE when admin deletes an employee it also deletes the linked user and updates the company if he is in one
-                // PUT  When employee is updated the user is updated as well
+                // PUT  When employee is updated the user is updated as well (the email cannot be modified)
 
         //TODO 8. api/employees
 
-                // POST  (Pre-Authorize ROLE_ADMIN) when admin creates an employee it also creates user with the same credentials
+                // TODO POST  No one can create an employee. An employee is created only when the user is activated
                 // GET (ADMIN can see all, the rest can only see their own account)
 
                 // DELETE  (Pre-Authorize ROLE_ADMIN) when admin deletes an employee it also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee

@@ -224,28 +224,28 @@ public class EmployeeResourceIT {
 //        verify(mockEmployeeSearchRepository, times(1)).save(testEmployee);
 //    }
 
-    @Test
-    @Transactional
-    public void createEmployeeWithExistingId() throws Exception {
-        int databaseSizeBeforeCreate = employeeRepository.findAll().size();
-
-        // Create the Employee with an existing ID
-        employee.setId(1L);
-        EmployeeDTO employeeDTO = employeeMapper.toDto(employee);
-
-        // An entity with an existing ID cannot be created, so this API call must fail
-        restEmployeeMockMvc.perform(post("/api/employees")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
-            .andExpect(status().isBadRequest());
-
-        // Validate the Employee in the database
-        List<Employee> employeeList = employeeRepository.findAll();
-        assertThat(employeeList).hasSize(databaseSizeBeforeCreate);
-
-        // Validate the Employee in Elasticsearch
-        verify(mockEmployeeSearchRepository, times(0)).save(employee);
-    }
+//    @Test
+//    @Transactional
+//    public void createEmployeeWithExistingId() throws Exception {
+//        int databaseSizeBeforeCreate = employeeRepository.findAll().size();
+//
+//        // Create the Employee with an existing ID
+//        employee.setId(1L);
+//        EmployeeDTO employeeDTO = employeeMapper.toDto(employee);
+//
+//        // An entity with an existing ID cannot be created, so this API call must fail
+//        restEmployeeMockMvc.perform(post("/api/employees")
+//            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+//            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
+//            .andExpect(status().isBadRequest());
+//
+//        // Validate the Employee in the database
+//        List<Employee> employeeList = employeeRepository.findAll();
+//        assertThat(employeeList).hasSize(databaseSizeBeforeCreate);
+//
+//        // Validate the Employee in Elasticsearch
+//        verify(mockEmployeeSearchRepository, times(0)).save(employee);
+//    }
 
 
     @Test
@@ -354,7 +354,7 @@ public class EmployeeResourceIT {
         restEmployeeMockMvc.perform(get("/api/employees/{id}", Long.MAX_VALUE))
             .andExpect(status().isNotFound());
     }
-
+//
 //    @Test
 //    @Transactional
 //    public void updateEmployee() throws Exception {

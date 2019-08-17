@@ -12,29 +12,47 @@ import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.repository.search.EmployeeSearchRepository;
 import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
+import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
 import com.streeam.cims.service.mapper.EmployeeMapper;
+import com.streeam.cims.web.rest.EmployeeResource;
 import com.streeam.cims.web.rest.TestUtil;
+import com.streeam.cims.web.rest.errors.ExceptionTranslator;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.Validator;
+import org.springframework.web.context.WebApplicationContext;
 
+import javax.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.streeam.cims.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Integration tests for {@link CompanyService}, {@link EmployeeService}, {@link UserService}  .
@@ -42,6 +60,12 @@ import static org.mockito.Mockito.*;
 @SpringBootTest(classes = CidApp.class)
 @Transactional
 class CompanyEmployeeServiceTestIT {
+
+    @Autowired
+    private EntityManager em;
+
+    @Autowired
+    private WebApplicationContext context;
 
     private final Logger log = LoggerFactory.getLogger(CompanyService.class);
 
@@ -123,10 +147,10 @@ class CompanyEmployeeServiceTestIT {
     private static final String DEFAULT_EMPLOYEE2_LAST_NAME = "CCCCCCCCC";
     private static final String UPDATED_EMPLOYEE2_LAST_NAME = "DDDDDDDDD";
 
-    private static final String DEFAULT_EMPLOYEE_EMAIL = "$+@#=.\"m";
-    private static final String UPDATED_EMPLOYEE_EMAIL = "P^@v.g";
-    private static final String DEFAULT_EMPLOYEE2_EMAIL = "$++&@#=.\"m";
-    private static final String UPDATED_EMPLOYEE2_EMAIL = "P^IU@v.g";
+    private static final String DEFAULT_EMPLOYEE_EMAIL = "eeewrrwe@localhost.com";
+    private static final String UPDATED_EMPLOYEE_EMAIL = "P^g@localhost.com";
+    private static final String DEFAULT_EMPLOYEE2_EMAIL = "$++@localhost.com";
+    private static final String UPDATED_EMPLOYEE2_EMAIL = "P^gfdg@localhost.com";
 
     private static final Boolean DEFAULT_HIRED = false;
     private static final Boolean UPDATED_HIRED = true;
@@ -225,6 +249,18 @@ class CompanyEmployeeServiceTestIT {
     @Autowired
     private EmployeeService employeeService;
 
+    @Autowired
+    private MappingJackson2HttpMessageConverter jacksonMessageConverter;
+
+    @Autowired
+    private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
+
+    @Autowired
+    private ExceptionTranslator exceptionTranslator;
+
+
+    @Autowired
+    private Validator validator;
 
     /**
      * This repository is mocked in the com.streeam.cims.repository.search test package.
@@ -240,11 +276,22 @@ class CompanyEmployeeServiceTestIT {
 
     private Company company, company2;
 
+    private MockMvc restEmployeeMockMvc;
+
+    private Employee employee;
+
 
     @BeforeEach
     void init() {
 
-
+        MockitoAnnotations.initMocks(this);
+        final EmployeeResource employeeResource = new EmployeeResource(employeeService);
+        this.restEmployeeMockMvc = MockMvcBuilders.standaloneSetup(employeeResource)
+            .setCustomArgumentResolvers(pageableArgumentResolver)
+            .setControllerAdvice(exceptionTranslator)
+            .setConversionService(createFormattingConversionService())
+            .setMessageConverters(jacksonMessageConverter)
+            .setValidator(validator).build();
 
         user1 = new User();
         user1.setLogin(DEFAULT_USER_LOGIN);
@@ -373,7 +420,7 @@ class CompanyEmployeeServiceTestIT {
         companyRepository.saveAndFlush(company);
 
         employeeService.saveWithCompany(employee1, company);
-        Optional<Company> maybeCompany =companyRepository.findOneByEmployees(Collections.singleton(employee1));
+        Optional<Company> maybeCompany = companyRepository.findOneByEmployees(Collections.singleton(employee1));
         assertThat(maybeCompany).isPresent();
         assertThat(maybeCompany.get()).isEqualTo(company);
 
@@ -389,12 +436,12 @@ class CompanyEmployeeServiceTestIT {
 
         userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
 
-        assertThat(userService.checkIfUserHasRoles(user1 , AuthoritiesConstants.MANAGER,  AuthoritiesConstants.EMPLOYEE)).isTrue();
-        assertThat(userService.checkIfUserHasRoles(user1 ,  AuthoritiesConstants.EMPLOYEE)).isFalse();
+        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.EMPLOYEE)).isFalse();
 
-        assertThat(userService.checkIfUserHasRoles(user1 , AuthoritiesConstants.MANAGER)).isTrue();
-        assertThat(userService.checkIfUserHasRoles(user1 , AuthoritiesConstants.USER)).isTrue();
-        assertThat(userService.checkIfUserHasRoles(user2 , AuthoritiesConstants.USER)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.MANAGER)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.USER)).isTrue();
+        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.USER)).isTrue();
     }
 
     @Test
@@ -402,11 +449,11 @@ class CompanyEmployeeServiceTestIT {
     void assertThatAnyActivatedUserHasAPairEmployee() {
 
         List<User> allUsers = userRepository.findAllByActivatedIsTrue();
-        if(!allUsers.isEmpty()){
+        if (!allUsers.isEmpty()) {
             User randomUser = allUsers.stream().findAny().get();
             assertThat(employeeRepository.findByLogin(randomUser.getLogin())).isPresent();
 
-            Employee linkedEmployee =  employeeRepository.findByLogin(randomUser.getLogin()).get();
+            Employee linkedEmployee = employeeRepository.findByLogin(randomUser.getLogin()).get();
 
             assertThat(randomUser.getEmail()).isEqualTo(linkedEmployee.getEmail());
         }
@@ -447,15 +494,13 @@ class CompanyEmployeeServiceTestIT {
     void assertThatWhenCompanyIsRemovedItRemovesTheUsersRoles() {
 
 
-
         userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
         userRepository.saveAndFlush(user1);
         userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user2);
         userRepository.saveAndFlush(user2);
         Company updatedCompany = companyRepository.saveAndFlush(company);
         int initialCompanySize = companyRepository.findAll().size();
-        updatedCompany.addEmployees(employee1);
-        updatedCompany.addEmployees(employee2);
+
         employee1.setCompany(updatedCompany);
         employee2.setCompany(updatedCompany);
         employeeRepository.saveAndFlush(employee1);
@@ -468,15 +513,15 @@ class CompanyEmployeeServiceTestIT {
         assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.USER)).isTrue();
         assertThat(updatedCompany.getId()).isNotNull();
 
-       companyService.delete(updatedCompany.getId());
+        companyService.delete(updatedCompany.getId());
 
-       assertThat(companyRepository.findAll().size()).isEqualTo(initialCompanySize-1);
-       assertThat(initialEmployeesInACompany).isEqualTo(employeeRepository.findAll().size());
-       assertThat(userRepository.findOneByLogin(user1.getLogin())).isPresent();
-       assertThat(userRepository.findOneByLogin(user2.getLogin())).isPresent();
+        assertThat(companyRepository.findAll().size()).isEqualTo(initialCompanySize - 1);
+        assertThat(initialEmployeesInACompany).isEqualTo(employeeRepository.findAll().size());
+        assertThat(userRepository.findOneByLogin(user1.getLogin())).isPresent();
+        assertThat(userRepository.findOneByLogin(user2.getLogin())).isPresent();
 
-       User testUser1 = userRepository.findOneByLogin(user1.getLogin()).get();
-       User testUser2 = userRepository.findOneByLogin(user2.getLogin()).get();
+        User testUser1 = userRepository.findOneByLogin(user1.getLogin()).get();
+        User testUser2 = userRepository.findOneByLogin(user2.getLogin()).get();
 
 
         assertThat(userService.checkIfUserHasRoles(testUser1, AuthoritiesConstants.MANAGER)).isFalse();
@@ -485,9 +530,148 @@ class CompanyEmployeeServiceTestIT {
         assertThat(userService.checkIfUserHasRoles(testUser1, AuthoritiesConstants.USER)).isTrue();
 
 
-        userRepository.deleteInBatch(Arrays.asList(user1,user2));
-        employeeRepository.deleteInBatch(Arrays.asList(employee1,employee2));
+        userRepository.deleteInBatch(Arrays.asList(user1, user2));
+        employeeRepository.deleteInBatch(Arrays.asList(employee1, employee2));
     }
+
+    @Test
+    @Transactional
+    void assertThatManagerCanChangeDetailsForEmployeesFromHisCompanyOnly() throws Exception {
+
+        securityAwareMockMVC();
+
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
+        userRepository.saveAndFlush(user1);
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user2);
+        userRepository.saveAndFlush(user2);
+        userService.allocateAuthority(AuthoritiesConstants.USER, user3);
+        userRepository.saveAndFlush(user3);
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user4);
+        userRepository.saveAndFlush(user4);
+
+
+        Company updatedCompany = companyRepository.saveAndFlush(company);
+        Company updatedCompany2 = companyRepository.saveAndFlush(company2);
+
+        employee1.setCompany(updatedCompany);
+        employee2.setCompany(updatedCompany);
+        employee3.setCompany(updatedCompany2);
+        employee4.setCompany(updatedCompany2);
+        employeeRepository.saveAndFlush(employee1);
+        employeeRepository.saveAndFlush(employee2);
+        employeeRepository.saveAndFlush(employee3);
+        employeeRepository.saveAndFlush(employee4);
+
+        int databaseSizeBeforeUpdate = employeeRepository.findAll().size();
+
+        assertThat(employeeRepository.findById(employee1.getId())).isPresent();
+        Employee updatedEmployee = employeeRepository.findById(employee1.getId()).get();
+
+        updatedEmployee
+            .login(UPDATED_EMPLOYEE2_LOGIN)
+            .firstName(UPDATED_EMPLOYEE2_FIRST_NAME)
+            .lastName(UPDATED_EMPLOYEE2_LAST_NAME)
+            //.email(UPDATED_EMPLOYEE2_EMAIL)
+            //.hired(UPDATED2_HIRED)
+            .language(DEFAULT_USER4_LANGKEY)
+            .image(UPDATED_EMPLOYEE2_IMAGE)
+            .imageContentType(UPDATED_EMPLOYEE2_IMAGE_CONTENT_TYPE);
+
+        EmployeeDTO employeeDTO = employeeMapper.toDto(updatedEmployee);
+
+/**
+ * Modifying the details of another employee is forbidden.
+ */
+        restEmployeeMockMvc.perform(put("/api/employees")
+            .with(user(user3.getLogin()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.changejustyouraccount")));
+
+        employeeDTO.setEmail("dummyemail@localhost.com");
+
+        assertThat(employeeDTO.getEmail()).isNotEqualTo(employee1.getEmail());
+/**
+ * You cannot update your email.
+ */
+        restEmployeeMockMvc.perform(put("/api/employees")
+            .with(user(user3.getLogin()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.emailcannotbemodified")))
+        ;
+
+        employeeDTO.setEmail(DEFAULT_USER_EMAIL);
+        employeeDTO.setHired(true);
+        assertThat(employeeDTO.isHired()).isNotEqualTo(employee1.isHired());
+/**
+ * You cannot update the hire value.
+ */
+        restEmployeeMockMvc.perform(put("/api/employees")
+            .with(user(user3.getLogin()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hirecannotbemodified")))
+        ;
+
+        employeeDTO.setHired(false);
+ /**
+  *  As a manager you cannot modify the details of employees from other companies then your own.
+  */
+        restEmployeeMockMvc.perform(put("/api/employees")
+            .with(user(user4.getLogin()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.noupdatestoemployeesoutsidethecompany")))
+        ;
+
+        /**
+         *  Update a employee
+         */
+        restEmployeeMockMvc.perform(put("/api/employees")
+            .with(user(user1.getLogin()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
+            .andExpect(status().isOk())
+        ;
+
+        em.flush();
+
+        // Validate the Employee in the database
+        List<Employee> employeeList = employeeRepository.findAll();
+        assertThat(employeeList).hasSize(databaseSizeBeforeUpdate);
+        Employee testEmployee = employeeList.get(employeeList.size() - 4);
+        assertThat(testEmployee.getLogin()).isEqualTo(UPDATED_EMPLOYEE2_LOGIN);
+        assertThat(testEmployee.getFirstName()).isEqualTo(UPDATED_EMPLOYEE2_FIRST_NAME);
+        assertThat(testEmployee.getLastName()).isEqualTo(UPDATED_EMPLOYEE2_LAST_NAME);
+        assertThat(testEmployee.getEmail()).isEqualTo(DEFAULT_USER_EMAIL);
+        assertThat(testEmployee.isHired()).isEqualTo(DEFAULT_HIRED);
+        assertThat(testEmployee.getLanguage()).isEqualTo(DEFAULT_USER4_LANGKEY);
+        assertThat(testEmployee.getImage()).isEqualTo(UPDATED_EMPLOYEE2_IMAGE);
+        assertThat(testEmployee.getImageContentType()).isEqualTo(UPDATED_EMPLOYEE2_IMAGE_CONTENT_TYPE);
+
+        // Validate the Employee in the database
+
+        User testUser = testEmployee.getUser();
+        assertThat(testUser.getLogin()).isEqualToIgnoringCase(UPDATED_EMPLOYEE2_LOGIN);
+        assertThat(testUser.getFirstName()).isEqualTo(UPDATED_EMPLOYEE2_FIRST_NAME);
+        assertThat(testUser.getLastName()).isEqualTo(UPDATED_EMPLOYEE2_LAST_NAME);
+        assertThat(testUser.getEmail()).isEqualTo(DEFAULT_USER_EMAIL);
+        assertThat(testUser.getLangKey()).isEqualTo(DEFAULT_USER4_LANGKEY);
+
+        // Validate the Employee in Elasticsearch
+        verify(mockEmployeeSearchRepository, times(1)).save(testEmployee);
+
+        userRepository.deleteInBatch(Arrays.asList(testUser, user2,user3, user4));
+        companyRepository.deleteInBatch(Arrays.asList(company,company2));
+        employeeRepository.deleteInBatch(Arrays.asList(employee1, employee2, employee3, employee4));
+
+    }
+
 
 //    @Test
 //    @Transactional
@@ -532,5 +716,12 @@ class CompanyEmployeeServiceTestIT {
 //        userRepository.delete(user4);
 //    }
 
+    private void securityAwareMockMVC() {
+        // Create security-aware mockMvc
+        restEmployeeMockMvc = MockMvcBuilders
+            .webAppContextSetup(context)
+            .apply(springSecurity())
+            .build();
+    }
 
 }

@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     private static final ObjectMapper mapper = createObjectMapper();
 
     /** MediaType for JSON UTF8 */
-     static final MediaType APPLICATION_JSON_UTF8 = MediaType.APPLICATION_JSON_UTF8;
+    public static final MediaType APPLICATION_JSON_UTF8 = MediaType.APPLICATION_JSON_UTF8;
 
     private static ObjectMapper createObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
@@ -46,7 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
      * @return the JSON byte array.
      * @throws IOException
      */
-     static byte[] convertObjectToJsonBytes(Object object) throws IOException {
+     public static byte[] convertObjectToJsonBytes(Object object) throws IOException {
         return mapper.writeValueAsBytes(object);
     }
 
@@ -129,7 +129,7 @@ import static org.assertj.core.api.Assertions.assertThat;
      * Create a {@link FormattingConversionService} which use ISO date format, instead of the localized one.
      * @return the {@link FormattingConversionService}.
      */
-     static FormattingConversionService createFormattingConversionService() {
+     public static FormattingConversionService createFormattingConversionService() {
         DefaultFormattingConversionService dfcs = new DefaultFormattingConversionService ();
         DateTimeFormatterRegistrar registrar = new DateTimeFormatterRegistrar();
         registrar.setUseIsoFormat(true);

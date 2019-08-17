@@ -39,9 +39,12 @@ public class EmployeeService {
     @Autowired
     private  UserService userService;
 
-    public EmployeeService(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper,
-                           EmployeeSearchRepository employeeSearchRepository) {
 
+    private final CompanyService companyService;
+
+    public EmployeeService(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper,CompanyService companyService,
+                           EmployeeSearchRepository employeeSearchRepository) {
+        this.companyService = companyService;
         this.employeeRepository = employeeRepository;
         this.employeeMapper = employeeMapper;
         this.employeeSearchRepository = employeeSearchRepository;
@@ -53,9 +56,16 @@ public class EmployeeService {
      * @param employeeDTO the entity to save.
      * @return the persisted entity.
      */
-    public EmployeeDTO save(EmployeeDTO employeeDTO) {
+    public EmployeeDTO save(User linkedUser, EmployeeDTO employeeDTO) {
         log.debug("Request to save Employee : {}", employeeDTO);
+
+        linkedUser.setLogin(employeeDTO.getLogin());
+        linkedUser.setFirstName(employeeDTO.getFirstName());
+        linkedUser.setLastName(employeeDTO.getLastName());
+        linkedUser.setLangKey(employeeDTO.getLanguage());
+
         Employee employee = employeeMapper.toEntity(employeeDTO);
+        employee.setUser(linkedUser);
         employee = employeeRepository.save(employee);
         EmployeeDTO result = employeeMapper.toDto(employee);
         employeeSearchRepository.save(employee);
@@ -87,6 +97,19 @@ public class EmployeeService {
         log.debug("Request to get Employee : {}", id);
         return employeeRepository.findById(id)
             .map(employeeMapper::toDto);
+    }
+
+
+    /**
+     * Get one employee by id.
+     *
+     * @param id the id of the entity.
+     * @return the entity.
+     */
+    @Transactional(readOnly = true)
+    public Optional<Employee> findOneById(Long id) {
+        log.debug("Request to get Employee : {}", id);
+        return employeeRepository.findById(id);
     }
 
     /**
@@ -151,8 +174,8 @@ public class EmployeeService {
         return result;
     }
 
-    public Optional<User> findLinkedUserByLogin(String login) {
-        return  userService.findOneByLogin(login);
+    public Optional<User> findLinkedUserByEmail(String email) {
+        return  userService.findOneByEmail(email);
     }
 
     public UserDTO mapEmployeeDTOToUser(User linkedUser, EmployeeDTO employeeDTO) {
@@ -162,5 +185,32 @@ public class EmployeeService {
         linkedUser.setLastName(employeeDTO.getLastName());
         linkedUser.setLangKey(employeeDTO.getLanguage());
         return  userService.save(linkedUser);
+    }
+
+    public Optional<User> findCurrentUser(String login) {
+
+        return userService.getCurrentUser(login);
+    }
+
+    public boolean hasCurrentUserRoles(User currentUser, String... roles) {
+
+        return userService.checkIfUserHasRoles(currentUser, roles);
+    }
+
+    public Optional<Company> findEmployeesCompany(Employee currentEmployee) {
+        return companyService.findCompanyById(currentEmployee.getCompany().getId());
+    }
+
+    public Optional<Employee> findOneByEmail(String email) {
+        return employeeRepository.findOneByEmail(email);
+    }
+
+    public boolean checkUserHasRoles(User user, String... roles) {
+        return userService.checkIfUserHasRoles(user, roles);
+    }
+
+    public Page<EmployeeDTO> findCompanysEmployees(Pageable pageable) {
+
+        return  null;
     }
 }

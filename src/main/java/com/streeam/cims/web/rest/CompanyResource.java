@@ -4,6 +4,7 @@ import com.streeam.cims.domain.*;
 import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
+import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.CompanyService;
 import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.dto.CompanyDTO;
@@ -48,6 +49,7 @@ public class CompanyResource {
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
 
+
     private final CompanyService companyService;
 
     private final MailService mailService;
@@ -85,7 +87,9 @@ public class CompanyResource {
             throw new BadRequestAlertException("This company name is already being used", ENTITY_NAME, "emailexists");
         }
 
-        User user = companyService.findCurrentUser().orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+
+        User user = companyService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
 
         Employee employee = companyService.findEmployeeFromUser(user).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
@@ -141,16 +145,15 @@ public class CompanyResource {
 
         Page<CompanyDTO> page = new PageImpl<>(new ArrayList<>());
 
-        Optional<User> user = companyService.findCurrentUser();
-        if (!user.isPresent()) {
-            throw new ResourceNotFoundException("No user logged in.");
-        }
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
-        if (companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)) {
+        User user = companyService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
+
+        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)) {
             page = companyService.findAll(pageable);
         }
-        if (companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
-            page = companyService.findCompanyWithCurrentUser(user.get());
+        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
+            page = companyService.findCompanyWithCurrentUser(user);
         }
 
 
@@ -179,7 +182,10 @@ public class CompanyResource {
      */
     @DeleteMapping("/companies/{id}")
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
-        Optional<User> user = companyService.findCurrentUser();
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+
+        Optional<User> user = companyService.findCurrentUser(currentUserLogin);
 
         if (user.isPresent() && !companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.MANAGER,
             AuthoritiesConstants.ADMIN)) {
@@ -219,8 +225,9 @@ public class CompanyResource {
         log.debug("REST request to join the company : {}", companyId);
 
         // find the latest rejected notification. If it has been less then 48h since
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
-        User user = companyService.findCurrentUser().orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+        User user = companyService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
 
         if (companyService.checkUserHasRoles(user, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
             throw new BadRequestAlertException("You don't have the eligible to request to join a company", ENTITY_NAME, "requesttojoinforbiden");
@@ -281,10 +288,11 @@ public class CompanyResource {
     @PreAuthorize("hasRole(\"" + AuthoritiesConstants.MANAGER + "\")")
     public void rejectEmployee(@PathVariable Long companyId, @PathVariable String userEmail, @PathVariable Long id) {
         log.debug("REST to reject a user's request to join a company.");
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
         Company company = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
-        User user = companyService.findCurrentUser().orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+        User user = companyService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
 
         mailService.sendRequestToJoinEmail(userEmail, user);
 

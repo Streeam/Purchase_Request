@@ -1,6 +1,10 @@
 package com.streeam.cims.web.rest;
 
+import com.streeam.cims.domain.Company;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
+import com.streeam.cims.security.AuthoritiesConstants;
+import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.web.rest.errors.BadRequestAlertException;
@@ -12,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +25,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -75,28 +81,66 @@ public class EmployeeResource {
     public ResponseEntity<EmployeeDTO> updateEmployee(@Valid @RequestBody EmployeeDTO employeeDTO) throws URISyntaxException {
         log.debug("REST request to update Employee : {}", employeeDTO);
         Long employeeId =  employeeDTO.getId();
+        EmployeeDTO result;
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(()->new BadRequestAlertException("No User currently logged in", ENTITY_NAME, "nouserloggedin"));
+
         if ( employeeId == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "employeenotfound");
         }
-        String email = employeeService.findOne(employeeId).orElseThrow(()->
-            new BadRequestAlertException("Employee not found.", ENTITY_NAME, "emailexists")).getEmail();
-        if(!email.equalsIgnoreCase(employeeDTO.getEmail())){
+
+        Employee employeeToModify =  employeeService.findOneById(employeeId).orElseThrow(()->
+            new BadRequestAlertException("Employee not found.", ENTITY_NAME, "emailexists"));
+
+
+
+        if(!employeeToModify.getEmail().equalsIgnoreCase(employeeDTO.getEmail())){
             throw new BadRequestAlertException("You cannot update your email.", ENTITY_NAME, "emailcannotbemodified");
         }
 
-        User linkedUser = employeeService.findLinkedUserByLogin(employeeDTO.getLogin()).orElseThrow(()->new ResourceNotFoundException("No user linked to employee " + employeeDTO.getEmail()));
+        User linkedUser = employeeService.findLinkedUserByEmail(employeeToModify.getEmail()).orElseThrow(()->new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserlinkedtoemployee"));
 
-         employeeService.mapEmployeeDTOToUser(linkedUser , employeeDTO);
-        // Link and save the user. Update the user from the employee dto
 
-        EmployeeDTO result = employeeService.save(employeeDTO);
+
+        if(!employeeToModify.isHired().equals(employeeDTO.isHired())){
+            throw new BadRequestAlertException("You cannot update the hire value.", ENTITY_NAME, "hirecannotbemodified");
+        }
+
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()->new BadRequestAlertException("No User currently logged in", ENTITY_NAME, "nouserloggedin"));
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(()->new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
+
+        boolean currentUserIsAdminOrManager = employeeService.hasCurrentUserRoles(currentUser, AuthoritiesConstants.MANAGER, AuthoritiesConstants.ADMIN);
+        // Scenario when a employee is trying to modify the details of another  employee and he is not a manager or a admin.
+        if(!linkedUser.getEmail().equalsIgnoreCase(currentUser.getEmail()) && !currentUserIsAdminOrManager){
+            throw new BadRequestAlertException("Modifying the details of another employee is forbidden.", ENTITY_NAME, "changejustyouraccount");
+        }
+
+        // The scenario where the user is the manager. He is only allowed to modify his details or the details of the employees from his company.
+        if(employeeService.hasCurrentUserRoles(currentUser, AuthoritiesConstants.MANAGER)){
+            Company currentCompany = employeeService.findEmployeesCompany(currentEmployee)
+                .orElseThrow(()->new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
+            boolean isEmployeeInTheCompany = currentCompany.getEmployees().stream()
+                .map(Employee::getEmail)
+                .anyMatch(email-> email.equalsIgnoreCase(employeeDTO.getEmail()));
+            if(!isEmployeeInTheCompany){
+                throw  new BadRequestAlertException("You cannot modify the details of employees from other companies then your own.", ENTITY_NAME, "noupdatestoemployeesoutsidethecompany");
+            }
+
+            result = employeeService.save(linkedUser, employeeDTO);
+        }
+        // The scenario where the user is the manager. He is only allowed to modify his details or the details of the employees from his company.
+        else {
+            result = employeeService.save(linkedUser, employeeDTO);
+        }
+
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, employeeDTO.getId().toString()))
             .body(result);
     }
 
     /**
-     * {@code GET  /employees} : get all the employees.
+     * {@code GET  /employees} : get all the employees. If the user is admin he can see all employees, otherwise only see employees from your company
      *
 
      * @param pageable the pagination information.
@@ -106,7 +150,36 @@ public class EmployeeResource {
     @GetMapping("/employees")
     public ResponseEntity<List<EmployeeDTO>> getAllEmployees(Pageable pageable) {
         log.debug("REST request to get a page of Employees");
-        Page<EmployeeDTO> page = employeeService.findAll(pageable);
+
+//
+//
+//        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+//
+//        User user = companyService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
+//
+//        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)) {
+//            page = companyService.findAll(pageable);
+//        }
+//        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
+//            page = companyService.findCompanyWithCurrentUser(user);
+//        }
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+
+        User user = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
+
+        Page<EmployeeDTO> page = new PageImpl<>(new ArrayList<>());
+
+        if (employeeService.checkUserHasRoles(user, AuthoritiesConstants.ADMIN)){
+            page = employeeService.findAll(pageable);
+        }
+        if (employeeService.checkUserHasRoles(user, AuthoritiesConstants.USER, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)){
+
+            page = employeeService.findCompanysEmployees(pageable);
+
+        }
+
+        //
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

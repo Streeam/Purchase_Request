@@ -49,11 +49,15 @@ public class CompanyService {
     @Autowired
     private  UserService userService;
 
+    @Autowired
+    private EmployeeService employeeService;
+
+
     private  final UserRepository userRepository;
 
     private final UserMapper userMapper;
 
-    private final EmployeeService employeeService;
+
 
     private  final EmployeeRepository employeeRepository;
 
@@ -66,7 +70,7 @@ public class CompanyService {
     private final AuthorityRepository authorityRepository;
 
     public CompanyService(CompanyRepository companyRepository, CompanyMapper companyMapper, UserRepository userRepository,
-                          CompanySearchRepository companySearchRepository, EmployeeService employeeService, EmployeeMapper employeeMapper, UserSearchRepository userSearchRepository,
+                          CompanySearchRepository companySearchRepository, EmployeeMapper employeeMapper, UserSearchRepository userSearchRepository,
                           EmployeeRepository employeeRepository,UserMapper userMapper, NotificationService notificationService, AuthorityRepository authorityRepository) {
 
         this.userRepository = userRepository;
@@ -76,7 +80,6 @@ public class CompanyService {
         this.companyRepository = companyRepository;
         this.companyMapper = companyMapper;
         this.companySearchRepository = companySearchRepository;
-        this.employeeService = employeeService;
         this.employeeMapper = employeeMapper;
         this.employeeRepository = employeeRepository;
         this.userSearchRepository = userSearchRepository;
@@ -252,8 +255,8 @@ public class CompanyService {
      *
      * @return an optional of the current user
      */
-    public Optional<User> findCurrentUser() {
-        return userService.getCurrentUser();
+    public Optional<User> findCurrentUser(String login) {
+        return userService.getCurrentUser(login);
     }
 
     public Optional<Employee> findEmployeeFromUser(User user) {
