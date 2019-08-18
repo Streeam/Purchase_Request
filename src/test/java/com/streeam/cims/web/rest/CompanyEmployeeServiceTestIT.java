@@ -1,24 +1,21 @@
-package com.streeam.cims.service;
+package com.streeam.cims.web.rest;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.streeam.cims.CidApp;
-import com.streeam.cims.domain.Company;
-import com.streeam.cims.domain.Employee;
-import com.streeam.cims.domain.Notification;
-import com.streeam.cims.domain.User;
+import com.streeam.cims.domain.*;
 import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.*;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.repository.search.EmployeeSearchRepository;
 import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
+import com.streeam.cims.service.CompanyService;
+import com.streeam.cims.service.EmployeeService;
+import com.streeam.cims.service.UserService;
 import com.streeam.cims.service.dto.CompanyDTO;
-import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
 import com.streeam.cims.service.mapper.EmployeeMapper;
-import com.streeam.cims.web.rest.EmployeeResource;
-import com.streeam.cims.web.rest.TestUtil;
 import com.streeam.cims.web.rest.errors.ExceptionTranslator;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hamcrest.Matchers;
@@ -32,8 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -55,9 +50,6 @@ import java.util.Optional;
 
 import static com.streeam.cims.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.not;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -298,7 +290,7 @@ class CompanyEmployeeServiceTestIT {
     private User user1, user2, user3, user4;
     private Company company, company2;
     private Notification notification1, notification2, notification3, notification4;
-    private MockMvc restMockMvc;
+    private MockMvc restCompanyMockMvc;
 
 
     @BeforeEach
@@ -306,7 +298,7 @@ class CompanyEmployeeServiceTestIT {
 
         MockitoAnnotations.initMocks(this);
         final EmployeeResource employeeResource = new EmployeeResource(employeeService);
-        this.restMockMvc = MockMvcBuilders.standaloneSetup(employeeResource)
+        this.restCompanyMockMvc = MockMvcBuilders.standaloneSetup(employeeResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setConversionService(createFormattingConversionService())
@@ -462,277 +454,6 @@ class CompanyEmployeeServiceTestIT {
 
     @Test
     @Transactional
-    void assertEmployeesEndpointsBehaveAsRequired() throws Exception {
-
-        securityAwareMockMVC();
-
-        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
-        userRepository.saveAndFlush(user1);
-        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user2);
-        userRepository.saveAndFlush(user2);
-        userService.allocateAuthority(AuthoritiesConstants.USER, user3);
-        userRepository.saveAndFlush(user3);
-        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user4);
-        userRepository.saveAndFlush(user4);
-
-
-        Company updatedCompany = companyRepository.saveAndFlush(company);
-        Company updatedCompany2 = companyRepository.saveAndFlush(company2);
-
-        employee1.setCompany(updatedCompany);
-        employee2.setCompany(updatedCompany);
-        employee3.setCompany(updatedCompany2);
-        employee4.setCompany(updatedCompany2);
-        employeeRepository.saveAndFlush(employee1);
-        employeeRepository.saveAndFlush(employee2);
-        employeeRepository.saveAndFlush(employee3);
-        employeeRepository.saveAndFlush(employee4);
-
-        notificationRepository.saveAndFlush(notification1);
-        notificationRepository.saveAndFlush(notification2);
-        notificationRepository.saveAndFlush(notification3);
-        notificationRepository.saveAndFlush(notification4);
-
-        int databaseSizeBeforeUpdate = employeeRepository.findAll().size();
-
-/**
- * ****************** PUT api/employees ****************
- */
-        assertThat(employeeRepository.findById(employee1.getId())).isPresent();
-        Employee updatedEmployee = employeeRepository.findById(employee1.getId()).get();
-
-        updatedEmployee
-            .login(UPDATED_EMPLOYEE2_LOGIN)
-            .firstName(UPDATED_EMPLOYEE2_FIRST_NAME)
-            .lastName(UPDATED_EMPLOYEE2_LAST_NAME)
-            //.email(UPDATED_EMPLOYEE2_EMAIL)
-            //.hired(UPDATED2_HIRED)
-            .language(DEFAULT_USER4_LANGKEY)
-            .image(UPDATED_EMPLOYEE2_IMAGE)
-            .imageContentType(UPDATED_EMPLOYEE2_IMAGE_CONTENT_TYPE);
-
-        EmployeeDTO employeeDTO = employeeMapper.toDto(updatedEmployee);
-
-        /**
-         * Modifying the details of another employee is forbidden.
-         */
-        restMockMvc.perform(put("/api/employees")
-            .with(user(user3.getLogin()))
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.changejustyouraccount")));
-
-        employeeDTO.setEmail("dummyemail@localhost.com");
-
-        assertThat(employeeDTO.getEmail()).isNotEqualTo(employee1.getEmail());
-        /**
-         * You cannot update your email.
-         */
-        restMockMvc.perform(put("/api/employees")
-            .with(user(user3.getLogin()))
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.emailcannotbemodified")))
-        ;
-
-        employeeDTO.setEmail(DEFAULT_USER_EMAIL);
-        employeeDTO.setHired(true);
-        assertThat(employeeDTO.isHired()).isNotEqualTo(employee1.isHired());
-        /**
-         * You cannot update the hire value.
-         */
-        restMockMvc.perform(put("/api/employees")
-            .with(user(user3.getLogin()))
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hirecannotbemodified")))
-        ;
-
-        employeeDTO.setHired(false);
-         /**
-          *  As a manager you cannot modify the details of employees from other companies then your own.
-          */
-        restMockMvc.perform(put("/api/employees")
-            .with(user(user4.getLogin()))
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.noupdatestoemployeesoutsidethecompany")));
-
-        /**
-         *  Update a employee
-         */
-        restMockMvc.perform(put("/api/employees")
-            .with(user(user1.getLogin()))
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
-            .andExpect(status().isOk())
-        ;
-
-        em.flush();
-
-        // Validate the Employee in the database
-        List<Employee> employeeList = employeeRepository.findAll();
-        assertThat(employeeList).hasSize(databaseSizeBeforeUpdate);
-        Employee testEmployee = employeeList.get(employeeList.size() - 4);
-        assertThat(testEmployee.getLogin()).isEqualTo(UPDATED_EMPLOYEE2_LOGIN);
-        assertThat(testEmployee.getFirstName()).isEqualTo(UPDATED_EMPLOYEE2_FIRST_NAME);
-        assertThat(testEmployee.getLastName()).isEqualTo(UPDATED_EMPLOYEE2_LAST_NAME);
-        assertThat(testEmployee.getEmail()).isEqualTo(DEFAULT_USER_EMAIL);
-        assertThat(testEmployee.isHired()).isEqualTo(DEFAULT_HIRED);
-        assertThat(testEmployee.getLanguage()).isEqualTo(DEFAULT_USER4_LANGKEY);
-        assertThat(testEmployee.getImage()).isEqualTo(UPDATED_EMPLOYEE2_IMAGE);
-        assertThat(testEmployee.getImageContentType()).isEqualTo(UPDATED_EMPLOYEE2_IMAGE_CONTENT_TYPE);
-
-        // Validate the Employee in the database
-
-        User testUser = testEmployee.getUser();
-        assertThat(testUser.getLogin()).isEqualToIgnoringCase(UPDATED_EMPLOYEE2_LOGIN);
-        assertThat(testUser.getFirstName()).isEqualTo(UPDATED_EMPLOYEE2_FIRST_NAME);
-        assertThat(testUser.getLastName()).isEqualTo(UPDATED_EMPLOYEE2_LAST_NAME);
-        assertThat(testUser.getEmail()).isEqualTo(DEFAULT_USER_EMAIL);
-        assertThat(testUser.getLangKey()).isEqualTo(DEFAULT_USER4_LANGKEY);
-
-        // Validate the Employee in Elasticsearch
-        verify(mockEmployeeSearchRepository, times(1)).save(testEmployee);
-
-/**
- * ****************** GET api/employees ****************
- */
-        /**
-         * You don't have the authority to access this endpoint.
-         */
-        restMockMvc.perform(get("/api/employees?sort=id,desc")
-            .with(user(user3.getLogin())))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.accessrestricted")));
-
-        restMockMvc.perform(get("/api/employees?sort=id,desc")
-            .with(user(user1.getLogin())))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].email").value(not(DEFAULT_USER4_EMAIL)))
-            .andExpect(jsonPath("$.[*].email").value(not(DEFAULT_USER3_EMAIL)))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(testEmployee.getId().intValue())))
-            .andExpect(jsonPath("$.[*].login").value(hasItem(UPDATED_EMPLOYEE2_LOGIN)))
-            .andExpect(jsonPath("$.[*].firstName").value(hasItem(UPDATED_EMPLOYEE2_FIRST_NAME)))
-            .andExpect(jsonPath("$.[*].lastName").value(hasItem(UPDATED_EMPLOYEE2_LAST_NAME)))
-            .andExpect(jsonPath("$.[*].email").value(hasItem(DEFAULT_USER_EMAIL)))
-            .andExpect(jsonPath("$.[*].email").value(hasItem(DEFAULT_USER2_EMAIL)))
-            .andExpect(jsonPath("$.[*].hired").value(hasItem(DEFAULT_HIRED.booleanValue())))
-            .andExpect(jsonPath("$.[*].language").value(hasItem(DEFAULT_USER4_LANGKEY)))
-            .andExpect(jsonPath("$.[*].imageContentType").value(hasItem(UPDATED_EMPLOYEE2_IMAGE_CONTENT_TYPE)))
-            .andExpect(jsonPath("$.[*].image").value(hasItem(Base64Utils.encodeToString(UPDATED_EMPLOYEE2_IMAGE))));
-
-
-
-/**
- * ****************** GET api/employees/{id} ****************
- */
-
-        // Get the employee
-        restMockMvc.perform(get("/api/employees/{id}", employee4.getId())
-            .with(user(user1.getLogin().toLowerCase())))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.id").value(employee4.getId().intValue()))
-            .andExpect(jsonPath("$.login").value(DEFAULT_USER4_LOGIN))
-            .andExpect(jsonPath("$.firstName").value(UPDATED_EMPLOYEE2_FIRST_NAME))
-            .andExpect(jsonPath("$.lastName").value(UPDATED_EMPLOYEE2_LAST_NAME))
-            .andExpect(jsonPath("$.email").value(DEFAULT_USER4_EMAIL))
-            .andExpect(jsonPath("$.hired").value(UPDATED_HIRED))
-            .andExpect(jsonPath("$.imageContentType").value(UPDATED_EMPLOYEE_IMAGE_CONTENT_TYPE))
-            .andExpect(jsonPath("$.image").value(Base64Utils.encodeToString(UPDATED_EMPLOYEE_IMAGE)));
-
-
-/**
- * ****************** SEARCH /api/_search/employees ****************
- */
-
-
-        when(mockEmployeeSearchRepository.search(queryStringQuery("id:" + testEmployee.getId()), PageRequest.of(0, 20)))
-            .thenReturn(new PageImpl<>(Collections.singletonList(testEmployee), PageRequest.of(0, 1), 1));
-        // Search the employee
-        restMockMvc.perform(get("/api/_search/employees?query=id:" + testEmployee.getId())
-            .with(user(user1.getLogin().toLowerCase())))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(hasItem(testEmployee.getId().intValue())))
-            .andExpect(jsonPath("$.[*].login").value(hasItem(UPDATED_EMPLOYEE2_LOGIN)))
-            .andExpect(jsonPath("$.[*].firstName").value(hasItem(UPDATED_EMPLOYEE2_FIRST_NAME)))
-            .andExpect(jsonPath("$.[*].lastName").value(hasItem(UPDATED_EMPLOYEE2_LAST_NAME)))
-            .andExpect(jsonPath("$.[*].email").value(hasItem(DEFAULT_USER_EMAIL)))
-            .andExpect(jsonPath("$.[*].hired").value(hasItem(DEFAULT_HIRED.booleanValue())))
-            .andExpect(jsonPath("$.[*].language").value(hasItem(DEFAULT_USER4_LANGKEY)))
-            .andExpect(jsonPath("$.[*].imageContentType").value(hasItem(UPDATED_EMPLOYEE2_IMAGE_CONTENT_TYPE)))
-            .andExpect(jsonPath("$.[*].image").value(hasItem(Base64Utils.encodeToString(UPDATED_EMPLOYEE2_IMAGE))));
-
-
-/**
- * ****************** DELETE api/employees ****************
- */
-        int databaseSizeBeforeDelete = employeeRepository.findAll().size();
-        int databaseUsersBeforeDelete = userRepository.findAllByActivatedIsTrue().size();
-        int databaseSizeEmployeesNotifications = notificationRepository.findAllByEmployee(employee4).size();
-
-        /**
-         * Delete the employee with the manager role
-         */
-
-        restMockMvc.perform(delete("/api/employees/{id}", employee4.getId())
-            .with(user(user1.getLogin().toLowerCase()))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.accessrestricted")));
-
-        // Validate the database contains one less item
-        List<Employee> employeeListAfterDelete = employeeRepository.findAll();
-        List<User> allUsersAfterDelete = userRepository.findAllByActivatedIsTrue();
-        List<Notification> allEmployeeNotificationsAfterDelete = notificationRepository.findAllByEmployee(employee4);
-
-        assertThat(employeeListAfterDelete).hasSize(databaseSizeBeforeDelete);
-        assertThat(allUsersAfterDelete).hasSize(databaseUsersBeforeDelete);
-        assertThat(allEmployeeNotificationsAfterDelete).hasSize(databaseSizeEmployeesNotifications);
-
-        // Validate the Employee in Elasticsearch
-        verify(mockEmployeeSearchRepository, times(0)).deleteById(employee4.getId());
-
-
-        /**
-         * Delete the employee with the admin role
-         */
-
-        restMockMvc.perform(delete("/api/employees/{id}", employee4.getId())
-            .with(user("admin"))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isNoContent());
-
-        // Validate the database contains one less item
-        employeeListAfterDelete = employeeRepository.findAll();
-        allUsersAfterDelete = userRepository.findAllByActivatedIsTrue();
-        allEmployeeNotificationsAfterDelete = notificationRepository.findAllByEmployee(employee4);
-
-        assertThat(employeeListAfterDelete).hasSize(databaseSizeBeforeDelete - 1);
-        assertThat(allUsersAfterDelete).hasSize(databaseUsersBeforeDelete - 1);
-        assertThat(allEmployeeNotificationsAfterDelete).hasSize(databaseSizeEmployeesNotifications - 1);
-
-
-
-        // Validate the Employee in Elasticsearch
-        verify(mockEmployeeSearchRepository, times(1)).deleteById(employee4.getId());
-
-        notificationRepository.deleteInBatch(Arrays.asList(notification1,notification2, notification3,notification4));
-        userRepository.deleteInBatch(Arrays.asList(testUser, user2,user3, user4));
-        companyRepository.deleteInBatch(Arrays.asList(company,company2));
-        employeeRepository.deleteInBatch(Arrays.asList(employee1, employee2, employee3, employee4));
-
-    }
-
-
-    @Test
-    @Transactional
     void assertCompanyEndpointsBehaveAsRequired() throws Exception {
 
         securityAwareMockMVC();
@@ -756,7 +477,7 @@ class CompanyEmployeeServiceTestIT {
 
         employee1.setCompany(null);
         employee2.setCompany(null);
-        employee3.setCompany(null);
+        employee3.setCompany(updatedCompany2);
         employee4.setCompany(updatedCompany2);
         employeeRepository.saveAndFlush(employee1);
         employeeRepository.saveAndFlush(employee2);
@@ -779,7 +500,7 @@ class CompanyEmployeeServiceTestIT {
 
         CompanyDTO companyDTO = companyMapper.toDto(company);
 
-        restMockMvc.perform(post("/api/companies")
+        restCompanyMockMvc.perform(post("/api/companies")
             .with(user(user1.getLogin().toLowerCase()))
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
@@ -814,7 +535,7 @@ class CompanyEmployeeServiceTestIT {
         /**
          * The manager of a company cannot see other companies
          */
-        ResultActions resultManagersCompany = restMockMvc.perform(get("/api/companies?sort=id,desc")
+        ResultActions resultManagersCompany = restCompanyMockMvc.perform(get("/api/companies?sort=id,desc")
             .with(user(user1.getLogin().toLowerCase())))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
@@ -824,7 +545,7 @@ class CompanyEmployeeServiceTestIT {
         /**
          * The User can see all companies
          */
-        ResultActions resultActions = restMockMvc.perform(get("/api/companies?sort=id,desc")
+        ResultActions resultActions = restCompanyMockMvc.perform(get("/api/companies?sort=id,desc")
             .with(user(user2.getLogin().toLowerCase())))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
@@ -870,7 +591,7 @@ class CompanyEmployeeServiceTestIT {
         initialEmployees = employeeRepository.findAll();
         initialUsers = userRepository.findAll();
 
-        restMockMvc.perform(delete("/api/companies/{id}", updatedCompany2.getId())
+        restCompanyMockMvc.perform(delete("/api/companies/{id}", updatedCompany2.getId())
             .with(user(user2.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.companyremoveforbiden")));
@@ -885,7 +606,7 @@ class CompanyEmployeeServiceTestIT {
         updatedCompany2 = companyRepository.findOneByEmail(UPDATED_COMPANY_EMAIL).get();
 
 
-        restMockMvc.perform(delete("/api/companies/{id}", updatedCompany.getId())
+        restCompanyMockMvc.perform(delete("/api/companies/{id}", updatedCompany.getId())
             .with(user(user4.getLogin().toLowerCase())) // ROLE_MANAGER
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.managercanonlyremovehisowncompany")));
@@ -896,7 +617,7 @@ class CompanyEmployeeServiceTestIT {
          * Manager deletes his own company.
          */
 
-        restMockMvc.perform(delete("/api/companies/{id}", updatedCompany2.getId())
+        restCompanyMockMvc.perform(delete("/api/companies/{id}", updatedCompany2.getId())
             .with(user(user4.getLogin().toLowerCase())) // ROLE_MANAGER
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isNoContent());
@@ -915,6 +636,8 @@ class CompanyEmployeeServiceTestIT {
  */
 
 
+
+
         /**
          * Delete all the test entities
          */
@@ -924,6 +647,53 @@ class CompanyEmployeeServiceTestIT {
         employeeRepository.deleteInBatch(Arrays.asList(employee1, employee2, employee3, employee4));
 
     }
+
+
+    @Test
+    @Transactional
+    void updateNonExistingCompany() throws Exception {
+        int databaseSizeBeforeUpdate = companyRepository.findAll().size();
+
+        // Create the Company
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        // If the entity doesn't have an ID, it will throw BadRequestAlertException
+        restCompanyMockMvc.perform(put("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        // Validate the Company in the database
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeUpdate);
+
+        // Validate the Company in Elasticsearch
+        verify(mockCompanySearchRepository, times(0)).save(company);
+    }
+//
+//    @Test
+//    @Transactional
+//    void searchCompany() throws Exception {
+//        // Initialize the database
+//        companyRepository.saveAndFlush(company);
+//        when(mockCompanySearchRepository.search(queryStringQuery("id:" + company.getId()), PageRequest.of(0, 20)))
+//            .thenReturn(new PageImpl<>(Collections.singletonList(company), PageRequest.of(0, 1), 1));
+//        // Search the company
+//        restCompanyMockMvc.perform(get("/api/_search/companies?query=id:" + company.getId()))
+//            .andExpect(status().isOk())
+//            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+//            .andExpect(jsonPath("$.[*].id").value(hasItem(company.getId().intValue())))
+//            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
+//            .andExpect(jsonPath("$.[*].email").value(hasItem(DEFAULT_EMAIL)))
+//            .andExpect(jsonPath("$.[*].phone").value(hasItem(DEFAULT_PHONE)))
+//            .andExpect(jsonPath("$.[*].addressLine1").value(hasItem(DEFAULT_ADDRESS_LINE_1)))
+//            .andExpect(jsonPath("$.[*].addressLine2").value(hasItem(DEFAULT_ADDRESS_LINE_2)))
+//            .andExpect(jsonPath("$.[*].city").value(hasItem(DEFAULT_CITY)))
+//            .andExpect(jsonPath("$.[*].country").value(hasItem(DEFAULT_COUNTRY)))
+//            .andExpect(jsonPath("$.[*].postcode").value(hasItem(DEFAULT_POSTCODE)))
+//            .andExpect(jsonPath("$.[*].companyLogoContentType").value(hasItem(DEFAULT_COMPANY_LOGO_CONTENT_TYPE)))
+//            .andExpect(jsonPath("$.[*].companyLogo").value(hasItem(Base64Utils.encodeToString(DEFAULT_COMPANY_LOGO))));
+//    }
 
 
     @Test
@@ -942,36 +712,6 @@ class CompanyEmployeeServiceTestIT {
 
         employeeService.delete(employee1.getId());
         companyRepository.delete(company);
-    }
-
-    @Test
-    @Transactional
-    void assertThatCheckIfUserHasRoles() {
-
-        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
-
-        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)).isTrue();
-        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.EMPLOYEE)).isFalse();
-
-        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.MANAGER)).isTrue();
-        assertThat(userService.checkIfUserHasRoles(user1, AuthoritiesConstants.USER)).isTrue();
-        assertThat(userService.checkIfUserHasRoles(user2, AuthoritiesConstants.USER)).isTrue();
-    }
-
-    @Test
-    @Transactional
-    void assertThatAnyActivatedUserHasALinkedEmployee() {
-
-        List<User> allUsers = userRepository.findAllByActivatedIsTrue();
-        if (!allUsers.isEmpty()) {
-            User randomUser = allUsers.stream().findAny().get();
-            assertThat(employeeRepository.findByLogin(randomUser.getLogin())).isPresent();
-
-            Employee linkedEmployee = employeeRepository.findByLogin(randomUser.getLogin()).get();
-
-            assertThat(randomUser.getEmail()).isEqualTo(linkedEmployee.getEmail());
-        }
-
     }
 
 
@@ -1048,9 +788,332 @@ class CompanyEmployeeServiceTestIT {
         employeeRepository.deleteInBatch(Arrays.asList(employee1, employee2));
     }
 
+    @Test
+    @Transactional
+    void equalsVerifier() throws Exception {
+        TestUtil.equalsVerifier(Company.class);
+        Company company1 = new Company();
+        company1.setId(1L);
+        Company company2 = new Company();
+        company2.setId(company1.getId());
+        assertThat(company1).isEqualTo(company2);
+        company2.setId(2L);
+        assertThat(company1).isNotEqualTo(company2);
+        company1.setId(null);
+        assertThat(company1).isNotEqualTo(company2);
+    }
+
+    @Test
+    @Transactional
+    void dtoEqualsVerifier() throws Exception {
+        TestUtil.equalsVerifier(CompanyDTO.class);
+        CompanyDTO companyDTO1 = new CompanyDTO();
+        companyDTO1.setId(1L);
+        CompanyDTO companyDTO2 = new CompanyDTO();
+        assertThat(companyDTO1).isNotEqualTo(companyDTO2);
+        companyDTO2.setId(companyDTO1.getId());
+        assertThat(companyDTO1).isEqualTo(companyDTO2);
+        companyDTO2.setId(2L);
+        assertThat(companyDTO1).isNotEqualTo(companyDTO2);
+        companyDTO1.setId(null);
+        assertThat(companyDTO1).isNotEqualTo(companyDTO2);
+    }
+
+    @Test
+    @Transactional
+    void testEntityFromId() {
+        assertThat(companyMapper.fromId(42L).getId()).isEqualTo(42);
+        assertThat(companyMapper.fromId(null)).isNull();
+    }
+
+//
+//    @Test
+//    @Transactional
+//    void createCompanyWithExistingEmail() throws Exception {
+//
+//        companyRepository.saveAndFlush(company);
+//        int databaseSizeBeforeCreate = companyRepository.findAll().size();
+//
+//        Company updatedCompany = createUpdatedEntity(em);
+//
+//        // Create the Company with an existing ID
+//        updatedCompany.setEmail(DEFAULT_EMAIL);
+//        CompanyDTO companyDTO = companyMapper.toDto(updatedCompany);
+//
+//        // An entity with an existing ID cannot be created, so this API call must fail
+//        restCompanyMockMvc.perform(post("/api/companies")
+//            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+//            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+//            .andExpect(status().isBadRequest());
+//
+//        // Validate the Company in the database
+//        List<Company> companyList = companyRepository.findAll();
+//        assertThat(companyList).hasSize(databaseSizeBeforeCreate);
+//
+//        verify(mockCompanyRepository, times(0)).save(company);
+//        // Validate the Company in Elasticsearch
+//        verify(mockCompanySearchRepository, times(0)).save(updatedCompany);
+//    }
+//
+//    @Test
+//    @Transactional
+//    void createCompanyWithExistingName() throws Exception {
+//
+//        companyRepository.saveAndFlush(company);
+//        int databaseSizeBeforeCreate = companyRepository.findAll().size();
+//
+//        Company updatedCompany = createUpdatedEntity(em);
+//
+//        // Create the Company with an existing ID
+//        updatedCompany.setName(DEFAULT_NAME);
+//        CompanyDTO companyDTO = companyMapper.toDto(updatedCompany);
+//
+//        // An entity with an existing ID cannot be created, so this API call must fail
+//        restCompanyMockMvc.perform(post("/api/companies")
+//            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+//            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+//            .andExpect(status().isBadRequest());
+//
+//        // Validate the Company in the database
+//        List<Company> companyList = companyRepository.findAll();
+//        assertThat(companyList).hasSize(databaseSizeBeforeCreate);
+//
+//        // Validate the Company in Elasticsearch
+//        verify(mockCompanySearchRepository, times(0)).save(updatedCompany);
+//    }
+//
+
+    @Test
+    @Transactional
+    void checkNameIsRequired() throws Exception {
+        int databaseSizeBeforeTest = companyRepository.findAll().size();
+        // set the field null
+        company.setName(null);
+
+        // Create the Company, which fails.
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
+    void checkEmailIsRequired() throws Exception {
+        int databaseSizeBeforeTest = companyRepository.findAll().size();
+        // set the field null
+        company.setEmail(null);
+
+        // Create the Company, which fails.
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
+    void checkPhoneIsRequired() throws Exception {
+        int databaseSizeBeforeTest = companyRepository.findAll().size();
+        // set the field null
+        company.setPhone(null);
+
+        // Create the Company, which fails.
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
+    void checkAddressLine1IsRequired() throws Exception {
+        int databaseSizeBeforeTest = companyRepository.findAll().size();
+        // set the field null
+        company.setAddressLine1(null);
+
+        // Create the Company, which fails.
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
+    void checkCityIsRequired() throws Exception {
+        int databaseSizeBeforeTest = companyRepository.findAll().size();
+        // set the field null
+        company.setCity(null);
+
+        // Create the Company, which fails.
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
+    void checkCountryIsRequired() throws Exception {
+        int databaseSizeBeforeTest = companyRepository.findAll().size();
+        // set the field null
+        company.setCountry(null);
+
+        // Create the Company, which fails.
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
+    void checkPostcodeIsRequired() throws Exception {
+        int databaseSizeBeforeTest = companyRepository.findAll().size();
+        // set the field null
+        company.setPostcode(null);
+
+        // Create the Company, which fails.
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeTest);
+    }
+
+    @Test
+    @Transactional
+    void getNonExistingCompany() throws Exception {
+        // Get the company
+        restCompanyMockMvc.perform(get("/api/companies/{id}", Long.MAX_VALUE))
+            .andExpect(status().isNotFound());
+    }
+
+    /**
+     * Create an entity for this test.
+     *
+     * This is a static method, as tests for other entities might also need it,
+     * if they test an entity which requires the current entity.
+     */
+//    static Company createEntity(EntityManager em) {
+//        Company company = new Company()
+//            .name(DEFAULT_NAME)
+//            .email(DEFAULT_EMAIL)
+//            .phone(DEFAULT_PHONE)
+//            .addressLine1(DEFAULT_ADDRESS_LINE_1)
+//            .addressLine2(DEFAULT_ADDRESS_LINE_2)
+//            .city(DEFAULT_CITY)
+//            .country(DEFAULT_COUNTRY)
+//            .postcode(DEFAULT_POSTCODE)
+//            .companyLogo(DEFAULT_COMPANY_LOGO)
+//            .companyLogoContentType(DEFAULT_COMPANY_LOGO_CONTENT_TYPE);
+//        // Add required entity
+//        Employee employee;
+//        if (TestUtil.findAll(em, Employee.class).isEmpty()) {
+//            employee = EmployeeTestIT.createEntity(em);
+//            em.persist(employee);
+//            em.flush();
+//        } else {
+//            employee = TestUtil.findAll(em, Employee.class).get(0);
+//        }
+//        company.getEmployees().add(employee);
+//        return company;
+//    }
+//
+//
+//    @Test
+//    @Transactional
+//    void createCompanyWithExistingId() throws Exception {
+//        int databaseSizeBeforeCreate = companyRepository.findAll().size();
+//
+//        // Create the Company with an existing ID
+//        company.setId(1L);
+//        CompanyDTO companyDTO = companyMapper.toDto(company);
+//
+//        // An entity with an existing ID cannot be created, so this API call must fail
+//        restCompanyMockMvc.perform(post("/api/companies")
+//            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+//            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+//            .andExpect(status().isBadRequest());
+//
+//        // Validate the Company in the database
+//        List<Company> companyList = companyRepository.findAll();
+//        assertThat(companyList).hasSize(databaseSizeBeforeCreate);
+//
+//        verify(mockCompanyRepository, times(0)).save(company);
+//        // Validate the Company in Elasticsearch
+//        verify(mockCompanySearchRepository, times(0)).save(company);
+//    }
+
+    @Test
+    @Transactional
+    void createCompanyWithWrongRole() throws Exception {
+
+        securityAwareMockMVC();
+        User currentUser = UserResourceIT.createEntity(em);
+
+        List<Authority> authorities = authorityRepository.findAll();
+
+        String authorityName = authorities.stream()
+            .map(Authority::getName)
+            .filter(authority -> !authority.contains(AuthoritiesConstants.USER))
+            .findAny()
+            .orElse("");
+
+        Authority manager = new Authority();
+        manager.setName(authorityName);
+        currentUser.getAuthorities().add(manager);
+
+        em.persist(currentUser);
+        em.flush();
+
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .with(user(currentUser.getLogin()))
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+    }
     private void securityAwareMockMVC() {
         // Create security-aware mockMvc
-        restMockMvc = MockMvcBuilders
+        restCompanyMockMvc = MockMvcBuilders
             .webAppContextSetup(context)
             .apply(springSecurity())
             .build();

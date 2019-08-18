@@ -120,7 +120,7 @@ public class NotificationResourceIT {
         // Add required entity
         Employee employee;
         if (TestUtil.findAll(em, Employee.class).isEmpty()) {
-            employee = EmployeeResourceIT.createEntity(em);
+            employee = EmployeeTestIT.createEntity(em);
             em.persist(employee);
             em.flush();
         } else {
@@ -144,7 +144,7 @@ public class NotificationResourceIT {
         // Add required entity
         Employee employee;
         if (TestUtil.findAll(em, Employee.class).isEmpty()) {
-            employee = EmployeeResourceIT.createUpdatedEntity(em);
+            employee = EmployeeTestIT.createEntity(em);
             em.persist(employee);
             em.flush();
         } else {
