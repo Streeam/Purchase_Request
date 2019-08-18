@@ -32,8 +32,9 @@ public class CidApp implements InitializingBean {
                     // Only the ROLE_USER can create a company
                     // He then automatically becomes MANAGER
             //TODO GET List all the companies details
-                      // manager and employee can see only his company, admin and user can see all companies
-            //TODO DELETE Delete a company  (manager can delete only his company, admin can delete any companies)
+                      //TODO manager and employee can see only his company, admin and user can see all companies
+            //TODO DELETE Delete a company
+                    //TODO Manager can delete only his company, admin can delete any company.
                     // Get all the employees from the company and remove the employee role. Remove the managers roles
                     // Delete the company update the employee company id
             //TODO PUT Update a company (manager his , admin any)

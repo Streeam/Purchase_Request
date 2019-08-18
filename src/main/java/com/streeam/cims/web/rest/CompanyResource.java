@@ -73,7 +73,7 @@ public class CompanyResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/companies")
-    @PreAuthorize("hasAnyRole(\"" + AuthoritiesConstants.USER + "\" , \"" + AuthoritiesConstants.ADMIN + "\")")
+   // @PreAuthorize("hasAnyRole(\"" + AuthoritiesConstants.USER + "\" , \"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<CompanyDTO> createCompany(@Valid @RequestBody CompanyDTO companyDTO) throws URISyntaxException {
         log.debug("REST request to save Company : {}", companyDTO);
         if (companyDTO.getId() != null) {
@@ -93,7 +93,7 @@ public class CompanyResource {
 
         Employee employee = companyService.findEmployeeFromUser(user).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
-        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN)) {
+        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN,AuthoritiesConstants.ANONYMOUS)) {
             throw new BadRequestAlertException("You can't create a company if you already have a company or are employed by another", ENTITY_NAME, "wrongrole");
         }
 
@@ -149,7 +149,7 @@ public class CompanyResource {
 
         User user = companyService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
 
-        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)) {
+        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER) && !companyService.checkUserHasRoles(user, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
             page = companyService.findAll(pageable);
         }
         if (companyService.checkUserHasRoles(user, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
@@ -183,19 +183,29 @@ public class CompanyResource {
     @DeleteMapping("/companies/{id}")
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
 
+        log.debug("REST request to delete Company : {}", id);
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
-        Optional<User> user = companyService.findCurrentUser(currentUserLogin);
+        User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
 
-        if (user.isPresent() && !companyService.checkUserHasRoles(user.get(), AuthoritiesConstants.MANAGER,
-            AuthoritiesConstants.ADMIN)) {
+        Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+        if (!companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN)) {
             throw new BadRequestAlertException("You don't have the authority to delete this company", ENTITY_NAME, "companyremoveforbiden");
         }
 
-        log.debug("REST request to delete Company : {}", id);
-        companyService.delete(id);
+        if(companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)){
 
-        return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, user.get().getId().toString())).build();
+            Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(()->new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+            if (!currentCompany.getId().equals(id)){
+                throw new BadRequestAlertException("The manager doesn't have the authority to delete other companies, only his own.", ENTITY_NAME, "managercanonlyremovehisowncompany");
+            }
+            companyService.delete(id);
+        }
+        else {
+            companyService.delete(id);
+        }
+        return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, currentUser.getId().toString())).build();
     }
 
     /**

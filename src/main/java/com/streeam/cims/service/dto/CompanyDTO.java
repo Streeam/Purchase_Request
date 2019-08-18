@@ -1,5 +1,6 @@
 package com.streeam.cims.service.dto;
 
+import com.streeam.cims.domain.Employee;
 import lombok.Data;
 
 import javax.persistence.Lob;
@@ -8,6 +9,7 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * A DTO for the {@link com.streeam.cims.domain.Company} entity.
@@ -46,6 +48,9 @@ public class CompanyDTO implements Serializable {
     private byte[] companyLogo;
 
     private String companyLogoContentType;
+
+    private Set<Employee> employees;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

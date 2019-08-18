@@ -325,8 +325,17 @@ class CompanyResourceIT {
 
         securityAwareMockMVC();
         User currentUser = UserResourceIT.createEntity(em);
+
+        List<Authority> authorities = authorityRepository.findAll();
+
+        String authorityName = authorities.stream()
+            .map(Authority::getName)
+            .filter(authority -> !authority.contains(AuthoritiesConstants.USER))
+            .findAny()
+            .orElse("");
+
         Authority manager = new Authority();
-        manager.setName(AuthoritiesConstants.MANAGER);
+        manager.setName(authorityName);
         currentUser.getAuthorities().add(manager);
 
         em.persist(currentUser);

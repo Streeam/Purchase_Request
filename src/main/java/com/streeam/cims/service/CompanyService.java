@@ -116,9 +116,6 @@ public class CompanyService {
         Company updatedCompany = companyRepository.save(company);
         EmployeeDTO employeeDTO = employeeService.saveWithCompany(employee, updatedCompany);
 
-
-
-
         log.debug("Request to save Company with employee: {}", employeeDTO);
 
         CompanyDTO result = companyMapper.toDto(updatedCompany);
@@ -163,7 +160,7 @@ public class CompanyService {
     public void delete(Long id) {
         log.debug("Request to delete Company : {}", id);
 
-        // Find all employees from the company and the manager and remove the ROLE_EMPLOYEE and ROLE_MANAGER
+        // Find all employees from the company and remove the ROLE_EMPLOYEE and ROLE_MANAGER
 
         Optional.of(companyRepository
             .findOneById(id))
@@ -317,5 +314,9 @@ public class CompanyService {
 
        CompanyDTO companyDTO = saveWithEmployee(company, employee);
         return  companyDTO;
+    }
+
+    public Optional<Company> findUsersCompany(Employee currentEmployee) {
+        return companyRepository.findOneByEmployees(Collections.singleton(currentEmployee));
     }
 }

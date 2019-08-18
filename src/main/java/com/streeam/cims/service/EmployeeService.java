@@ -168,7 +168,7 @@ public class EmployeeService {
      * @param company
      */
     public EmployeeDTO saveWithCompany(Employee employee, Company company) {
-        employee.company(company);
+        employee.setCompany(company);
         Employee updatedEmployee = employeeRepository.save(employee);
         employeeSearchRepository.save(updatedEmployee);
         EmployeeDTO result = employeeMapper.toDto(updatedEmployee);
