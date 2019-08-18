@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
@@ -117,4 +118,13 @@ public class NotificationService {
         notificationDTO.setComment(comment);
 
         return this.save(notificationDTO);}
+
+    public void deleteAllByEmployee(Employee employeeToDelete) {
+        List<Notification> notifications = notificationRepository.findAllByEmployee(employeeToDelete);
+        notifications.stream()
+            .forEach(notification -> {
+                this.delete(notification.getId());
+            });
+
+    }
 }

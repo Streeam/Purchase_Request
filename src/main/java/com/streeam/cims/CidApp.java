@@ -25,7 +25,7 @@ import java.util.Collection;
 public class CidApp implements InitializingBean {
 
 
-    //TODO                                                  ****API'S****
+    //TODO                                                  ****API's****
         //TODO 1. api/companies
             //TODO POST Create a company and automatically become the manager
                     //TODO If the user is ROLE_MANAGER or ROLE_EMPLOYEE he cannot see this option otherwise he can
@@ -66,19 +66,18 @@ public class CidApp implements InitializingBean {
                     // The employee resigns from the company
                     // Removes all the users roles except the default ROLE_USER (update the user, the employee and the company)
                     // Send a notification to all the employees from the company to inform that he is leaving the company
-        //TODO 8. api/users (Pre-Authorize ROLE_ADMIN)
+        //TODO 8. api/users (Pre-Authorize ROLE_ADMIN and ROLE_MANAGER only for modifying the user's role )
                 // POST When admin creates a user also creates an employee
                 // DELETE when admin deletes an employee it also deletes the linked user and updates the company if he is in one
-                // PUT  When employee is updated the user is updated as well (the email cannot be modified)
-
-        //TODO 8. api/employees
+                // TODO PUT If you are a manager you can only modify the roles of users in your company (the email cannot be modified)
+                    //When user is updated the employee is updated as well.
+        //TODO 9. api/employees
 
                 // TODO POST  No one can create an employee. An employee is created only when the user is activated
-                // GET (ADMIN can see all, the rest can only see their own account)
-
-                // DELETE  (Pre-Authorize ROLE_ADMIN) when admin deletes an employee it also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee
-                // PUT  (ADMIN can update all, Manager can all from his company,  the rest can only update their own account)
-                        // When employee is updated the user is updated as well (no one can cannot updated the email). The admin and managers can also update the employee roles
+                // TODO GET (ADMIN can see all, the rest can only see their own account)
+                // TODO DELETE  (Pre-Authorize ROLE_ADMIN) when admin deletes an employee it also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee
+                // TODO PUT  (ADMIN can update all, Manager can all from his company,  the rest can only update their own account)
+                        // When employee is updated the user is updated as well (no one can updated the email). The admin and managers can also update the employee roles
 
 
 

@@ -334,7 +334,6 @@ class CompanyResourceIT {
 
         CompanyDTO companyDTO = companyMapper.toDto(company);
 
-        // An entity with an existing ID cannot be created, so this API call must fail
         restCompanyMockMvc.perform(post("/api/companies")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .with(user(currentUser.getLogin()))

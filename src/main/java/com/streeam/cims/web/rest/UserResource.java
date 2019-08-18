@@ -1,23 +1,26 @@
 package com.streeam.cims.web.rest;
 
 import com.streeam.cims.config.Constants;
+import com.streeam.cims.domain.Company;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
+import com.streeam.cims.security.SecurityUtils;
+import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.UserService;
 import com.streeam.cims.service.dto.UserDTO;
 import com.streeam.cims.web.rest.errors.BadRequestAlertException;
 import com.streeam.cims.web.rest.errors.EmailAlreadyUsedException;
 import com.streeam.cims.web.rest.errors.LoginAlreadyUsedException;
-
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,11 +34,12 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
 /**
  * REST controller for managing users.
@@ -66,9 +70,13 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 public class UserResource {
 
     private final Logger log = LoggerFactory.getLogger(UserResource.class);
+    private static final String ENTITY_NAME = "user";
 
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
+
+    @Autowired
+    private EmployeeService employeeService;
 
     private final UserService userService;
 
@@ -128,9 +136,13 @@ public class UserResource {
      * @throws LoginAlreadyUsedException {@code 400 (Bad Request)} if the login is already in use.
      */
     @PutMapping("/users")
-    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserDTO userDTO) {
         log.debug("REST request to update User : {}", userDTO);
+        Optional<UserDTO> updatedUser;
+
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(()->new BadRequestAlertException("No User currently logged in", ENTITY_NAME, "nouserloggedin"));
+
         Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
             throw new EmailAlreadyUsedException();
@@ -139,7 +151,33 @@ public class UserResource {
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
             throw new LoginAlreadyUsedException();
         }
-        Optional<UserDTO> updatedUser = userService.updateUser(userDTO);
+        User currentUser = userService.getCurrentUser(currentUserLogin).orElseThrow(()->new BadRequestAlertException("No User currently logged in", ENTITY_NAME, "nouserloggedin"));
+
+        if (!userService.checkIfUserHasRoles(currentUser , AuthoritiesConstants.MANAGER, AuthoritiesConstants.ADMIN)){
+            throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "limitedaccessability");
+        }
+
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(()->new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
+
+
+        if(userService.checkIfUserHasRoles(existingUser.get(), AuthoritiesConstants.MANAGER)){
+            Company currentCompany = employeeService.findEmployeesCompany(currentEmployee)
+                .orElseThrow(()->new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
+            boolean isEmployeeInTheCompany = currentCompany.getEmployees().stream()
+                .map(Employee::getEmail)
+                .anyMatch(email-> email.equalsIgnoreCase(userDTO.getEmail()));
+            if(!isEmployeeInTheCompany){
+                throw  new BadRequestAlertException("You cannot modify the details of employees from other companies then your own.", ENTITY_NAME, "noupdatestoemployeesoutsidethecompany");
+            }
+
+            updatedUser = userService.updateUserRoles(userDTO);
+        }
+        else {
+            updatedUser = userService.updateUser(userDTO);
+            //Todo Update the linked employee as well
+        }
+
 
         return ResponseUtil.wrapOrNotFound(updatedUser,
             HeaderUtil.createAlert(applicationName, "userManagement.updated", userDTO.getLogin()));

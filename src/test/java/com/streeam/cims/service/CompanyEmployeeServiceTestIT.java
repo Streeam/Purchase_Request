@@ -3,11 +3,10 @@ package com.streeam.cims.service;
 import com.streeam.cims.CidApp;
 import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
+import com.streeam.cims.domain.Notification;
 import com.streeam.cims.domain.User;
-import com.streeam.cims.repository.AuthorityRepository;
-import com.streeam.cims.repository.CompanyRepository;
-import com.streeam.cims.repository.EmployeeRepository;
-import com.streeam.cims.repository.UserRepository;
+import com.streeam.cims.domain.enumeration.NotificationType;
+import com.streeam.cims.repository.*;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.repository.search.EmployeeSearchRepository;
 import com.streeam.cims.repository.search.UserSearchRepository;
@@ -30,15 +29,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Base64Utils;
 import org.springframework.validation.Validator;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.persistence.EntityManager;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,12 +51,14 @@ import java.util.Optional;
 
 import static com.streeam.cims.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.not;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Integration tests for {@link CompanyService}, {@link EmployeeService}, {@link UserService}  .
@@ -200,6 +206,17 @@ class CompanyEmployeeServiceTestIT {
     private static final String DEFAULT_USER4_IMAGEURL = "http://placehold4.it/50x50";
     private static final String DEFAULT_USER4_LANGKEY = "spanish";
 
+    //***************Notification1 DEFAULT VALUES**************
+    private static final String NOTIFICATION1_COMMENT = "dkcnbsodvndfovbfodeyvofdybvdofvbdfo";
+    private static final String NOTIFICATION2_COMMENT = "jhcbiksuygdcuvybsdvoh";
+    private static final String NOTIFICATION3_COMMENT = "nvpisodvnpisnvdnvfidnfv";
+    private static final String NOTIFICATION4_COMMENT = "kcvjnfdvnsoiuhbdvcbreoivneiv";
+
+    private static final boolean NOTIFICATION1_READ = true;
+    private static final boolean NOTIFICATION2_READ = false;
+    private static final boolean NOTIFICATION3_READ = false;
+    private static final boolean NOTIFICATION4_READ = false;
+
     @Autowired
     private CompanyRepository companyRepository;
 
@@ -244,6 +261,9 @@ class CompanyEmployeeServiceTestIT {
     private EmployeeRepository employeeRepository;
 
     @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
     private EmployeeMapper employeeMapper;
 
     @Autowired
@@ -271,14 +291,10 @@ class CompanyEmployeeServiceTestIT {
     private EmployeeSearchRepository mockEmployeeSearchRepository;
 
     private Employee employee1, employee2, employee3, employee4;
-
     private User user1, user2, user3, user4;
-
     private Company company, company2;
-
+    private Notification notification1, notification2, notification3, notification4;
     private MockMvc restEmployeeMockMvc;
-
-    private Employee employee;
 
 
     @BeforeEach
@@ -378,6 +394,34 @@ class CompanyEmployeeServiceTestIT {
             .image(UPDATED_EMPLOYEE_IMAGE)
             .imageContentType(UPDATED_EMPLOYEE_IMAGE_CONTENT_TYPE)
             .user(user4);
+
+        notification1 = new Notification()
+            .comment(NOTIFICATION1_COMMENT)
+            .format(NotificationType.REQUEST_TO_JOIN)
+            .employee(employee1)
+            .read(NOTIFICATION1_READ)
+            .sentDate(Instant.now());
+
+        notification2 = new Notification()
+            .comment(NOTIFICATION2_COMMENT)
+            .format(NotificationType.ACCEPT_INVITE)
+            .employee(employee2)
+            .read(NOTIFICATION2_READ)
+            .sentDate(Instant.now());
+
+        notification3 = new Notification()
+            .comment(NOTIFICATION3_COMMENT)
+            .format(NotificationType.FIRED)
+            .employee(employee3)
+            .read(NOTIFICATION3_READ)
+            .sentDate(Instant.now());
+
+        notification4 = new Notification()
+            .comment(NOTIFICATION4_COMMENT)
+            .format(NotificationType.LEFT_COMPANY)
+            .employee(employee4)
+            .read(NOTIFICATION4_READ)
+            .sentDate(Instant.now());
 
         company = new Company()
             .name(DEFAULT_NAME)
@@ -491,7 +535,7 @@ class CompanyEmployeeServiceTestIT {
 
     @Test
     @Transactional
-    void assertThatWhenCompanyIsRemovedItRemovesTheUsersRoles() {
+    void assertThatWhenTheCompanyIsRemovedTheEmployeesLoseTheirRoles() {
 
 
         userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
@@ -536,7 +580,7 @@ class CompanyEmployeeServiceTestIT {
 
     @Test
     @Transactional
-    void assertThatManagerCanChangeDetailsForEmployeesFromHisCompanyOnly() throws Exception {
+    void assertEmployeesEndpointsBehaveAsRequired() throws Exception {
 
         securityAwareMockMVC();
 
@@ -562,8 +606,16 @@ class CompanyEmployeeServiceTestIT {
         employeeRepository.saveAndFlush(employee3);
         employeeRepository.saveAndFlush(employee4);
 
+        notificationRepository.saveAndFlush(notification1);
+        notificationRepository.saveAndFlush(notification2);
+        notificationRepository.saveAndFlush(notification3);
+        notificationRepository.saveAndFlush(notification4);
+
         int databaseSizeBeforeUpdate = employeeRepository.findAll().size();
 
+/**
+ * ****************** PUT api/employees ****************
+ */
         assertThat(employeeRepository.findById(employee1.getId())).isPresent();
         Employee updatedEmployee = employeeRepository.findById(employee1.getId()).get();
 
@@ -579,9 +631,9 @@ class CompanyEmployeeServiceTestIT {
 
         EmployeeDTO employeeDTO = employeeMapper.toDto(updatedEmployee);
 
-/**
- * Modifying the details of another employee is forbidden.
- */
+        /**
+         * Modifying the details of another employee is forbidden.
+         */
         restEmployeeMockMvc.perform(put("/api/employees")
             .with(user(user3.getLogin()))
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -592,9 +644,9 @@ class CompanyEmployeeServiceTestIT {
         employeeDTO.setEmail("dummyemail@localhost.com");
 
         assertThat(employeeDTO.getEmail()).isNotEqualTo(employee1.getEmail());
-/**
- * You cannot update your email.
- */
+        /**
+         * You cannot update your email.
+         */
         restEmployeeMockMvc.perform(put("/api/employees")
             .with(user(user3.getLogin()))
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -606,9 +658,9 @@ class CompanyEmployeeServiceTestIT {
         employeeDTO.setEmail(DEFAULT_USER_EMAIL);
         employeeDTO.setHired(true);
         assertThat(employeeDTO.isHired()).isNotEqualTo(employee1.isHired());
-/**
- * You cannot update the hire value.
- */
+        /**
+         * You cannot update the hire value.
+         */
         restEmployeeMockMvc.perform(put("/api/employees")
             .with(user(user3.getLogin()))
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -618,16 +670,15 @@ class CompanyEmployeeServiceTestIT {
         ;
 
         employeeDTO.setHired(false);
- /**
-  *  As a manager you cannot modify the details of employees from other companies then your own.
-  */
+         /**
+          *  As a manager you cannot modify the details of employees from other companies then your own.
+          */
         restEmployeeMockMvc.perform(put("/api/employees")
             .with(user(user4.getLogin()))
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.noupdatestoemployeesoutsidethecompany")))
-        ;
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.noupdatestoemployeesoutsidethecompany")));
 
         /**
          *  Update a employee
@@ -666,55 +717,136 @@ class CompanyEmployeeServiceTestIT {
         // Validate the Employee in Elasticsearch
         verify(mockEmployeeSearchRepository, times(1)).save(testEmployee);
 
+/**
+ * ****************** GET api/employees ****************
+ */
+        /**
+         * You don't have the authority to access this endpoint.
+         */
+        restEmployeeMockMvc.perform(get("/api/employees?sort=id,desc")
+            .with(user(user3.getLogin())))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.accessrestricted")));
+
+        restEmployeeMockMvc.perform(get("/api/employees?sort=id,desc")
+            .with(user(user1.getLogin())))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].email").value(not(DEFAULT_USER4_EMAIL)))
+            .andExpect(jsonPath("$.[*].email").value(not(DEFAULT_USER3_EMAIL)))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(testEmployee.getId().intValue())))
+            .andExpect(jsonPath("$.[*].login").value(hasItem(UPDATED_EMPLOYEE2_LOGIN)))
+            .andExpect(jsonPath("$.[*].firstName").value(hasItem(UPDATED_EMPLOYEE2_FIRST_NAME)))
+            .andExpect(jsonPath("$.[*].lastName").value(hasItem(UPDATED_EMPLOYEE2_LAST_NAME)))
+            .andExpect(jsonPath("$.[*].email").value(hasItem(DEFAULT_USER_EMAIL)))
+            .andExpect(jsonPath("$.[*].email").value(hasItem(DEFAULT_USER2_EMAIL)))
+            .andExpect(jsonPath("$.[*].hired").value(hasItem(DEFAULT_HIRED.booleanValue())))
+            .andExpect(jsonPath("$.[*].language").value(hasItem(DEFAULT_USER4_LANGKEY)))
+            .andExpect(jsonPath("$.[*].imageContentType").value(hasItem(UPDATED_EMPLOYEE2_IMAGE_CONTENT_TYPE)))
+            .andExpect(jsonPath("$.[*].image").value(hasItem(Base64Utils.encodeToString(UPDATED_EMPLOYEE2_IMAGE))));
+
+
+
+/**
+ * ****************** GET api/employees/{id} ****************
+ */
+
+        // Get the employee
+        restEmployeeMockMvc.perform(get("/api/employees/{id}", employee4.getId())
+            .with(user(user1.getLogin().toLowerCase())))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.id").value(employee4.getId().intValue()))
+            .andExpect(jsonPath("$.login").value(DEFAULT_USER4_LOGIN))
+            .andExpect(jsonPath("$.firstName").value(UPDATED_EMPLOYEE2_FIRST_NAME))
+            .andExpect(jsonPath("$.lastName").value(UPDATED_EMPLOYEE2_LAST_NAME))
+            .andExpect(jsonPath("$.email").value(DEFAULT_USER4_EMAIL))
+            .andExpect(jsonPath("$.hired").value(UPDATED_HIRED))
+            .andExpect(jsonPath("$.imageContentType").value(UPDATED_EMPLOYEE_IMAGE_CONTENT_TYPE))
+            .andExpect(jsonPath("$.image").value(Base64Utils.encodeToString(UPDATED_EMPLOYEE_IMAGE)));
+
+
+/**
+ * ****************** SEARCH /api/_search/employees ****************
+ */
+
+
+        when(mockEmployeeSearchRepository.search(queryStringQuery("id:" + testEmployee.getId()), PageRequest.of(0, 20)))
+            .thenReturn(new PageImpl<>(Collections.singletonList(testEmployee), PageRequest.of(0, 1), 1));
+        // Search the employee
+        restEmployeeMockMvc.perform(get("/api/_search/employees?query=id:" + testEmployee.getId())
+            .with(user(user1.getLogin().toLowerCase())))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(testEmployee.getId().intValue())))
+            .andExpect(jsonPath("$.[*].login").value(hasItem(UPDATED_EMPLOYEE2_LOGIN)))
+            .andExpect(jsonPath("$.[*].firstName").value(hasItem(UPDATED_EMPLOYEE2_FIRST_NAME)))
+            .andExpect(jsonPath("$.[*].lastName").value(hasItem(UPDATED_EMPLOYEE2_LAST_NAME)))
+            .andExpect(jsonPath("$.[*].email").value(hasItem(DEFAULT_USER_EMAIL)))
+            .andExpect(jsonPath("$.[*].hired").value(hasItem(DEFAULT_HIRED.booleanValue())))
+            .andExpect(jsonPath("$.[*].language").value(hasItem(DEFAULT_USER4_LANGKEY)))
+            .andExpect(jsonPath("$.[*].imageContentType").value(hasItem(UPDATED_EMPLOYEE2_IMAGE_CONTENT_TYPE)))
+            .andExpect(jsonPath("$.[*].image").value(hasItem(Base64Utils.encodeToString(UPDATED_EMPLOYEE2_IMAGE))));
+
+
+/**
+ * ****************** DELETE api/employees ****************
+ */
+        int databaseSizeBeforeDelete = employeeRepository.findAll().size();
+        int databaseUsersBeforeDelete = userRepository.findAllByActivatedIsTrue().size();
+        int databaseSizeEmployeesNotifications = notificationRepository.findAllByEmployee(employee4).size();
+
+        /**
+         * Delete the employee with the manager role
+         */
+
+        restEmployeeMockMvc.perform(delete("/api/employees/{id}", employee4.getId())
+            .with(user(user1.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.accessrestricted")));
+
+        // Validate the database contains one less item
+        List<Employee> employeeListAfterDelete = employeeRepository.findAll();
+        List<User> allUsersAfterDelete = userRepository.findAllByActivatedIsTrue();
+        List<Notification> allEmployeeNotificationsAfterDelete = notificationRepository.findAllByEmployee(employee4);
+
+        assertThat(employeeListAfterDelete).hasSize(databaseSizeBeforeDelete);
+        assertThat(allUsersAfterDelete).hasSize(databaseUsersBeforeDelete);
+        assertThat(allEmployeeNotificationsAfterDelete).hasSize(databaseSizeEmployeesNotifications);
+
+        // Validate the Employee in Elasticsearch
+        verify(mockEmployeeSearchRepository, times(0)).deleteById(employee4.getId());
+
+
+        /**
+         * Delete the employee with the admin role
+         */
+
+        restEmployeeMockMvc.perform(delete("/api/employees/{id}", employee4.getId())
+            .with(user("admin"))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isNoContent());
+
+        // Validate the database contains one less item
+        employeeListAfterDelete = employeeRepository.findAll();
+        allUsersAfterDelete = userRepository.findAllByActivatedIsTrue();
+        allEmployeeNotificationsAfterDelete = notificationRepository.findAllByEmployee(employee4);
+
+        assertThat(employeeListAfterDelete).hasSize(databaseSizeBeforeDelete - 1);
+        assertThat(allUsersAfterDelete).hasSize(databaseUsersBeforeDelete - 1);
+        assertThat(allEmployeeNotificationsAfterDelete).hasSize(databaseSizeEmployeesNotifications - 1);
+
+
+
+        // Validate the Employee in Elasticsearch
+        verify(mockEmployeeSearchRepository, times(1)).deleteById(employee4.getId());
+
+       // notificationRepository.deleteAllInBatch(Arrays.asList(notification1,notification2));
         userRepository.deleteInBatch(Arrays.asList(testUser, user2,user3, user4));
         companyRepository.deleteInBatch(Arrays.asList(company,company2));
         employeeRepository.deleteInBatch(Arrays.asList(employee1, employee2, employee3, employee4));
 
     }
-
-
-//    @Test
-//    @Transactional
-//    void assertThatUsersCanOnlySeeOwnCompany() {
-//        int initialCompanies = companyRepository.findAll().size();
-//
-//        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
-//        userRepository.saveAndFlush(user1);
-//        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user2);
-//        userRepository.saveAndFlush(user2);
-//        userRepository.saveAndFlush(user3);
-//        userRepository.saveAndFlush(user4);
-//
-//
-//
-//        employeeRepository.saveAndFlush(employee1); //ROLE_MANAGER
-//        employeeRepository.saveAndFlush(employee2);//ROLE_EMPLOYEE
-//        employeeRepository.saveAndFlush(employee3);//ROLE_ADMIN
-//        employeeRepository.saveAndFlush(employee4);//ROLE_USER
-//
-//        companyRepository.saveAndFlush(company); // employee1 & employee2
-//        companyRepository.saveAndFlush(company2);// employee3 & employee4
-//
-//        assertThat(companyService.findCompanyWithCurrentUser(user1)).size().isEqualTo(1);
-//        assertThat(companyService.findCompanyWithCurrentUser(user2)).size().isEqualTo(1);
-//        assertThat(companyService.findCompanyWithCurrentUser(user1).get().collect(Collectors.toList()).get(0).getName()).isEqualTo(DEFAULT_NAME);
-//        assertThat(companyService.findCompanyWithCurrentUser(user2).get().collect(Collectors.toList()).get(0).getName()).isEqualTo(DEFAULT_NAME);
-//
-//
-//
-//        companyRepository.delete(company);
-//        companyRepository.delete(company2);
-//
-//        employeeRepository.delete(employee1); //ROLE_MANAGER
-//        employeeRepository.delete(employee2);//ROLE_EMPLOYEE
-//        employeeRepository.delete(employee3);//ROLE_ADMIN
-//        employeeRepository.delete(employee4);//ROLE_USER
-//
-//        userRepository.delete(user1);
-//        userRepository.delete(user2);
-//        userRepository.delete(user3);
-//        userRepository.delete(user4);
-//    }
 
     private void securityAwareMockMVC() {
         // Create security-aware mockMvc

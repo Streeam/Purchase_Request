@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +24,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -92,15 +90,11 @@ public class EmployeeResource {
         Employee employeeToModify =  employeeService.findOneById(employeeId).orElseThrow(()->
             new BadRequestAlertException("Employee not found.", ENTITY_NAME, "emailexists"));
 
-
-
         if(!employeeToModify.getEmail().equalsIgnoreCase(employeeDTO.getEmail())){
             throw new BadRequestAlertException("You cannot update your email.", ENTITY_NAME, "emailcannotbemodified");
         }
 
         User linkedUser = employeeService.findLinkedUserByEmail(employeeToModify.getEmail()).orElseThrow(()->new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserlinkedtoemployee"));
-
-
 
         if(!employeeToModify.isHired().equals(employeeDTO.isHired())){
             throw new BadRequestAlertException("You cannot update the hire value.", ENTITY_NAME, "hirecannotbemodified");
@@ -151,35 +145,25 @@ public class EmployeeResource {
     public ResponseEntity<List<EmployeeDTO>> getAllEmployees(Pageable pageable) {
         log.debug("REST request to get a page of Employees");
 
-//
-//
-//        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
-//
-//        User user = companyService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
-//
-//        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)) {
-//            page = companyService.findAll(pageable);
-//        }
-//        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
-//            page = companyService.findCompanyWithCurrentUser(user);
-//        }
-
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
-        User user = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(()->new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
 
-        Page<EmployeeDTO> page = new PageImpl<>(new ArrayList<>());
+        Page<EmployeeDTO> page ;
 
-        if (employeeService.checkUserHasRoles(user, AuthoritiesConstants.ADMIN)){
+        if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN)){
             page = employeeService.findAll(pageable);
         }
-        if (employeeService.checkUserHasRoles(user, AuthoritiesConstants.USER, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)){
-
-            page = employeeService.findCompanysEmployees(pageable);
-
+        else if(employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER , AuthoritiesConstants.EMPLOYEE)) {
+            Company currentCompany = employeeService.findEmployeesCompany(currentEmployee)
+                .orElseThrow(()->new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+            page = employeeService.findCompanysEmployees(pageable, currentCompany.getId());
+        }
+        else {
+            throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "accessrestricted");
         }
 
-        //
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
@@ -205,8 +189,32 @@ public class EmployeeResource {
      */
     @DeleteMapping("/employees/{id}")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
+        Employee employeeToDelete =  employeeService.findOneById(id).orElseThrow(()->
+            new BadRequestAlertException("Employee not found.", ENTITY_NAME, "emailexists"));
+
+
+        if (!employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN)){
+            throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "accessrestricted");
+        }
+        //also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee
+
+        User linkedUser = employeeService.findLinkedUserByEmail(employeeToDelete.getEmail()).orElseThrow(()->new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserlinkedtoemployee"));
+
         log.debug("REST request to delete Employee : {}", id);
         employeeService.delete(id);
+
+        log.debug("REST request to delete all Employee's Notifications.");
+        employeeService.deleteEmployeesNotifications(employeeToDelete);
+
+
+
+
+
+        log.debug("REST request to delete User : {}", linkedUser.getId());
+        employeeService.deleteLinkedUser(linkedUser);
+
         return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString())).build();
     }
 

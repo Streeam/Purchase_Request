@@ -10,7 +10,6 @@ import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.service.mapper.EmployeeMapper;
 import com.streeam.cims.web.rest.errors.ExceptionTranslator;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
@@ -169,23 +168,6 @@ public class EmployeeResourceIT {
         } else {
             user = TestUtil.findAll(em, User.class).get(0);
         }
-        employee.setUser(user);
-        return employee;
-    }
-
-    static Employee createRandomEmployee(EntityManager em) {
-        Employee employee = new Employee()
-            .login(RandomStringUtils.randomAlphabetic(8))
-            .firstName(RandomStringUtils.randomAlphabetic(8))
-            .lastName(RandomStringUtils.randomAlphabetic(8))
-            .email(RandomStringUtils.randomAlphabetic(8)+ "@localhost.com")
-            .hired(false)
-            .image(TestUtil.createByteArray(1, "1"))
-            .imageContentType(RandomStringUtils.randomAlphabetic(8));
-        // Add required entity
-        User user = UserResourceIT.createEntity(em);
-        em.persist(user);
-        em.flush();
         employee.setUser(user);
         return employee;
     }

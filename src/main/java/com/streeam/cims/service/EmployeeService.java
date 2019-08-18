@@ -6,7 +6,6 @@ import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.EmployeeRepository;
 import com.streeam.cims.repository.search.EmployeeSearchRepository;
 import com.streeam.cims.service.dto.EmployeeDTO;
-import com.streeam.cims.service.dto.UserDTO;
 import com.streeam.cims.service.mapper.EmployeeMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,15 +38,17 @@ public class EmployeeService {
     @Autowired
     private  UserService userService;
 
+    private final NotificationService notificationService;
 
     private final CompanyService companyService;
 
     public EmployeeService(EmployeeRepository employeeRepository, EmployeeMapper employeeMapper,CompanyService companyService,
-                           EmployeeSearchRepository employeeSearchRepository) {
+                           EmployeeSearchRepository employeeSearchRepository, NotificationService notificationService) {
         this.companyService = companyService;
         this.employeeRepository = employeeRepository;
         this.employeeMapper = employeeMapper;
         this.employeeSearchRepository = employeeSearchRepository;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -178,15 +179,6 @@ public class EmployeeService {
         return  userService.findOneByEmail(email);
     }
 
-    public UserDTO mapEmployeeDTOToUser(User linkedUser, EmployeeDTO employeeDTO) {
-
-        linkedUser.setLogin(employeeDTO.getLogin());
-        linkedUser.setFirstName(employeeDTO.getFirstName());
-        linkedUser.setLastName(employeeDTO.getLastName());
-        linkedUser.setLangKey(employeeDTO.getLanguage());
-        return  userService.save(linkedUser);
-    }
-
     public Optional<User> findCurrentUser(String login) {
 
         return userService.getCurrentUser(login);
@@ -209,8 +201,16 @@ public class EmployeeService {
         return userService.checkIfUserHasRoles(user, roles);
     }
 
-    public Page<EmployeeDTO> findCompanysEmployees(Pageable pageable) {
+    public Page<EmployeeDTO> findCompanysEmployees(Pageable pageable, Long id) {
 
-        return  null;
+        return  employeeRepository.findAllByCompanyId(pageable, id).map(employeeMapper::toDto);
+    }
+
+    public void deleteLinkedUser(User linkedUser) {
+        userService.deleteUser(linkedUser.getLogin());
+    }
+
+    public void deleteEmployeesNotifications(Employee employeeToDelete) {
+        notificationService.deleteAllByEmployee(employeeToDelete);
     }
 }

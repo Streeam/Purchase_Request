@@ -232,10 +232,42 @@ public class UserService {
                 user.setLogin(userDTO.getLogin().toLowerCase());
                 user.setFirstName(userDTO.getFirstName());
                 user.setLastName(userDTO.getLastName());
-                user.setEmail(userDTO.getEmail().toLowerCase());
+               // user.setEmail(userDTO.getEmail().toLowerCase()); Uncommet if to allow Admin to change user's email address. Not advisable.
                 user.setImageUrl(userDTO.getImageUrl());
                 user.setActivated(userDTO.isActivated());
                 user.setLangKey(userDTO.getLangKey());
+                Set<Authority> managedAuthorities = user.getAuthorities();
+                managedAuthorities.clear(); // Clear all old authorities
+                userDTO.getAuthorities().stream()
+                    .map(authorityRepository::findById)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .forEach(managedAuthorities::add);
+                userSearchRepository.save(user);
+                this.clearUserCaches(user);
+                log.debug("Changed Information for User: {}", user);
+                return user;
+            })
+            .map(UserDTO::new);
+
+        return userToUpdate;
+    }
+
+
+    /**
+     * Update just the roles of a specific user, and return the modified user.
+     *
+     * @param userDTO user to update.
+     * @return updated user.
+     */
+    public Optional<UserDTO> updateUserRoles(UserDTO userDTO) {
+
+        Optional<UserDTO> userToUpdate = Optional.of(userRepository
+            .findById(userDTO.getId()))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(user -> {
+                this.clearUserCaches(user);
                 Set<Authority> managedAuthorities = user.getAuthorities();
                 managedAuthorities.clear(); // Clear all old authorities
                 userDTO.getAuthorities().stream()

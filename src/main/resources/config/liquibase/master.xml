@@ -18,12 +18,14 @@
     <include file="config/liquibase/changelog/20190807193903_insert_data_Company.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20190807193904_added_entity_Notification.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20190807193905_added_entity_Employee.xml" relativeToChangelogFile="false"/>
-    <!-- jhipster-needle-liquibase-add-changelog - JHipster will add liquibase changelogs here -->
+
     <include file="config/liquibase/changelog/20190807193904_added_entity_constraints_Notification.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20190807193905_added_entity_constraints_Employee.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20190807193905_insert_values_Employee.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20190807193905_remove_company_constraint_Employee.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20190807193905_remove_user_constraint_Employee.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20190807193904_remove_employee_constraint_Notification.xml" relativeToChangelogFile="false"/>
 
-    <!-- jhipster-needle-liquibase-add-constraints-changelog - JHipster will add liquibase constraints changelogs here -->
+
+
 </databaseChangeLog>
