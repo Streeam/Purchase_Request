@@ -48,7 +48,7 @@ public class EmployeeResource {
     }
 
     /**
-     * {@code POST  /employees} : employees are created only when a user is created.
+     * {@code POST  /employees} : This endpoint is disabled. A employee is created only when a user registers and he's identity is confirmed.
      *
      * @param employeeDTO the employeeDTO to create.
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new employeeDTO, or with status {@code 400 (Bad Request)} if the employee has already an ID.
@@ -87,8 +87,7 @@ public class EmployeeResource {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "employeenotfound");
         }
 
-        Employee employeeToModify =  employeeService.findOneById(employeeId).orElseThrow(()->
-            new BadRequestAlertException("Employee not found.", ENTITY_NAME, "emailexists"));
+        Employee employeeToModify =  employeeService.findOneById(employeeId).orElseThrow(()->new BadRequestAlertException("Employee not found.", ENTITY_NAME, "emailexists"));
 
         if(!employeeToModify.getEmail().equalsIgnoreCase(employeeDTO.getEmail())){
             throw new BadRequestAlertException("You cannot update your email.", ENTITY_NAME, "emailcannotbemodified");
@@ -103,9 +102,9 @@ public class EmployeeResource {
         User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()->new BadRequestAlertException("No User currently logged in", ENTITY_NAME, "nouserloggedin"));
         Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(()->new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
 
-        boolean currentUserIsAdminOrManager = employeeService.hasCurrentUserRoles(currentUser, AuthoritiesConstants.MANAGER, AuthoritiesConstants.ADMIN);
-        // Scenario when a employee is trying to modify the details of another  employee and he is not a manager or a admin.
-        if(!linkedUser.getEmail().equalsIgnoreCase(currentUser.getEmail()) && !currentUserIsAdminOrManager){
+        boolean currentUserIsNOTAdminOrManager = !employeeService.hasCurrentUserRoles(currentUser, AuthoritiesConstants.MANAGER, AuthoritiesConstants.ADMIN);
+        // Scenario when a employee is trying to modify the details of another  employee and he is not a manager nor an admin.
+        if(!linkedUser.getEmail().equalsIgnoreCase(currentUser.getEmail()) && currentUserIsNOTAdminOrManager){
             throw new BadRequestAlertException("Modifying the details of another employee is forbidden.", ENTITY_NAME, "changejustyouraccount");
         }
 

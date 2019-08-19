@@ -133,15 +133,14 @@ public class CompanyResource {
         }
 
 
-
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
         User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
 
         Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
         Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(()->new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
 
-        if(!companyDTO.getEmployees().isEmpty()){
-            throw new BadRequestAlertException("Editing the employees from this endpoint is forbidden. Leave the employee list empty.", ENTITY_NAME, "cantmodifyemployees");
+        if(companyDTO.getEmployees() != null){
+            throw new BadRequestAlertException("Editing the employees from this endpoint is forbidden. Leave the employee list empty and try again.", ENTITY_NAME, "cantmodifyemployees");
         }
 
         if (!companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN, AuthoritiesConstants.MANAGER)) {
@@ -201,6 +200,9 @@ public class CompanyResource {
      */
     @GetMapping("/companies/{id}")
     public ResponseEntity<CompanyDTO> getCompany(@PathVariable Long id) {
+        if (id == null) {
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        }
         log.debug("REST request to get Company : {}", id);
         Optional<CompanyDTO> companyDTO = companyService.findOne(id);
         return ResponseUtil.wrapOrNotFound(companyDTO);
@@ -215,8 +217,14 @@ public class CompanyResource {
     @DeleteMapping("/companies/{id}")
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
 
+        if (id == null) {
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        }
+
         log.debug("REST request to delete Company : {}", id);
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+
+        Company company = companyService.findCompanyById(id).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
         User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
 
@@ -234,9 +242,11 @@ public class CompanyResource {
                 throw new BadRequestAlertException("The manager doesn't have the authority to delete other companies, only his own.", ENTITY_NAME, "managercanonlyremovehisowncompany");
             }
             companyService.delete(id);
+            companyService.notifyEmployeeThatTheyHaveBeenFired(company);
         }
         else {
             companyService.delete(id);
+            companyService.notifyEmployeeThatTheyHaveBeenFired(company);
         }
         return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, currentUser.getId().toString())).build();
     }

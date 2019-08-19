@@ -323,4 +323,13 @@ public class CompanyService {
     public boolean exists(Long id) {
         return companyRepository.existsById(id);
     }
+
+    public void notifyEmployeeThatTheyHaveBeenFired(Company company) {
+
+        company.getEmployees().stream().forEach(employee -> {
+            this.sendNotificationToEmployee(employee, NotificationType.FIRED, "The company " + company.getName() + " has been struck off. You are out of job.");
+        });
+
+
+    }
 }

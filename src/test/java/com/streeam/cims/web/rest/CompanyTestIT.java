@@ -640,7 +640,10 @@ class CompanyTestIT {
  * ****************** PUT api/companies ****************
  */
         updatedCompany = companyRepository.findOneByEmail(DEFAULT_COMPANY_EMAIL).get();
+        updatedCompany2 = companyRepository.findOneByEmail(UPDATED_COMPANY_EMAIL).get();
         assertThat(companyRepository.findOneById(updatedCompany.getId())).isPresent();
+        assertThat(companyRepository.findOneById(updatedCompany2.getId())).isPresent();
+
         updatedCompany.email(UPDATED2_COMPANY_EMAIL)
             .name(UPDATED2_NAME)
             .addressLine1(UPDATED2_ADDRESS_LINE_1)
@@ -652,7 +655,9 @@ class CompanyTestIT {
 
 
         CompanyDTO updatedCompanyDTO = companyMapper.toDto(updatedCompany);
-        companyDTO.setEmployees(Collections.EMPTY_SET);
+        CompanyDTO updatedCompanyDTO2 = companyMapper.toDto(updatedCompany2);
+        updatedCompanyDTO.setEmployees(Collections.EMPTY_SET);
+        updatedCompanyDTO2.setEmployees(Collections.EMPTY_SET);
 
         /**
          * Modifying the details of a company by a user that doesn't have the role of Manager or Admin is forbidden.
@@ -665,25 +670,32 @@ class CompanyTestIT {
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.noauthoritytochangecomp")));
 
         /**
-         * Manager is trying to modify  a company that is not his
+         * Manager is trying to modify  a company that is not his.  Make user 1 a Manager. User 1 is not from updatedCompanyDTO2
          */
-
-        restCompanyMockMvc.perform(put("/api/companies")
-            .with(user(user4.getLogin()))
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedCompany)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.managercanonlyupdatehisowncompany")));
-
-        /**
-         * Manager is updating his own company
-         */
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
+        userRepository.saveAndFlush(user1);
 
         restCompanyMockMvc.perform(put("/api/companies")
             .with(user(user1.getLogin()))
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedCompanyDTO)))
+            .content(TestUtil.convertObjectToJsonBytes(updatedCompanyDTO2)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.managercanonlyupdatehisowncompany")));
+
+        /**
+         * Manager is updating his own company.
+         */
+
+
+
+        restCompanyMockMvc.perform(put("/api/companies")
+            .with(user(user4.getLogin()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(updatedCompanyDTO2)))
             .andExpect(status().is2xxSuccessful());
+
+        // Validate the Employee in Elasticsearch
+        verify(mockCompanySearchRepository, times(2)).save(any(Company.class));
 
         updatedCompanyDTO.setEmployees(Collections.singleton(employee1));
 
@@ -696,11 +708,14 @@ class CompanyTestIT {
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
             .content(TestUtil.convertObjectToJsonBytes(updatedCompanyDTO)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.cantmidifyemployees")));
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.cantmodifyemployees")));
 
         /**
          * Trying to modify a company that doesn't exit
          */
+
+        updatedCompanyDTO.setId(null);
+
         restCompanyMockMvc.perform(put("/api/companies")
             .with(user(user4.getLogin()))
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
