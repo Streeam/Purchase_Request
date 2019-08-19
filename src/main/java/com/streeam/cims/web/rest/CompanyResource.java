@@ -79,7 +79,6 @@ public class CompanyResource {
         if (companyDTO.getId() != null) {
             throw new BadRequestAlertException("A new company cannot already have an ID", ENTITY_NAME, "idexists");
         }
-
         if (companyService.companyEmailAlreadyExists(companyDTO.getEmail())) {
             throw new BadRequestAlertException("This company email is already being used", ENTITY_NAME, "emailexists");
         }
@@ -123,11 +122,44 @@ public class CompanyResource {
     @PutMapping("/companies")
     public ResponseEntity<CompanyDTO> updateCompany(@Valid @RequestBody CompanyDTO companyDTO) throws URISyntaxException {
         log.debug("REST request to update Company : {}", companyDTO);
+        CompanyDTO result;
+
         if (companyDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
+        Optional<Company> companyToModify = companyService.findCompanyById(companyDTO.getId());
+        if(!companyToModify.isPresent()){
+            throw new BadRequestAlertException("No company found with the id: " + companyDTO.getId(), ENTITY_NAME, "nocompanyfound");
+        }
 
-        CompanyDTO result = companyService.save(companyDTO);
+
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+        User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+
+        Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+        Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(()->new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
+
+        if(!companyDTO.getEmployees().isEmpty()){
+            throw new BadRequestAlertException("Editing the employees from this endpoint is forbidden. Leave the employee list empty.", ENTITY_NAME, "cantmodifyemployees");
+        }
+
+        if (!companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN, AuthoritiesConstants.MANAGER)) {
+            throw new BadRequestAlertException("You don't have the authority to modify the details of the company", ENTITY_NAME, "noauthoritytochangecomp");
+        }
+
+        if(companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)){
+
+            if (!currentCompany.getId().equals(companyDTO.getId())){
+                throw new BadRequestAlertException("The manager doesn't have the authority to update other companies, only his own.", ENTITY_NAME, "managercanonlyupdatehisowncompany");
+            }
+            result = companyService.save(companyDTO);
+        }
+        else {
+            result = companyService.save(companyDTO);
+        }
+
+
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyDTO.getId().toString()))
             .body(result);
@@ -196,7 +228,8 @@ public class CompanyResource {
 
         if(companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)){
 
-            Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(()->new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+            Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(()->new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
+
             if (!currentCompany.getId().equals(id)){
                 throw new BadRequestAlertException("The manager doesn't have the authority to delete other companies, only his own.", ENTITY_NAME, "managercanonlyremovehisowncompany");
             }

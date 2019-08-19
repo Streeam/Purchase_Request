@@ -12,6 +12,7 @@ import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.CompanyService;
 import com.streeam.cims.service.EmployeeService;
+import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.UserService;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
@@ -29,6 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -50,6 +53,8 @@ import java.util.Optional;
 
 import static com.streeam.cims.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -61,7 +66,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @SpringBootTest(classes = CidApp.class)
 @Transactional
-class CompanyEmployeeServiceTestIT {
+class CompanyTestIT {
 
     @Autowired
     private EntityManager em;
@@ -272,6 +277,9 @@ class CompanyEmployeeServiceTestIT {
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
 
     @Autowired
+    private MailService mailService;
+
+    @Autowired
     private ExceptionTranslator exceptionTranslator;
 
 
@@ -297,8 +305,8 @@ class CompanyEmployeeServiceTestIT {
     void init() {
 
         MockitoAnnotations.initMocks(this);
-        final EmployeeResource employeeResource = new EmployeeResource(employeeService);
-        this.restCompanyMockMvc = MockMvcBuilders.standaloneSetup(employeeResource)
+        final CompanyResource companyResource = new CompanyResource(companyService,authorityRepository, mailService);
+        this.restCompanyMockMvc = MockMvcBuilders.standaloneSetup(companyResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
             .setConversionService(createFormattingConversionService())
@@ -531,7 +539,6 @@ class CompanyEmployeeServiceTestIT {
 /**
  * ****************** GET api/companies ****************
  */
-
         /**
          * The manager of a company cannot see other companies
          */
@@ -574,7 +581,6 @@ class CompanyEmployeeServiceTestIT {
 /**
  * ****************** DELETE api/companies ****************
  */
-
         /**
          * Delete the company without the manager nor admin role
          */
@@ -595,7 +601,6 @@ class CompanyEmployeeServiceTestIT {
             .with(user(user2.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.companyremoveforbiden")));
-
 
         assertThat(initialCompanies).hasSize(databaseCompaniesSizeBeforeUpdate);
 
@@ -634,10 +639,74 @@ class CompanyEmployeeServiceTestIT {
 /**
  * ****************** PUT api/companies ****************
  */
+        updatedCompany = companyRepository.findOneByEmail(DEFAULT_COMPANY_EMAIL).get();
+        assertThat(companyRepository.findOneById(updatedCompany.getId())).isPresent();
+        updatedCompany.email(UPDATED2_COMPANY_EMAIL)
+            .name(UPDATED2_NAME)
+            .addressLine1(UPDATED2_ADDRESS_LINE_1)
+            .addressLine2(UPDATED2_ADDRESS_LINE_2)
+            .city(UPDATED2_CITY)
+            .country(UPDATED2_COUNTRY)
+            .companyLogo(UPDATED2_COMPANY_LOGO)
+            .companyLogoContentType(UPDATED2_COMPANY_LOGO_CONTENT_TYPE);
 
 
+        CompanyDTO updatedCompanyDTO = companyMapper.toDto(updatedCompany);
+        companyDTO.setEmployees(Collections.EMPTY_SET);
+
+        /**
+         * Modifying the details of a company by a user that doesn't have the role of Manager or Admin is forbidden.
+         */
+        restCompanyMockMvc.perform(put("/api/companies")
+            .with(user(user3.getLogin()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(updatedCompanyDTO)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.noauthoritytochangecomp")));
+
+        /**
+         * Manager is trying to modify  a company that is not his
+         */
+
+        restCompanyMockMvc.perform(put("/api/companies")
+            .with(user(user4.getLogin()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(updatedCompany)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.managercanonlyupdatehisowncompany")));
+
+        /**
+         * Manager is updating his own company
+         */
+
+        restCompanyMockMvc.perform(put("/api/companies")
+            .with(user(user1.getLogin()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(updatedCompanyDTO)))
+            .andExpect(status().is2xxSuccessful());
+
+        updatedCompanyDTO.setEmployees(Collections.singleton(employee1));
 
 
+        /**
+         * Trying to modify the employees from this endpoint is forbidden.
+         */
+        restCompanyMockMvc.perform(put("/api/companies")
+            .with(user(user3.getLogin()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(updatedCompanyDTO)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.cantmidifyemployees")));
+
+        /**
+         * Trying to modify a company that doesn't exit
+         */
+        restCompanyMockMvc.perform(put("/api/companies")
+            .with(user(user4.getLogin()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(updatedCompanyDTO)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.idnull")));
         /**
          * Delete all the test entities
          */
@@ -670,30 +739,30 @@ class CompanyEmployeeServiceTestIT {
         // Validate the Company in Elasticsearch
         verify(mockCompanySearchRepository, times(0)).save(company);
     }
-//
-//    @Test
-//    @Transactional
-//    void searchCompany() throws Exception {
-//        // Initialize the database
-//        companyRepository.saveAndFlush(company);
-//        when(mockCompanySearchRepository.search(queryStringQuery("id:" + company.getId()), PageRequest.of(0, 20)))
-//            .thenReturn(new PageImpl<>(Collections.singletonList(company), PageRequest.of(0, 1), 1));
-//        // Search the company
-//        restCompanyMockMvc.perform(get("/api/_search/companies?query=id:" + company.getId()))
-//            .andExpect(status().isOk())
-//            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-//            .andExpect(jsonPath("$.[*].id").value(hasItem(company.getId().intValue())))
-//            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
-//            .andExpect(jsonPath("$.[*].email").value(hasItem(DEFAULT_EMAIL)))
-//            .andExpect(jsonPath("$.[*].phone").value(hasItem(DEFAULT_PHONE)))
-//            .andExpect(jsonPath("$.[*].addressLine1").value(hasItem(DEFAULT_ADDRESS_LINE_1)))
-//            .andExpect(jsonPath("$.[*].addressLine2").value(hasItem(DEFAULT_ADDRESS_LINE_2)))
-//            .andExpect(jsonPath("$.[*].city").value(hasItem(DEFAULT_CITY)))
-//            .andExpect(jsonPath("$.[*].country").value(hasItem(DEFAULT_COUNTRY)))
-//            .andExpect(jsonPath("$.[*].postcode").value(hasItem(DEFAULT_POSTCODE)))
-//            .andExpect(jsonPath("$.[*].companyLogoContentType").value(hasItem(DEFAULT_COMPANY_LOGO_CONTENT_TYPE)))
-//            .andExpect(jsonPath("$.[*].companyLogo").value(hasItem(Base64Utils.encodeToString(DEFAULT_COMPANY_LOGO))));
-//    }
+
+    @Test
+    @Transactional
+    void searchCompany() throws Exception {
+        // Initialize the database
+        companyRepository.saveAndFlush(company);
+        when(mockCompanySearchRepository.search(queryStringQuery("id:" + company.getId()), PageRequest.of(0, 20)))
+            .thenReturn(new PageImpl<>(Collections.singletonList(company), PageRequest.of(0, 1), 1));
+        // Search the company
+        ResultActions dghdfhdf = restCompanyMockMvc.perform(get("/api/_search/companies?query=id:" + company.getId()))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(company.getId().intValue())))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME)))
+            .andExpect(jsonPath("$.[*].email").value(hasItem(DEFAULT_COMPANY_EMAIL)))
+            .andExpect(jsonPath("$.[*].phone").value(hasItem(DEFAULT_PHONE)))
+            .andExpect(jsonPath("$.[*].addressLine1").value(hasItem(DEFAULT_ADDRESS_LINE_1)))
+            .andExpect(jsonPath("$.[*].addressLine2").value(hasItem(DEFAULT_ADDRESS_LINE_2)))
+            .andExpect(jsonPath("$.[*].city").value(hasItem(DEFAULT_CITY)))
+            .andExpect(jsonPath("$.[*].country").value(hasItem(DEFAULT_COUNTRY)))
+            .andExpect(jsonPath("$.[*].postcode").value(hasItem(DEFAULT_POSTCODE)))
+            .andExpect(jsonPath("$.[*].companyLogoContentType").value(hasItem(DEFAULT_COMPANY_LOGO_CONTENT_TYPE)))
+            .andExpect(jsonPath("$.[*].companyLogo").value(hasItem(Base64Utils.encodeToString(DEFAULT_COMPANY_LOGO))));
+    }
 
 
     @Test
@@ -826,62 +895,61 @@ class CompanyEmployeeServiceTestIT {
         assertThat(companyMapper.fromId(null)).isNull();
     }
 
-//
-//    @Test
-//    @Transactional
-//    void createCompanyWithExistingEmail() throws Exception {
-//
-//        companyRepository.saveAndFlush(company);
-//        int databaseSizeBeforeCreate = companyRepository.findAll().size();
-//
-//        Company updatedCompany = createUpdatedEntity(em);
-//
-//        // Create the Company with an existing ID
-//        updatedCompany.setEmail(DEFAULT_EMAIL);
-//        CompanyDTO companyDTO = companyMapper.toDto(updatedCompany);
-//
-//        // An entity with an existing ID cannot be created, so this API call must fail
-//        restCompanyMockMvc.perform(post("/api/companies")
-//            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-//            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
-//            .andExpect(status().isBadRequest());
-//
-//        // Validate the Company in the database
-//        List<Company> companyList = companyRepository.findAll();
-//        assertThat(companyList).hasSize(databaseSizeBeforeCreate);
-//
-//        verify(mockCompanyRepository, times(0)).save(company);
-//        // Validate the Company in Elasticsearch
-//        verify(mockCompanySearchRepository, times(0)).save(updatedCompany);
-//    }
-//
-//    @Test
-//    @Transactional
-//    void createCompanyWithExistingName() throws Exception {
-//
-//        companyRepository.saveAndFlush(company);
-//        int databaseSizeBeforeCreate = companyRepository.findAll().size();
-//
-//        Company updatedCompany = createUpdatedEntity(em);
-//
-//        // Create the Company with an existing ID
-//        updatedCompany.setName(DEFAULT_NAME);
-//        CompanyDTO companyDTO = companyMapper.toDto(updatedCompany);
-//
-//        // An entity with an existing ID cannot be created, so this API call must fail
-//        restCompanyMockMvc.perform(post("/api/companies")
-//            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-//            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
-//            .andExpect(status().isBadRequest());
-//
-//        // Validate the Company in the database
-//        List<Company> companyList = companyRepository.findAll();
-//        assertThat(companyList).hasSize(databaseSizeBeforeCreate);
-//
-//        // Validate the Company in Elasticsearch
-//        verify(mockCompanySearchRepository, times(0)).save(updatedCompany);
-//    }
-//
+
+    @Test
+    @Transactional
+    void createCompanyWithExistingEmail() throws Exception {
+
+        companyRepository.saveAndFlush(company);
+        int databaseSizeBeforeCreate = companyRepository.findAll().size();
+
+        Company updatedCompany = createEntity(em);
+
+        // Create the Company with an existing ID
+        updatedCompany.setEmail(DEFAULT_COMPANY_EMAIL);
+        CompanyDTO companyDTO = companyMapper.toDto(updatedCompany);
+
+        // An entity with an existing ID cannot be created, so this API call must fail
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        // Validate the Company in the database
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeCreate);
+
+        // Validate the Company in Elasticsearch
+        verify(mockCompanySearchRepository, times(0)).save(updatedCompany);
+    }
+
+    @Test
+    @Transactional
+    void createCompanyWithExistingName() throws Exception {
+
+        companyRepository.saveAndFlush(company);
+        int databaseSizeBeforeCreate = companyRepository.findAll().size();
+
+        Company updatedCompany = createEntity(em);
+
+        // Create the Company with an existing ID
+        updatedCompany.setName(DEFAULT_NAME);
+        CompanyDTO companyDTO = companyMapper.toDto(updatedCompany);
+
+        // An entity with an existing ID cannot be created, so this API call must fail
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest());
+
+        // Validate the Company in the database
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeCreate);
+
+        // Validate the Company in Elasticsearch
+        verify(mockCompanySearchRepository, times(0)).save(updatedCompany);
+    }
+
 
     @Test
     @Transactional
@@ -1030,55 +1098,57 @@ class CompanyEmployeeServiceTestIT {
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
-//    static Company createEntity(EntityManager em) {
-//        Company company = new Company()
-//            .name(DEFAULT_NAME)
-//            .email(DEFAULT_EMAIL)
-//            .phone(DEFAULT_PHONE)
-//            .addressLine1(DEFAULT_ADDRESS_LINE_1)
-//            .addressLine2(DEFAULT_ADDRESS_LINE_2)
-//            .city(DEFAULT_CITY)
-//            .country(DEFAULT_COUNTRY)
-//            .postcode(DEFAULT_POSTCODE)
-//            .companyLogo(DEFAULT_COMPANY_LOGO)
-//            .companyLogoContentType(DEFAULT_COMPANY_LOGO_CONTENT_TYPE);
-//        // Add required entity
-//        Employee employee;
-//        if (TestUtil.findAll(em, Employee.class).isEmpty()) {
-//            employee = EmployeeTestIT.createEntity(em);
-//            em.persist(employee);
-//            em.flush();
-//        } else {
-//            employee = TestUtil.findAll(em, Employee.class).get(0);
-//        }
-//        company.getEmployees().add(employee);
-//        return company;
-//    }
-//
-//
-//    @Test
-//    @Transactional
-//    void createCompanyWithExistingId() throws Exception {
-//        int databaseSizeBeforeCreate = companyRepository.findAll().size();
-//
-//        // Create the Company with an existing ID
-//        company.setId(1L);
-//        CompanyDTO companyDTO = companyMapper.toDto(company);
-//
-//        // An entity with an existing ID cannot be created, so this API call must fail
-//        restCompanyMockMvc.perform(post("/api/companies")
-//            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-//            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
-//            .andExpect(status().isBadRequest());
-//
-//        // Validate the Company in the database
-//        List<Company> companyList = companyRepository.findAll();
-//        assertThat(companyList).hasSize(databaseSizeBeforeCreate);
-//
-//        verify(mockCompanyRepository, times(0)).save(company);
-//        // Validate the Company in Elasticsearch
-//        verify(mockCompanySearchRepository, times(0)).save(company);
-//    }
+    static Company createEntity(EntityManager em) {
+        Company company = new Company()
+            .name(DEFAULT_NAME)
+            .email(DEFAULT_COMPANY_EMAIL)
+            .phone(DEFAULT_PHONE)
+            .addressLine1(DEFAULT_ADDRESS_LINE_1)
+            .addressLine2(DEFAULT_ADDRESS_LINE_2)
+            .city(DEFAULT_CITY)
+            .country(DEFAULT_COUNTRY)
+            .postcode(DEFAULT_POSTCODE)
+            .companyLogo(DEFAULT_COMPANY_LOGO)
+            .companyLogoContentType(DEFAULT_COMPANY_LOGO_CONTENT_TYPE);
+        // Add required entity
+        Employee employee;
+        if (TestUtil.findAll(em, Employee.class).isEmpty()) {
+            employee = EmployeeTestIT.createEntity(em);
+            em.persist(employee);
+            em.flush();
+        } else {
+            employee = TestUtil.findAll(em, Employee.class).get(0);
+        }
+        company.getEmployees().add(employee);
+        return company;
+    }
+
+
+    @Test
+    @Transactional
+    void createCompanyWithExistingId() throws Exception {
+        int databaseSizeBeforeCreate = companyRepository.findAll().size();
+
+        // Create the Company with an existing ID
+        company.setId(1L);
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        // An entity with an existing ID cannot be created, so this API call must fail
+        restCompanyMockMvc.perform(post("/api/companies")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.idexists")));
+
+        //idexists
+
+        // Validate the Company in the database
+        List<Company> companyList = companyRepository.findAll();
+        assertThat(companyList).hasSize(databaseSizeBeforeCreate);
+
+        // Validate the Company in Elasticsearch
+        verify(mockCompanySearchRepository, times(0)).save(company);
+    }
 
     @Test
     @Transactional

@@ -319,4 +319,8 @@ public class CompanyService {
     public Optional<Company> findUsersCompany(Employee currentEmployee) {
         return companyRepository.findOneByEmployees(Collections.singleton(currentEmployee));
     }
+
+    public boolean exists(Long id) {
+        return companyRepository.existsById(id);
+    }
 }

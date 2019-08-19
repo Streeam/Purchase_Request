@@ -38,10 +38,13 @@ public class CidApp implements InitializingBean {
                     // Get all the employees from the company and remove the employee role. Remove the managers roles
                     // Delete the company update the employee company id
             //TODO PUT Update a company (manager his , admin any)
-                    // Only if you are a manager or admin you can update the company (except the company's email)
+                    //TODO Only if you are a manager or admin you can update the company (except the company's email)
+                    //TODO The current user/employee needs to be in a company
+                    //TODO The manager can only update his company. The admin can updated any companies
+                    //TODO Neither the manager nor the admin can update, add nor remove the employees from this endpoint
         //TODO 2. api/activate
                 // GET When activating the user also create and links to an employee (NEEDS TEST)
-        //TODO 3. api/employee/employeeId/request-to-join (no restriction)
+        //TODO 3. api/employee/employeeId/request-to-join
             //TODO POST(companyName) Request to join a company
                 // * If the user is ROLE_MANAGER and ROLE_EMPLOYEE he cannot see this option
                 // * Sends a email to the company's manager to request to join the company
