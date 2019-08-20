@@ -3,6 +3,7 @@ package com.streeam.cims.service;
 import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
+import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.EmployeeRepository;
 import com.streeam.cims.repository.search.EmployeeSearchRepository;
 import com.streeam.cims.service.dto.EmployeeDTO;
@@ -217,5 +218,26 @@ public class EmployeeService {
 
     public List<Employee> findAllEmployeesFromCompany(Company company) {
         return employeeRepository.findAllByCompany(company);
+    }
+
+    public Optional<Company> findCompanyById(Long companyId) {
+        return companyService.findCompanyById(companyId);
+    }
+
+    public Optional<Employee> getCompanysManager(Company company) {
+        return companyService.getCompanysManager(company);
+    }
+
+    public String getEmployeesEmail(Employee manager) {
+        return companyService.getEmployeeEmail(manager);
+    }
+
+    public void sendNotificationToEmployee(Employee manager, NotificationType requestToJoin, String subject) {
+        companyService.sendNotificationToEmployee(manager, requestToJoin, subject);
+    }
+
+    public boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee) {
+
+        return notificationService.userRequestedToJoinAndWasRejectedLessThen3DaysAgo(currentEmployee);
     }
 }

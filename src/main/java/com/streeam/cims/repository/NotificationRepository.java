@@ -2,9 +2,11 @@ package com.streeam.cims.repository;
 
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.Notification;
+import com.streeam.cims.domain.enumeration.NotificationType;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -16,4 +18,6 @@ import java.util.List;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
     List<Notification> findAllByEmployee(Employee employeeToDelete);
+
+    List<Notification> findAllBySentDateBetweenAndEmployeeIdAndFormat(LocalDate now, LocalDate threeDaysAgo, Long id, NotificationType fired);
 }

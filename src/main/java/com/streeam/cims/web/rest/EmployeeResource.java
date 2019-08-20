@@ -3,9 +3,11 @@ package com.streeam.cims.web.rest;
 import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
+import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.EmployeeService;
+import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.web.rest.errors.BadRequestAlertException;
 import io.github.jhipster.web.util.HeaderUtil;
@@ -14,6 +16,7 @@ import io.github.jhipster.web.util.ResponseUtil;
 import org.elasticsearch.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +38,9 @@ import java.util.Optional;
 public class EmployeeResource {
 
     private final Logger log = LoggerFactory.getLogger(EmployeeResource.class);
+
+    @Autowired
+    private  MailService mailService;
 
     private static final String ENTITY_NAME = "employee";
 
@@ -191,7 +197,7 @@ public class EmployeeResource {
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
         User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
         Employee employeeToDelete =  employeeService.findOneById(id).orElseThrow(()->
-            new BadRequestAlertException("Employee not found.", ENTITY_NAME, "emailexists"));
+            new BadRequestAlertException("Employee not found.", ENTITY_NAME, "employeenotfound"));
 
 
         if (!employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN)){
@@ -227,6 +233,57 @@ public class EmployeeResource {
         Page<EmployeeDTO> page = employeeService.search(query, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+
+    /**
+     * {@code POST  /companies/:id/request-to-join} : request to join a company/companyID
+     *
+     * @param companyId the id of the companyDTO to to which the user wants to  join.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
+     */
+    @PostMapping("employee/{employeeId}/request-to-join/{companyId}")
+    public void requestToJoinCompany(@PathVariable Long employeeId,@PathVariable Long companyId) {
+        log.debug("REST request to join the company : {}", companyId);
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(()->new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
+
+        if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
+            throw new BadRequestAlertException("As a manager or a employee you are not allowed to join a company", ENTITY_NAME, "requesttojoinforbiden");
+        }
+
+        Employee employeeRequestingToJoin =  employeeService.findOneById(employeeId).orElseThrow(()->
+            new BadRequestAlertException("Employee not found.", ENTITY_NAME, "employeenotfound"));
+
+
+        if (!currentEmployee.getEmail().equalsIgnoreCase(employeeRequestingToJoin.getEmail())){
+            throw new BadRequestAlertException("You cannot request to join a company on behalf of someone else.", ENTITY_NAME, "requestingtojoinonanothersbehalf");
+        }
+
+        //Cannot implement this method until i can find a way to link the notifications to the company
+
+        // find the latest rejected notification. If it has been less then 48h since
+//        if(!employeeService.userRequestedToJoinAndWasRejectedLessThen3DaysAgo(currentEmployee)){
+//            throw new BadRequestAlertException("You have already requested to join this company less then three days ago.", ENTITY_NAME, "3daysbeforeyoucanrequestagain");
+//        }
+
+
+
+        Company company = employeeService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
+        Employee manager = employeeService.getCompanysManager(company).orElseThrow(() -> new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
+
+
+        String managersEmail = employeeService.getEmployeesEmail(manager);
+
+        // send an email to the manager to inform him of a employee wanting to join the company
+        mailService.sendRequestToJoinEmail(managersEmail, currentUser);
+
+        // create a Notification(REQUEST_TO_JOIN) and link it to the manager
+        employeeService.sendNotificationToEmployee(manager, NotificationType.REQUEST_TO_JOIN, "A user submitted a request to join your company " + company.getName());
+
     }
 
 }

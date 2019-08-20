@@ -46,16 +46,19 @@ public class CidApp implements InitializingBean {
                     //TODO The manager can only update his company. The admin can updated any companies
                     //TODO Neither the manager nor the admin can update, add nor remove the employees from this endpoint
         //TODO 2. api/activate
-                // GET When activating the user also create and links to an employee (NEEDS TEST)
-        //TODO 3. api/employee/employeeId/request-to-join
-            //TODO POST(companyName) Request to join a company
-                // * If the user is ROLE_MANAGER and ROLE_EMPLOYEE he cannot see this option
-                // * Sends a email to the company's manager to request to join the company
-                // * Creates a notification and sends it to the manager
+                //TODO  GET When activating the user also create and links to an employee
+        //TODO 3. api/employee/{employeeId}/request-to-join/{companyId}
+            //TODO POST Request to join a company
+                // TODO  If the user is ROLE_MANAGER and ROLE_EMPLOYEE he cannot see this option
+                // TODO  Sends a email to the company's manager to request to join the company
+                // TODO  Creates a notification and sends it to the manager
+                // * Use the company name to link the company to the employees notification. A employee cannot apply to join the same company in a period less then 3 days.
+                // NEEDS TESTING
         //TODO 4. api/invite-to-join (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
             //TODO POST(email)
                 // * If the user exists and is not ROLE_MANAGER and ROLE_EMPLOYEE sends a notification and an email to the user
-                // * If the user don't exists send an email with link to registration page
+                // * If the user exists but not activated, resend an email for the user to activate his account
+                // * If the user don't exists send an email with link to the registration page
         //TODO 5. api/employees/{employeeId}/approve-employee (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
                 // * The manager or the admin approves the users request.
                 // * The user gets the ROLE_EMPLOYEE and it is added to the company (save the user, employee and the company)

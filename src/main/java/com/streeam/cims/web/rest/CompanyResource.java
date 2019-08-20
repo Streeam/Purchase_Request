@@ -268,40 +268,6 @@ public class CompanyResource {
     }
 
     /**
-     * {@code POST  /companies/:id/request-to-join} : request to join a company/companyID
-     *
-     * @param companyId the id of the companyDTO to to which the user wants to  join.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
-     */
-    @PostMapping("companies/{companyId}/requestToJoin")
-    public void requestToJoinCompany(@PathVariable Long companyId) {
-        log.debug("REST request to join the company : {}", companyId);
-
-        // find the latest rejected notification. If it has been less then 48h since
-        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
-
-        User user = companyService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
-
-        if (companyService.checkUserHasRoles(user, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
-            throw new BadRequestAlertException("You don't have the eligible to request to join a company", ENTITY_NAME, "requesttojoinforbiden");
-        }
-
-        Company company = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
-
-        Employee manager = companyService.getCompanysManager(company).orElseThrow(() -> new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
-
-
-        String managersEmail = companyService.getEmployeeEmail(manager);
-
-        // send an email to the manager to inform him of a employee wanting to join the company
-        mailService.sendRequestToJoinEmail(managersEmail, user);
-
-        // create a Notification(REQUEST_TO_JOIN) and link it to the manager
-        companyService.sendNotificationToEmployee(manager, NotificationType.REQUEST_TO_JOIN, "A user submitted a request to join your company.");
-
-    }
-
-    /**
      * {@code POST  /companies/{id}/hire-employee/{userEmail} : hire a user to the company
      *
      * @param userEmail the email of the user who wants to join the company.

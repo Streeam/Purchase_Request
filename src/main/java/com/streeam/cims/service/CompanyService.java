@@ -273,7 +273,15 @@ public class CompanyService {
     public Optional<Employee> getCompanysManager(Company company) {
 
         return company.getEmployees().stream()
-            .filter(employee -> employee.getUser().getAuthorities().stream().anyMatch(authority-> authority.getName().equals(AuthoritiesConstants.MANAGER))).findAny();
+            .filter(employee ->
+                employee.getUser()
+                    .getAuthorities()
+                    .stream()
+                    .anyMatch(authority->
+                        authority
+                            .getName()
+                            .equals(AuthoritiesConstants.MANAGER))).
+                findAny();
 
     }
 

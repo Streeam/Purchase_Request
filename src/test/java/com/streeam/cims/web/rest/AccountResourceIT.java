@@ -6,11 +6,11 @@ import com.streeam.cims.domain.Authority;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.repository.AuthorityRepository;
+import com.streeam.cims.repository.EmployeeRepository;
 import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.repository.search.EmployeeSearchRepository;
 import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
-import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.UserService;
 import com.streeam.cims.service.dto.PasswordChangeDTO;
@@ -41,8 +41,8 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -69,7 +69,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     private UserService userService;
 
     @Autowired
-    private EmployeeService employeeService;
+    private EmployeeRepository employeeRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -471,12 +471,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
         user = userRepository.findOneByLogin(user.getLogin()).orElse(null);
-        Employee employee = employeeService.createEmployeeFromUser(user);
+        Optional<Employee> employeeMaybe = employeeRepository.findOneByEmail(user.getEmail());
+        assertThat(employeeMaybe).isPresent();
+        Employee employee = employeeMaybe.get();
         assertThat(user.getActivated()).isTrue();
         assertThat(user).isEqualTo(employee.getUser());
         assertThat(user.getEmail()).isEqualTo(employee.getEmail());
         assertThat(user.getLogin()).isEqualTo(employee.getLogin());
+        assertThat(employee.isHired()).isFalse();
 
+        verify(mockEmployeeSearchRepository, times(1)).save(employee);
 
     }
 
@@ -666,7 +670,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             .content(TestUtil.convertObjectToJsonBytes(new PasswordChangeDTO(currentPassword, "new password"))))
             .andExpect(status().isOk());
 
-        User updatedUser = userRepository.findOneByLogin("change-password").orElse(null);
+        User updatedUser = userRepository.findOneByEmailIgnoreCase("change-password@example.com").orElse(null);
         assertThat(passwordEncoder.matches("new password", updatedUser.getPassword())).isTrue();
     }
 
@@ -688,7 +692,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             .content(TestUtil.convertObjectToJsonBytes(new PasswordChangeDTO(currentPassword, newPassword))))
             .andExpect(status().isBadRequest());
 
-        User updatedUser = userRepository.findOneByLogin("change-password-too-small").orElse(null);
+        User updatedUser = userRepository.findOneByEmailIgnoreCase("change-password-too-small@example.com").orElse(null);
         assertThat(updatedUser.getPassword()).isEqualTo(user.getPassword());
     }
 
@@ -710,7 +714,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             .content(TestUtil.convertObjectToJsonBytes(new PasswordChangeDTO(currentPassword, newPassword))))
             .andExpect(status().isBadRequest());
 
-        User updatedUser = userRepository.findOneByLogin("change-password-too-long").orElse(null);
+        User updatedUser = userRepository.findOneByEmailIgnoreCase("change-password-too-long@example.com").orElse(null);
         assertThat(updatedUser.getPassword()).isEqualTo(user.getPassword());
     }
 
@@ -730,7 +734,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
             .content(TestUtil.convertObjectToJsonBytes(new PasswordChangeDTO(currentPassword, ""))))
             .andExpect(status().isBadRequest());
 
-        User updatedUser = userRepository.findOneByLogin("change-password-empty").orElse(null);
+        User updatedUser = userRepository.findOneByEmailIgnoreCase("change-password-empty@example.com").orElse(null);
         assertThat(updatedUser.getPassword()).isEqualTo(user.getPassword());
     }
 
@@ -793,7 +797,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .content(TestUtil.convertObjectToJsonBytes(keyAndPassword)))
             .andExpect(status().isOk());
 
-        User updatedUser = userRepository.findOneByLogin(user.getLogin()).orElse(null);
+        User updatedUser = userRepository.findOneByEmailIgnoreCase(user.getEmail()).orElse(null);
         assertThat(passwordEncoder.matches(keyAndPassword.getNewPassword(), updatedUser.getPassword())).isTrue();
     }
 
@@ -818,7 +822,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 .content(TestUtil.convertObjectToJsonBytes(keyAndPassword)))
             .andExpect(status().isBadRequest());
 
-        User updatedUser = userRepository.findOneByLogin(user.getLogin()).orElse(null);
+        User updatedUser = userRepository.findOneByEmailIgnoreCase(user.getEmail()).orElse(null);
         assertThat(passwordEncoder.matches(keyAndPassword.getNewPassword(), updatedUser.getPassword())).isFalse();
     }
 

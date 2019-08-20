@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -132,5 +133,14 @@ public class NotificationService {
                 this.delete(notification.getId());
             });
 
+    }
+
+    public boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee) {
+
+        LocalDate now = LocalDate.now();
+        LocalDate threeDaysAgo = now.minusDays(3);
+
+        List<Notification> notificationsLessThen3Days = notificationRepository.findAllBySentDateBetweenAndEmployeeIdAndFormat(now, threeDaysAgo, currentEmployee.getId(), NotificationType.REQUEST_TO_JOIN);
+        return !notificationsLessThen3Days.isEmpty();
     }
 }
