@@ -27,8 +27,8 @@ public class CidApp implements InitializingBean {
 
     //TODO                                                  ****API's****
 
-        //TODO 1. api/companies  //
-            // **SEPARATE THE TEST INTO INDIVIDUAL METHODS
+        //TODO 1. api/companies
+            // **CREATE MORE TESTS FOR THE MAILSERVICE TEST CLASS
             //TODO POST Create a company and automatically become the manager
                     //TODO If the user is ROLE_MANAGER or ROLE_EMPLOYEE he cannot see this option otherwise he can
                     // Only the ROLE_USER can create a company
@@ -39,7 +39,7 @@ public class CidApp implements InitializingBean {
                     //TODO Manager can delete only his company, admin can delete any company.
                     //TODO Get all the employees from the company and remove the employee role. Remove the managers roles
                     //TODO Delete the company update the employee company id
-                    //* Send notifications and emails to all employees that they all been fired (FINISHED BUT NEEDS TESTING)
+                    //TODO Send notifications and emails to all employees that they all been fired
             //TODO PUT Update a company (manager his , admin any)
                     //TODO Only if you are a manager or admin you can update the company (except the company's email)
                     //TODO The current user/employee needs to be in a company

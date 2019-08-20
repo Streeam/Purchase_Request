@@ -73,7 +73,6 @@ public class CompanyResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/companies")
-   // @PreAuthorize("hasAnyRole(\"" + AuthoritiesConstants.USER + "\" , \"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<CompanyDTO> createCompany(@Valid @RequestBody CompanyDTO companyDTO) throws URISyntaxException {
         log.debug("REST request to save Company : {}", companyDTO);
         if (companyDTO.getId() != null) {
@@ -93,7 +92,7 @@ public class CompanyResource {
         Employee employee = companyService.findEmployeeFromUser(user).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
         if (companyService.checkUserHasRoles(user, AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN,AuthoritiesConstants.ANONYMOUS)) {
-            throw new BadRequestAlertException("You can't create a company if you already have a company or are employed by another", ENTITY_NAME, "wrongrole");
+            throw new BadRequestAlertException("You can't create a company if you already have a company or are employed by another", ENTITY_NAME, "wrongroleforcreatingcompany");
         }
 
         Set<Authority> authorities = user.getAuthorities();
@@ -243,6 +242,7 @@ public class CompanyResource {
             }
             companyService.delete(id);
             companyService.notifyEmployeeThatTheyHaveBeenFired(company);
+            companyService.sendEmailToAllEmployees(company);
         }
         else {
             companyService.delete(id);

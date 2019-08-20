@@ -207,10 +207,6 @@ public class EmployeeResource {
         log.debug("REST request to delete all Employee's Notifications.");
         employeeService.deleteEmployeesNotifications(employeeToDelete);
 
-
-
-
-
         log.debug("REST request to delete User : {}", linkedUser.getId());
         employeeService.deleteLinkedUser(linkedUser);
 

@@ -50,14 +50,14 @@ public class CompanyService {
     private  UserService userService;
 
     @Autowired
-    private EmployeeService employeeService;
+    private MailService mailService;
 
+    @Autowired
+    private EmployeeService employeeService;
 
     private  final UserRepository userRepository;
 
     private final UserMapper userMapper;
-
-
 
     private  final EmployeeRepository employeeRepository;
 
@@ -200,7 +200,8 @@ public class CompanyService {
                     });
                 companySearchRepository.delete(company);
                 return company;
-            }).ifPresent(companyRepository::delete);
+            }).ifPresent(
+                companyRepository::delete);
     }
 
     /**
@@ -257,7 +258,7 @@ public class CompanyService {
     }
 
     public Optional<Employee> findEmployeeFromUser(User user) {
-        return userService.findLinkedEmployee(user);
+        return employeeService.findOneByLogin(user.getLogin());
     }
 
 
@@ -331,5 +332,10 @@ public class CompanyService {
         });
 
 
+    }
+
+    public void sendEmailToAllEmployees(Company company) {
+        List<Employee> employees = employeeService.findAllEmployeesFromCompany(company);
+        mailService.sendEmailToAllFromCompany(employees);
     }
 }

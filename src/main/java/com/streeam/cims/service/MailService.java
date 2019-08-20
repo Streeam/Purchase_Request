@@ -1,9 +1,12 @@
 package com.streeam.cims.service;
 
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
+import com.streeam.cims.repository.UserRepository;
 import io.github.jhipster.config.JHipsterProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -14,7 +17,10 @@ import org.thymeleaf.spring5.SpringTemplateEngine;
 
 import javax.mail.internet.MimeMessage;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Service for sending emails.
@@ -25,6 +31,9 @@ import java.util.Locale;
 public class MailService {
 
     private final Logger log = LoggerFactory.getLogger(MailService.class);
+
+    @Autowired
+    private UserRepository userRepository;
 
     private static final String USER = "user";
 
@@ -122,5 +131,18 @@ public class MailService {
 
         log.debug("Sending a rejection notification email to '{}'", rejectedUserEmail);
         sendEmailFromTemplate(rejectedUserEmail ,manager, "mail/rejectionEmail", "email.reject.application");
+    }
+
+    public void sendEmailToAllFromCompany(List<Employee> employees) {
+        employees.stream()
+            .map(Employee::getEmail)
+            .map(userRepository::findOneByEmailIgnoreCase)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .filter(user -> Objects.nonNull(user.getEmail()))
+            .forEach(user -> {
+                log.debug("Sending a dismissal notification email to '{}'", user.getEmail());
+                sendEmailFromTemplate(user.getEmail(), user,"mail/dissolvedCompanyEmail","email.company.dissolved" );
+            });
     }
 }

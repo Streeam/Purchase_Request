@@ -133,7 +133,7 @@
     "userexists": "Login name already used!",
     "emailexists": "Email is already in use!",
     "idexists": "A new {{ entityName }} cannot already have an ID",
-    "wrongrole": "You can't create a company if you already manage a company or are employed by one.",
+    "wrongroleforcreatingcompany": "You can't create a company if you manage a company or are employed by one.",
     "idnull": "Invalid ID"
   },
   "footer": "This is your footer"

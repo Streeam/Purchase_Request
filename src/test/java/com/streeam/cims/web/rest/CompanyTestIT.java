@@ -8,6 +8,7 @@ import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.*;
 import com.streeam.cims.repository.search.CompanySearchRepository;
 import com.streeam.cims.repository.search.EmployeeSearchRepository;
+import com.streeam.cims.repository.search.NotificationSearchRepository;
 import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.CompanyService;
@@ -197,7 +198,7 @@ class CompanyTestIT {
     private static final String DEFAULT_USER3_FIRSTNAME = "gandalf";
     private static final String DEFAULT_USER3_LASTNAME = "theGRey";
     private static final String DEFAULT_USER3_IMAGEURL = "http://placehold3.it/50x50";
-    private static final String DEFAULT_USER3_LANGKEY = "urukay";
+    private static final String DEFAULT_USER3_LANGKEY = "en";
 
     //***************USER4 DEFAULT VALUES**************
     private static final String DEFAULT_USER4_LOGIN = "faramir";
@@ -240,6 +241,8 @@ class CompanyTestIT {
      */
     @Autowired
     private CompanySearchRepository mockCompanySearchRepository;
+    @Autowired
+    private NotificationSearchRepository mockNotificationSearchRepository;
 
     @Autowired
     private UserService userService;
@@ -276,8 +279,8 @@ class CompanyTestIT {
     @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
 
-    @Autowired
-    private MailService mailService;
+    @Mock
+    private MailService mockMailService;
 
     @Autowired
     private ExceptionTranslator exceptionTranslator;
@@ -305,7 +308,9 @@ class CompanyTestIT {
     void init() {
 
         MockitoAnnotations.initMocks(this);
-        final CompanyResource companyResource = new CompanyResource(companyService,authorityRepository, mailService);
+        doNothing().when(mockMailService).sendEmailFromTemplate(any(User.class),anyString(),anyString());
+
+        final CompanyResource companyResource = new CompanyResource(companyService,authorityRepository, mockMailService);
         this.restCompanyMockMvc = MockMvcBuilders.standaloneSetup(companyResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -462,51 +467,49 @@ class CompanyTestIT {
 
     @Test
     @Transactional
-    void assertCompanyEndpointsBehaveAsRequired() throws Exception {
+    void assertTheCreationOfACompany() throws  Exception{
 
         securityAwareMockMVC();
 
         userService.allocateAuthority(AuthoritiesConstants.USER, user1);
         userRepository.saveAndFlush(user1);
-        userService.allocateAuthority(AuthoritiesConstants.USER, user2);
-        userRepository.saveAndFlush(user2);
-        userService.allocateAuthority(AuthoritiesConstants.USER, user3);
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user3);
         userRepository.saveAndFlush(user3);
         userService.allocateAuthority(AuthoritiesConstants.MANAGER, user4);
         userRepository.saveAndFlush(user4);
 
-
-        Company updatedCompany ;
-        Company updatedCompany2 = companyRepository.saveAndFlush(company2);
+        Company savedCompany2 = companyRepository.saveAndFlush(company2);
 
         List<Company> initialCompanies ;
-        List<Employee> initialEmployees;
-        List<User> initialUsers;
 
         employee1.setCompany(null);
-        employee2.setCompany(null);
-        employee3.setCompany(updatedCompany2);
-        employee4.setCompany(updatedCompany2);
+        employee3.setCompany(savedCompany2);
+        employee4.setCompany(savedCompany2);
         employeeRepository.saveAndFlush(employee1);
-        employeeRepository.saveAndFlush(employee2);
         employeeRepository.saveAndFlush(employee3);
         employeeRepository.saveAndFlush(employee4);
 
-        notificationRepository.saveAndFlush(notification1);
-        notificationRepository.saveAndFlush(notification2);
-        notificationRepository.saveAndFlush(notification3);
-        notificationRepository.saveAndFlush(notification4);
-
-        int databaseEmployeesSizeBeforeUpdate = employeeRepository.findAll().size();
-        int databaseUsersSizeBeforeUpdate = userRepository.findAll().size();
         int databaseCompaniesSizeBeforeUpdate = companyRepository.findAll().size();
-        int databaseNotificationsSizeBeforeUpdate = notificationRepository.findAll().size();
 
 /**
  * ****************** POST api/companies ****************
  */
 
+        assertThat(userRepository.findOneByEmailIgnoreCase(user1.getEmail())).isPresent();
+        User testUser = userRepository.findOneByEmailIgnoreCase(user1.getEmail()).get();
+        assertThat(userService.checkIfUserHasRoles(testUser, AuthoritiesConstants.MANAGER)).isFalse();
+
         CompanyDTO companyDTO = companyMapper.toDto(company);
+
+        /**
+         * Verify that if you are a manager or a employee you cannot create a company
+         */
+        restCompanyMockMvc.perform(post("/api/companies")
+            .with(user(Arrays.asList(user3, user4).stream().findAny().get().getLogin().toLowerCase()))
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.wrongroleforcreatingcompany")));
 
         restCompanyMockMvc.perform(post("/api/companies")
             .with(user(user1.getLogin().toLowerCase()))
@@ -521,13 +524,7 @@ class CompanyTestIT {
         Company testCompany = initialCompanies.get(databaseCompaniesSizeBeforeUpdate);
 
         assertThat(testCompany.getEmail()).isEqualToIgnoringCase(company.getEmail());
-
-        assertThat(userRepository.findOneByEmailIgnoreCase(user1.getEmail())).isPresent();
-
-        User testUser = userRepository.findOneByEmailIgnoreCase(user1.getEmail()).get();
-
         assertThat(userService.checkIfUserHasRoles(testUser, AuthoritiesConstants.MANAGER)).isTrue();
-
         assertThat(initialCompanies).hasSize(databaseCompaniesSizeBeforeUpdate + 1);
 
         // Validate the Employee in Elasticsearch
@@ -535,6 +532,42 @@ class CompanyTestIT {
         verify(mockUserSearchRepository, times(1)).save(any(User.class));
         verify(mockEmployeeSearchRepository, times(1)).save(any(Employee.class));
 
+
+        userRepository.deleteInBatch(Arrays.asList(user1, user3, user4));
+        employeeRepository.deleteInBatch(Arrays.asList(employee1, employee3, employee4));
+        companyRepository.deleteInBatch(Arrays.asList(testCompany, savedCompany2));
+    }
+
+
+    @Test
+    @Transactional
+    void assertThatPostCompaniesBehaviorWorksAsIntended() throws Exception {
+
+        securityAwareMockMVC();
+
+        userService.allocateAuthority(AuthoritiesConstants.USER, user1);
+        userRepository.saveAndFlush(user1);
+        userService.allocateAuthority(AuthoritiesConstants.USER, user2);
+        userRepository.saveAndFlush(user2);
+        userService.allocateAuthority(AuthoritiesConstants.USER, user3);
+        userRepository.saveAndFlush(user3);
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user4);
+        userRepository.saveAndFlush(user4);
+
+
+        Company updatedCompany = companyRepository.saveAndFlush(company);
+        Company updatedCompany2 = companyRepository.saveAndFlush(company2);
+
+        employee1.setCompany(null);
+        employee2.setCompany(null);
+        employee3.setCompany(updatedCompany2);
+        employee4.setCompany(updatedCompany2);
+        employeeRepository.saveAndFlush(employee1);
+        employeeRepository.saveAndFlush(employee2);
+        employeeRepository.saveAndFlush(employee3);
+        employeeRepository.saveAndFlush(employee4);
+
+        int databaseCompaniesSizeBeforeUpdate = companyRepository.findAll().size();
 
 /**
  * ****************** GET api/companies ****************
@@ -556,7 +589,7 @@ class CompanyTestIT {
             .with(user(user2.getLogin().toLowerCase())))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-            .andExpect(jsonPath("$.[*].id").value(Matchers.hasItem(testCompany.getId().intValue())))
+            .andExpect(jsonPath("$.[*].id").value(Matchers.hasItem(updatedCompany.getId().intValue())))
             .andExpect(jsonPath("$.[*].id").value(Matchers.hasItem(updatedCompany2.getId().intValue()))) // The json object has 2 companies
             .andExpect(jsonPath("$.[*].name").value(Matchers.hasItem(DEFAULT_NAME)))
             .andExpect(jsonPath("$.[*].email").value(Matchers.hasItem(DEFAULT_COMPANY_EMAIL)))
@@ -572,11 +605,56 @@ class CompanyTestIT {
         String contentAsString = resultActions.andReturn().getResponse().getContentAsString();
         DocumentContext context = JsonPath.parse(contentAsString);
         int jsonLength = context.read("$.length()");
-        assertThat(jsonLength).isEqualTo(databaseCompaniesSizeBeforeUpdate + 1);
+        assertThat(jsonLength).isEqualTo(databaseCompaniesSizeBeforeUpdate);
 
-       //System.out.println(JsonFormatter.prettyPrint(managersCompanyAsString));
+        //System.out.println(JsonFormatter.prettyPrint(managersCompanyAsString));
 
         assertThat(context.read("$.[*].email").toString()).contains(DEFAULT_COMPANY_EMAIL);
+
+        userRepository.deleteInBatch(Arrays.asList(user1, user2, user3, user4));
+        employeeRepository.deleteInBatch(Arrays.asList(employee1,employee2, employee3, employee4));
+        companyRepository.deleteInBatch(Arrays.asList(company, company2));
+    }
+
+
+    @Test
+    @Transactional
+    void assertThatDeleteCompaniesBehaviorWorksAsIntended() throws Exception {
+
+        securityAwareMockMVC();
+
+        userService.allocateAuthority(AuthoritiesConstants.USER, user1);
+        userRepository.saveAndFlush(user1);
+        userService.allocateAuthority(AuthoritiesConstants.USER, user2);
+        userRepository.saveAndFlush(user2);
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user3);
+        userRepository.saveAndFlush(user3);
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user4);
+        userRepository.saveAndFlush(user4);
+
+
+        Company updatedCompany= companyRepository.saveAndFlush(company);
+        Company updatedCompany2 = companyRepository.saveAndFlush(company2);
+
+        List<Company> initialCompanies ;
+        List<Employee> initialEmployees;
+        List<User> initialUsers;
+        List<Notification> initialNotifications;
+
+        employee1.setCompany(null);
+        employee2.setCompany(null);
+        employee3.setCompany(updatedCompany2);
+        employee4.setCompany(updatedCompany2);
+        employeeRepository.saveAndFlush(employee1);
+        employeeRepository.saveAndFlush(employee2);
+        employeeRepository.saveAndFlush(employee3);
+        employeeRepository.saveAndFlush(employee4);
+
+
+        int databaseEmployeesSizeBeforeDelete = employeeRepository.findAll().size();
+        int databaseUsersSizeBeforeDelete = userRepository.findAll().size();
+        int databaseCompaniesSizeBeforeDelete = companyRepository.findAll().size();
+        int databaseNotificationsSizeBeforeDelete = notificationRepository.findAll().size();
 
 /**
  * ****************** DELETE api/companies ****************
@@ -584,25 +662,22 @@ class CompanyTestIT {
         /**
          * Delete the company without the manager nor admin role
          */
-        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user3);
-        userRepository.saveAndFlush(user3);
 
         assertThat(userService.checkIfUserHasRoles(user4, AuthoritiesConstants.MANAGER)).isTrue();
         assertThat(userService.checkIfUserHasRoles(user3, AuthoritiesConstants.EMPLOYEE)).isTrue();
 
-        databaseCompaniesSizeBeforeUpdate = companyRepository.findAll().size();
-
-
         initialCompanies = companyRepository.findAll();
         initialEmployees = employeeRepository.findAll();
         initialUsers = userRepository.findAll();
+        initialNotifications = notificationRepository.findAll();
 
         restCompanyMockMvc.perform(delete("/api/companies/{id}", updatedCompany2.getId())
             .with(user(user2.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.companyremoveforbiden")));
 
-        assertThat(initialCompanies).hasSize(databaseCompaniesSizeBeforeUpdate);
+        assertThat(initialCompanies).hasSize(databaseCompaniesSizeBeforeDelete);
 
         /**
          * Manager deletes a company that it's not his.
@@ -616,7 +691,8 @@ class CompanyTestIT {
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.managercanonlyremovehisowncompany")));
 
-        assertThat(initialCompanies).hasSize(databaseCompaniesSizeBeforeUpdate);
+        assertThat(initialCompanies).hasSize(databaseCompaniesSizeBeforeDelete);
+        assertThat(initialNotifications).hasSize(databaseNotificationsSizeBeforeDelete);
 
         /**
          * Manager deletes his own company.
@@ -627,15 +703,84 @@ class CompanyTestIT {
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isNoContent());
 
-        em.clear();
+        List<Company> companiesAfterDelete = companyRepository.findAll();
+        List<Notification> notificationsAfterDelete = notificationRepository.findAll();
 
-        databaseCompaniesSizeBeforeUpdate = companyRepository.findAll().size();
+        assertThat(employeeRepository.findOneByEmail(employee3.getEmail())).isPresent();
+        assertThat(employeeRepository.findOneByEmail(employee4.getEmail())).isPresent();
 
+        Employee testEmmployee3 = employeeRepository.findOneByEmail(employee3.getEmail()).get();
+        Employee testEmmployee4 = employeeRepository.findOneByEmail(employee4.getEmail()).get();
+
+        assertThat(notificationRepository.findAllByEmployee(testEmmployee3)).isNotEmpty();
+        Notification employee3FiredNotification = notificationRepository.findAllByEmployee(testEmmployee3).get(0);
+        Notification employee4FiredNotification = notificationRepository.findAllByEmployee(testEmmployee4).get(0);
+        assertThat(Arrays.asList(employee3FiredNotification, employee4FiredNotification).stream().findAny().get().getFormat())
+            .isEqualTo(NotificationType.FIRED);
         assertThat(userService.checkIfUserHasRoles(user4, AuthoritiesConstants.MANAGER)).isFalse();
         assertThat(userService.checkIfUserHasRoles(user3, AuthoritiesConstants.EMPLOYEE)).isFalse();
-        assertThat(initialCompanies).hasSize(databaseCompaniesSizeBeforeUpdate);
-        assertThat(initialEmployees).hasSize(databaseEmployeesSizeBeforeUpdate);
-        assertThat(initialUsers).hasSize(databaseUsersSizeBeforeUpdate);
+        assertThat(companiesAfterDelete).hasSize(initialCompanies.size() -1);
+        assertThat(initialEmployees).hasSize(databaseEmployeesSizeBeforeDelete);
+        assertThat(initialUsers).hasSize(databaseUsersSizeBeforeDelete);
+        assertThat(notificationsAfterDelete).hasSize(initialNotifications.size() + 2);
+
+        verify(mockNotificationSearchRepository, times(2)).save(any(Notification.class));
+        verify(mockCompanySearchRepository, times(1)).delete(updatedCompany2);
+        verify(mockNotificationSearchRepository, times(1))
+            .save(Arrays.asList(employee3FiredNotification,employee3FiredNotification).stream().findAny().get());
+        verify(mockEmployeeSearchRepository, times(1)).save(employee3);
+
+        notificationRepository.deleteInBatch(Arrays.asList(employee3FiredNotification, employee4FiredNotification));
+        userRepository.deleteInBatch(Arrays.asList(user1, user2,user3, user4));
+        companyRepository.deleteInBatch(Arrays.asList(company,company2));
+        employeeRepository.deleteInBatch(Arrays.asList(employee1, employee2, employee3, employee4));
+    }
+
+
+
+    @Test
+    @Transactional
+    void assertThatPutCompaniesBehaviorWorksAsIntended() throws Exception {
+
+        securityAwareMockMVC();
+
+        userService.allocateAuthority(AuthoritiesConstants.USER, user1);
+        userRepository.saveAndFlush(user1);
+        userService.allocateAuthority(AuthoritiesConstants.USER, user2);
+        userRepository.saveAndFlush(user2);
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user3);
+        userRepository.saveAndFlush(user3);
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user4);
+        userRepository.saveAndFlush(user4);
+
+
+        Company updatedCompany = companyRepository.saveAndFlush(company);
+        Company updatedCompany2 = companyRepository.saveAndFlush(company2);
+
+        List<Company> initialCompanies;
+        List<Employee> initialEmployees;
+        List<User> initialUsers;
+        List<Notification> initialNotifications;
+
+        employee1.setCompany(null);
+        employee2.setCompany(null);
+        employee3.setCompany(updatedCompany2);
+        employee4.setCompany(updatedCompany2);
+        employeeRepository.saveAndFlush(employee1);
+        employeeRepository.saveAndFlush(employee2);
+        employeeRepository.saveAndFlush(employee3);
+        employeeRepository.saveAndFlush(employee4);
+
+        notificationRepository.saveAndFlush(notification1);
+        notificationRepository.saveAndFlush(notification2);
+        notificationRepository.saveAndFlush(notification3);
+        notificationRepository.saveAndFlush(notification4);
+
+        int databaseEmployeesSizeBeforeUpdate = employeeRepository.findAll().size();
+        int databaseUsersSizeBeforeUpdate = userRepository.findAll().size();
+        int databaseCompaniesSizeBeforeUpdate = companyRepository.findAll().size();
+        int databaseNotificationsSizeBeforeUpdate = notificationRepository.findAll().size();
+
 /**
  * ****************** PUT api/companies ****************
  */
@@ -668,11 +813,11 @@ class CompanyTestIT {
             .content(TestUtil.convertObjectToJsonBytes(updatedCompanyDTO)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.noauthoritytochangecomp")));
-
         /**
-         * Manager is trying to modify  a company that is not his.  Make user 1 a Manager. User 1 is not from updatedCompanyDTO2
+         * Manager is trying to modify  a company that is not his.  Make user 1 a Manager for company 1;
          */
         userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
+        employee1.setCompany(company);
         userRepository.saveAndFlush(user1);
 
         restCompanyMockMvc.perform(put("/api/companies")
@@ -685,9 +830,6 @@ class CompanyTestIT {
         /**
          * Manager is updating his own company.
          */
-
-
-
         restCompanyMockMvc.perform(put("/api/companies")
             .with(user(user4.getLogin()))
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -695,7 +837,7 @@ class CompanyTestIT {
             .andExpect(status().is2xxSuccessful());
 
         // Validate the Employee in Elasticsearch
-        verify(mockCompanySearchRepository, times(2)).save(any(Company.class));
+        verify(mockCompanySearchRepository, times(1)).save(any(Company.class));
 
         updatedCompanyDTO.setEmployees(Collections.singleton(employee1));
 
@@ -727,11 +869,10 @@ class CompanyTestIT {
          */
         notificationRepository.deleteInBatch(Arrays.asList(notification1,notification2, notification3,notification4));
         userRepository.deleteInBatch(Arrays.asList(user1, user2,user3, user4));
-        companyRepository.deleteInBatch(Arrays.asList(testCompany,company2));
+        companyRepository.deleteInBatch(Arrays.asList(company,company2));
         employeeRepository.deleteInBatch(Arrays.asList(employee1, employee2, employee3, employee4));
 
     }
-
 
     @Test
     @Transactional
@@ -1109,7 +1250,6 @@ class CompanyTestIT {
 
     /**
      * Create an entity for this test.
-     *
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */

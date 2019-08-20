@@ -4,11 +4,13 @@ import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.Notification;
 import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.NotificationRepository;
+import com.streeam.cims.repository.search.EmployeeSearchRepository;
 import com.streeam.cims.repository.search.NotificationSearchRepository;
 import com.streeam.cims.service.dto.NotificationDTO;
 import com.streeam.cims.service.mapper.NotificationMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,9 @@ import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 public class NotificationService {
 
     private final Logger log = LoggerFactory.getLogger(NotificationService.class);
+
+    @Autowired
+    private EmployeeSearchRepository employeeSearchRepository;
 
     private final NotificationRepository notificationRepository;
 
@@ -116,7 +121,8 @@ public class NotificationService {
         notificationDTO.setEmployeeId(employee.getId());
         notificationDTO.setRead(false);
         notificationDTO.setComment(comment);
-
+//        employee.getNotifications().add(notificationMapper.toEntity(notificationDTO));
+        employeeSearchRepository.save(employee);
         return this.save(notificationDTO);}
 
     public void deleteAllByEmployee(Employee employeeToDelete) {
