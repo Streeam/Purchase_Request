@@ -64,8 +64,9 @@ public class CidApp implements InitializingBean {
                 // * The user gets the ROLE_EMPLOYEE and it is added to the company (save the user, employee and the company)
                 // * Sends a email to the user to inform him that his request has been approved
                 // * Also sends a notification to the user to inform him that his request has been approved.
-        //TODO 5. api/employees/{employeeId}/reject-employee
+        //TODO 5. api/companies/{companyId}/reject-employee/{employeeId}
                     // * The manager or the admin rejects the users request.
+                    // * The employee must not have the role of manager nor employee and he is not part of a company.
                     // * Sends a email to the user to inform him that his request has been rejected
                     // * Also sends a notification to the user to inform him that his request has been rejected.
         //TODO 6. api/employees/{employeeId}/fire-employee (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)

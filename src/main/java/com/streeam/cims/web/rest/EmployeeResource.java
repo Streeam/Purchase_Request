@@ -236,13 +236,14 @@ public class EmployeeResource {
     }
 
 
+
     /**
      * {@code POST  /companies/:id/request-to-join} : request to join a company/companyID
      *
      * @param companyId the id of the companyDTO to to which the user wants to  join.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
-    @PostMapping("employee/{employeeId}/request-to-join/{companyId}")
+    @PostMapping("/employees/{employeeId}/request-to-join/{companyId}")
     public void requestToJoinCompany(@PathVariable Long employeeId,@PathVariable Long companyId) {
         log.debug("REST request to join the company : {}", companyId);
 
@@ -256,7 +257,14 @@ public class EmployeeResource {
 
         Employee employeeRequestingToJoin =  employeeService.findOneById(employeeId).orElseThrow(()->
             new BadRequestAlertException("Employee not found.", ENTITY_NAME, "employeenotfound"));
+        User userRequestingToJoin = employeeService.findLinkedUserByEmail(employeeRequestingToJoin.getEmail()).orElseThrow(()->
+            new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserforthisemployee"));
 
+
+
+        if(employeeService.checkUserHasRoles(userRequestingToJoin, AuthoritiesConstants.EMPLOYEE,AuthoritiesConstants.MANAGER) && employeeRequestingToJoin.isHired()){
+            throw new BadRequestAlertException("You cannot request to join a company if you are already into one.", ENTITY_NAME, "joinonlyifunemployed");
+        }
 
         if (!currentEmployee.getEmail().equalsIgnoreCase(employeeRequestingToJoin.getEmail())){
             throw new BadRequestAlertException("You cannot request to join a company on behalf of someone else.", ENTITY_NAME, "requestingtojoinonanothersbehalf");
@@ -268,8 +276,6 @@ public class EmployeeResource {
 //        if(!employeeService.userRequestedToJoinAndWasRejectedLessThen3DaysAgo(currentEmployee)){
 //            throw new BadRequestAlertException("You have already requested to join this company less then three days ago.", ENTITY_NAME, "3daysbeforeyoucanrequestagain");
 //        }
-
-
 
         Company company = employeeService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
@@ -285,5 +291,7 @@ public class EmployeeResource {
         employeeService.sendNotificationToEmployee(manager, NotificationType.REQUEST_TO_JOIN, "A user submitted a request to join your company " + company.getName());
 
     }
+
+
 
 }

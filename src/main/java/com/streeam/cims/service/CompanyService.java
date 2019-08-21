@@ -313,8 +313,8 @@ public class CompanyService {
         return  employeeService.findOneByLogin(userEmail);
     }
 
-    public Optional<User> findUserByLogin(String userEmail) {
-        return userService.findOneByLogin(userEmail);
+    public Optional<User> findUserByEmail(String userEmail) {
+        return userService.findOneByEmail(userEmail);
     }
 
     public CompanyDTO saveUserEmployeeAndComapany(Employee employee, User user, Company company) {
@@ -346,4 +346,14 @@ public class CompanyService {
         List<Employee> employees = employeeService.findAllEmployeesFromCompany(company);
         mailService.sendEmailToAllFromCompany(employees);
     }
+
+    public Optional<Employee> findEmployeeById(Long employeeId) {
+        return employeeService.findOneById(employeeId);
+    }
+
+    public Optional<Employee> findEmployeeByEmail(String email) {
+
+    return employeeService.findOneByEmail(email);
+    }
+
 }

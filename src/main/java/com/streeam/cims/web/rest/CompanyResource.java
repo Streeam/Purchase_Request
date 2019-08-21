@@ -1,6 +1,9 @@
 package com.streeam.cims.web.rest;
 
-import com.streeam.cims.domain.*;
+import com.streeam.cims.domain.Authority;
+import com.streeam.cims.domain.Company;
+import com.streeam.cims.domain.Employee;
+import com.streeam.cims.domain.User;
 import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
@@ -23,7 +26,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -223,7 +225,7 @@ public class CompanyResource {
         log.debug("REST request to delete Company : {}", id);
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
-        Company company = companyService.findCompanyById(id).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+        Company companyToDelete = companyService.findCompanyById(id).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
         User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
 
@@ -237,16 +239,16 @@ public class CompanyResource {
 
             Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(()->new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
 
-            if (!currentCompany.getId().equals(id)){
+            if (!currentCompany.getId().equals(companyToDelete.getId())){
                 throw new BadRequestAlertException("The manager doesn't have the authority to delete other companies, only his own.", ENTITY_NAME, "managercanonlyremovehisowncompany");
             }
             companyService.delete(id);
-            companyService.notifyEmployeeThatTheyHaveBeenFired(company);
-            companyService.sendEmailToAllEmployees(company);
+            companyService.notifyEmployeeThatTheyHaveBeenFired(companyToDelete);
+            companyService.sendEmailToAllEmployees(companyToDelete);
         }
         else {
             companyService.delete(id);
-            companyService.notifyEmployeeThatTheyHaveBeenFired(company);
+            companyService.notifyEmployeeThatTheyHaveBeenFired(companyToDelete);
         }
         return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, currentUser.getId().toString())).build();
     }
@@ -274,7 +276,6 @@ public class CompanyResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
     @PostMapping("/companies/{companyId}/hire-employee/{userEmail}")
-    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.MANAGER + "\")")
     public ResponseEntity<CompanyDTO> hireEmployee(@PathVariable Long companyId, @PathVariable String userEmail) {
         log.debug("REST request to hire the user: {}", userEmail);
 
@@ -284,7 +285,7 @@ public class CompanyResource {
 
         // Update the user, the employee and the company
 
-        User user = companyService.findUserByLogin(userEmail).orElseThrow(() -> new BadRequestAlertException("User with " + userEmail + " login not found.", ENTITY_NAME, "nouserwithlogin"));
+        User user = companyService.findUserByEmail(userEmail).orElseThrow(() -> new BadRequestAlertException("User with " + userEmail + " email not found.", ENTITY_NAME, "nouserwithemail"));
 
         Authority employeeRole = new Authority();
         employeeRole.setName(AuthoritiesConstants.EMPLOYEE);
@@ -297,33 +298,56 @@ public class CompanyResource {
             .body(companyDTO);
     }
 
+
     /**
      * {@code POST  /companies/{id}/reject-employee/{userEmail} : reject a user's request to join a company
      *
      * @param userEmail the email of the user who wants to join the company.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
-    @PostMapping("/companies/{companyId}/reject-employee/{userEmail}/notifications/{id}")
-    @PreAuthorize("hasRole(\"" + AuthoritiesConstants.MANAGER + "\")")
-    public void rejectEmployee(@PathVariable Long companyId, @PathVariable String userEmail, @PathVariable Long id) {
+    @PostMapping(" /companies/{companyId}/reject-employee/{employeeId} ")
+    public void rejectEmployee(@PathVariable Long companyId, @PathVariable Long employeeId) {
         log.debug("REST to reject a user's request to join a company.");
+        if (employeeId == null && companyId ==  null) {
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        }
+        Employee employeeToReject = companyService.findEmployeeById(employeeId).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+        User userToReject = companyService.findUserByEmail(employeeToReject.getEmail()).orElseThrow(()-> new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserforthisemployee"));
+
+        if (companyService.checkUserHasRoles(userToReject, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN, AuthoritiesConstants.EMPLOYEE)) {
+            throw new BadRequestAlertException("You don't have the authority to delete this company", ENTITY_NAME, "companyremoveforbiden");
+        }
+
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
-        Company company = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+        Company currentCompany = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
-        User user = companyService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+        User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
 
-        mailService.sendRequestToJoinEmail(userEmail, user);
+        Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
-        Employee employee = companyService.findEmployeeFromUser(user).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+        if (!companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN)) {
+            throw new BadRequestAlertException("You don't have the authority to delete this company", ENTITY_NAME, "companyremoveforbiden");
+        }
 
-        companyService.sendNotificationToEmployee(employee, NotificationType.REJECT_INVITE, "Your application to join " + company.getName() + " has been rejected!");
+        if(companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)){// Manager can only reject employees applying to his company
 
-        // obtain the user notification, set it to true and save it
+            Company managersCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(()->new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
 
-        Notification managersNotification = employee.getNotifications().stream().filter(notification -> notification.getId().equals(id)).findFirst()
-            .orElseThrow(() -> new BadRequestAlertException("No notification found for this id number: " + id, ENTITY_NAME, "notificationnotfound"));
+            if (!managersCompany.getId().equals(currentCompany.getId())){
+                throw new BadRequestAlertException("The manager cannot reject a application by a employee who is pplying to a different company then his.", ENTITY_NAME, "cannotrejectemployeeifheapplyestoadiffcompany");
+            }
+            mailService.sendRejectionEmail(employeeToReject.getEmail(), currentUser);
+            companyService.sendNotificationToEmployee(employeeToReject, NotificationType.REJECT_INVITE, "Your application to join " + currentCompany.getName() + " has been rejected!");
 
-    }
+        }
+
+        else {// Admin can reject anyone's application
+            mailService.sendRejectionEmail(employeeToReject.getEmail(), currentUser);
+            companyService.sendNotificationToEmployee(employeeToReject, NotificationType.REJECT_INVITE, "Your application to join " + currentCompany.getName() + " has been rejected!");
+        }
+
+   }
 
 }
