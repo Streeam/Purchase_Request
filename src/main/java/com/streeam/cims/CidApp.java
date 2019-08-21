@@ -54,21 +54,25 @@ public class CidApp implements InitializingBean {
                 // TODO  Creates a notification and sends it to the manager
                 // * Use the company name to link the company to the employees notification. A employee cannot apply to join the same company in a period less then 3 days.
                 // NEEDS TESTING
-        //TODO 4. api/invite-to-join (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
-            //TODO POST(email)
+        //TODO 4. POST api/companies/{companyId}/invite-to-join/{email} (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+                // * The manager or the admin can see all the unemployed users.
                 // * If the user exists and is not ROLE_MANAGER and ROLE_EMPLOYEE sends a notification and an email to the user
                 // * If the user exists but not activated, resend an email for the user to activate his account
                 // * If the user don't exists send an email with link to the registration page
-        //TODO 5. api/employees/{employeeId}/approve-employee (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
-                // * The manager or the admin approves the users request.
-                // * The user gets the ROLE_EMPLOYEE and it is added to the company (save the user, employee and the company)
+        //TODO 5. api/companies/{companyId}/approve-employee/{employeeId}(Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+                // TODO The manager or the admin approves the users request. The manager can only approve employees that apply to join his company.
+                // TODO Check to see if the employee is already taken by another company.
+                // TODO The user gets the ROLE_EMPLOYEE and it is added to the company (save the user, employee and the company)
                 // * Sends a email to the user to inform him that his request has been approved
-                // * Also sends a notification to the user to inform him that his request has been approved.
+                // TODO Also sends a notification to the user to inform him that his request has been approved.
+                // NEEDS TESTING
         //TODO 5. api/companies/{companyId}/reject-employee/{employeeId}
-                    // * The manager or the admin rejects the users request.
-                    // * The employee must not have the role of manager nor employee and he is not part of a company.
-                    // * Sends a email to the user to inform him that his request has been rejected
-                    // * Also sends a notification to the user to inform him that his request has been rejected.
+                    // TODO Only the manager or the admin rejects the users request. The manager can only reject employees that apply to join his company.
+                    // TODO The employee must not have the role of manager nor employee and he is must not be part of a company.
+                    // TODO Sends a email to the user to inform him that his request has been rejected
+                    // TODO Also sends a notification to the user to inform him that his request has been rejected.
+                    // * Use the company name to link the company to the employees notification. A employee cannot apply to join the same company in a period less then 3 days.
+                    // NEEDS TESTING
         //TODO 6. api/employees/{employeeId}/fire-employee (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
                     // The manager or the admin can fire an employee.
                     // Removes all the users roles except the default ROLE_USER (update the user, the employee and the company)
@@ -88,7 +92,7 @@ public class CidApp implements InitializingBean {
                 // TODO POST  No one can create an employee. An employee is created only when the user is activated
                 // TODO GET (ADMIN can see all, the rest can only see their own account)
                 // TODO DELETE  (Pre-Authorize ROLE_ADMIN) when admin deletes an employee it also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee
-                // TODO PUT  (ADMIN can update all, Manager can all from his company,  the rest can only update their own account)
+                // TODO PUT  (ADMIN can update all, Manager can update all from his company,  the rest can only update their own account)
                         // When employee is updated the user is updated as well (no one can updated the email). The admin and managers can also update the employee roles
 
 

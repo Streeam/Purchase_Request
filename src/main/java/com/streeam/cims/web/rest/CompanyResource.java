@@ -275,23 +275,61 @@ public class CompanyResource {
      * @param userEmail the email of the user who wants to join the company.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
-    @PostMapping("/companies/{companyId}/hire-employee/{userEmail}")
-    public ResponseEntity<CompanyDTO> hireEmployee(@PathVariable Long companyId, @PathVariable String userEmail) {
-        log.debug("REST request to hire the user: {}", userEmail);
+    @PostMapping("/companies/{companyId}/approve-employee/{employeeId}")
+    public ResponseEntity<CompanyDTO> approveEmployee(@PathVariable Long companyId, @PathVariable Long employeeId) {
 
-        Company company = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
-        // find the user and make him EMPLOYEE
-        Employee employee = companyService.findEmployeeByLogin(userEmail).orElseThrow(() -> new BadRequestAlertException("No employee linked to this login", ENTITY_NAME, "noemployeewithlogin"));
+        if (employeeId== null) {
+            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
+        }
+        if (companyId == null ) {
+            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
+        }
 
-        // Update the user, the employee and the company
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
-        User user = companyService.findUserByEmail(userEmail).orElseThrow(() -> new BadRequestAlertException("User with " + userEmail + " email not found.", ENTITY_NAME, "nouserwithemail"));
+        User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
 
-        Authority employeeRole = new Authority();
-        employeeRole.setName(AuthoritiesConstants.EMPLOYEE);
-        user.getAuthorities().add(employeeRole);
-        CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(employee, user, company);
-        // send a notification and an email to the user to inform him.
+        Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+        if (!companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN)) {
+            throw new BadRequestAlertException("You don't have the authority to accept employee applications.", ENTITY_NAME, "companyremoveforbiden");
+        }
+
+        Employee approvedEmployee = companyService.findEmployeeById(employeeId).orElseThrow(() ->
+            new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+        log.debug("REST request to hire the user: {}", approvedEmployee.getLogin());
+
+        User approvedUser = companyService.findUserByEmail(approvedEmployee.getEmail()).orElseThrow(()->
+            new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserforthisemployee"));
+
+        if (companyService.checkUserHasRoles(approvedUser, AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN) && approvedEmployee.isHired()) {
+            throw new BadRequestAlertException("This application cannot be accepted. This employee is already in a company.", ENTITY_NAME, "companyremoveforbiden");
+        }
+        Company companyWhereEmployeeApplied = companyService.findCompanyById(companyId).orElseThrow(() ->
+            new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
+// Manager can only reject employees applying to his company
+        if(companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)){
+            Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(()->
+                new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
+
+            if (!currentCompany.getId().equals(companyWhereEmployeeApplied.getId())){
+                throw new BadRequestAlertException("The manager cannot approve a application by a employee who is applying to a different company then his.", ENTITY_NAME, "cannotapproveemployeeifheapplyestoadiffcompany");
+            }
+
+        }
+// Admin can reject anyone's application
+        Set<Authority> authorities = approvedUser.getAuthorities();
+        authorityRepository.findById(AuthoritiesConstants.EMPLOYEE).ifPresent(authorities::add);
+        approvedUser.setAuthorities(authorities);
+        approvedEmployee.setUser(approvedUser);
+        CompanyDTO  companyDTO = companyService.saveUserEmployeeAndComapany(approvedEmployee, approvedUser, companyWhereEmployeeApplied);
+
+
+        mailService.sendRejectionEmail(approvedEmployee.getEmail(), currentUser);
+        companyService.sendNotificationToEmployee(approvedEmployee, NotificationType.ACCEPT_INVITE, "Your application to join " + companyWhereEmployeeApplied.getName() + " has been approved!");
+
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))
@@ -308,44 +346,47 @@ public class CompanyResource {
     @PostMapping(" /companies/{companyId}/reject-employee/{employeeId} ")
     public void rejectEmployee(@PathVariable Long companyId, @PathVariable Long employeeId) {
         log.debug("REST to reject a user's request to join a company.");
-        if (employeeId == null && companyId ==  null) {
-            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
-        }
-        Employee employeeToReject = companyService.findEmployeeById(employeeId).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
-        User userToReject = companyService.findUserByEmail(employeeToReject.getEmail()).orElseThrow(()-> new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserforthisemployee"));
-
-        if (companyService.checkUserHasRoles(userToReject, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN, AuthoritiesConstants.EMPLOYEE)) {
-            throw new BadRequestAlertException("You don't have the authority to delete this company", ENTITY_NAME, "companyremoveforbiden");
+        if (employeeId== null) {
+            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
         }
+        if (companyId == null ) {
+            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
+        }
+
+        Company companyWhereEmployeeApplied = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
+        Employee rejectedEmployee = companyService.findEmployeeById(employeeId).orElseThrow(() ->
+            new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+        User userToReject = companyService.findUserByEmail(rejectedEmployee.getEmail()).orElseThrow(()->
+            new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserforthisemployee"));
 
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
-
-        Company currentCompany = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
         User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
 
         Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
         if (!companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN)) {
-            throw new BadRequestAlertException("You don't have the authority to delete this company", ENTITY_NAME, "companyremoveforbiden");
+            throw new BadRequestAlertException("You don't have the authority to reject employee applications.", ENTITY_NAME, "companyremoveforbiden");
         }
+// Manager can only reject employees applying to his company
+        if(companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)){
 
-        if(companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)){// Manager can only reject employees applying to his company
+            Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(()->new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
 
-            Company managersCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(()->new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
-
-            if (!managersCompany.getId().equals(currentCompany.getId())){
-                throw new BadRequestAlertException("The manager cannot reject a application by a employee who is pplying to a different company then his.", ENTITY_NAME, "cannotrejectemployeeifheapplyestoadiffcompany");
+            if (!currentCompany.getId().equals(companyWhereEmployeeApplied.getId())){
+                throw new BadRequestAlertException("The manager cannot reject a application by a employee who is applying to a different company then his.", ENTITY_NAME, "cannotrejectemployeeifheapplyestoadiffcompany");
             }
-            mailService.sendRejectionEmail(employeeToReject.getEmail(), currentUser);
-            companyService.sendNotificationToEmployee(employeeToReject, NotificationType.REJECT_INVITE, "Your application to join " + currentCompany.getName() + " has been rejected!");
+            mailService.sendRejectionEmail(rejectedEmployee.getEmail(), currentUser);
+            companyService.sendNotificationToEmployee(rejectedEmployee, NotificationType.REJECT_INVITE, "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
 
         }
-
-        else {// Admin can reject anyone's application
-            mailService.sendRejectionEmail(employeeToReject.getEmail(), currentUser);
-            companyService.sendNotificationToEmployee(employeeToReject, NotificationType.REJECT_INVITE, "Your application to join " + currentCompany.getName() + " has been rejected!");
+// Admin can reject anyone's application
+        else {
+            mailService.sendRejectionEmail(rejectedEmployee.getEmail(), currentUser);
+            companyService.sendNotificationToEmployee(rejectedEmployee, NotificationType.REJECT_INVITE, "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
         }
 
    }

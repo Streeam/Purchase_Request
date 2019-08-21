@@ -247,45 +247,41 @@ public class EmployeeResource {
     public void requestToJoinCompany(@PathVariable Long employeeId,@PathVariable Long companyId) {
         log.debug("REST request to join the company : {}", companyId);
 
+        if (employeeId== null) {
+            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
+        }
+        if (companyId == null ) {
+            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
+        }
+
+        Company company = employeeService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
         User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
         Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(()->new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
 
-        if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
-            throw new BadRequestAlertException("As a manager or a employee you are not allowed to join a company", ENTITY_NAME, "requesttojoinforbiden");
-        }
-
         Employee employeeRequestingToJoin =  employeeService.findOneById(employeeId).orElseThrow(()->
             new BadRequestAlertException("Employee not found.", ENTITY_NAME, "employeenotfound"));
-        User userRequestingToJoin = employeeService.findLinkedUserByEmail(employeeRequestingToJoin.getEmail()).orElseThrow(()->
-            new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserforthisemployee"));
 
+        if(!currentEmployee.getId().equals(employeeRequestingToJoin.getId())){
+            throw new BadRequestAlertException("Only the logged in employee can request to join a company.", ENTITY_NAME, "onlycurrentloggedincanjoincomp");
+        }
 
-
-        if(employeeService.checkUserHasRoles(userRequestingToJoin, AuthoritiesConstants.EMPLOYEE,AuthoritiesConstants.MANAGER) && employeeRequestingToJoin.isHired()){
+        if(employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.EMPLOYEE,AuthoritiesConstants.MANAGER) && currentEmployee.isHired()){
             throw new BadRequestAlertException("You cannot request to join a company if you are already into one.", ENTITY_NAME, "joinonlyifunemployed");
         }
 
-        if (!currentEmployee.getEmail().equalsIgnoreCase(employeeRequestingToJoin.getEmail())){
-            throw new BadRequestAlertException("You cannot request to join a company on behalf of someone else.", ENTITY_NAME, "requestingtojoinonanothersbehalf");
-        }
-
-        //Cannot implement this method until i can find a way to link the notifications to the company
-
-        // find the latest rejected notification. If it has been less then 48h since
+//        Cannot implement this method until I can find a way to link the notifications to the company
+//
+//         find the latest rejected notification. If it has been less then 48h since
 //        if(!employeeService.userRequestedToJoinAndWasRejectedLessThen3DaysAgo(currentEmployee)){
 //            throw new BadRequestAlertException("You have already requested to join this company less then three days ago.", ENTITY_NAME, "3daysbeforeyoucanrequestagain");
 //        }
 
-        Company company = employeeService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
-
         Employee manager = employeeService.getCompanysManager(company).orElseThrow(() -> new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
 
-
-        String managersEmail = employeeService.getEmployeesEmail(manager);
-
         // send an email to the manager to inform him of a employee wanting to join the company
-        mailService.sendRequestToJoinEmail(managersEmail, currentUser);
+        mailService.sendRequestToJoinEmail(manager.getEmail(), currentUser);
 
         // create a Notification(REQUEST_TO_JOIN) and link it to the manager
         employeeService.sendNotificationToEmployee(manager, NotificationType.REQUEST_TO_JOIN, "A user submitted a request to join your company " + company.getName());

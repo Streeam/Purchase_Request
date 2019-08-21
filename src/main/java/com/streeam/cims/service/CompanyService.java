@@ -285,11 +285,6 @@ public class CompanyService {
 
     }
 
-    public String getEmployeeEmail(Employee employee) {
-        log.debug("Retrieving the employee email address:{}", employee.getEmail());
-        return employee.getEmail();
-    }
-
     public Optional<Company> findCompanyById(Long companyId) {
         return companyRepository.findOneById(companyId);
     }

@@ -228,10 +228,6 @@ public class EmployeeService {
         return companyService.getCompanysManager(company);
     }
 
-    public String getEmployeesEmail(Employee manager) {
-        return companyService.getEmployeeEmail(manager);
-    }
-
     public void sendNotificationToEmployee(Employee manager, NotificationType requestToJoin, String subject) {
         companyService.sendNotificationToEmployee(manager, requestToJoin, subject);
     }
