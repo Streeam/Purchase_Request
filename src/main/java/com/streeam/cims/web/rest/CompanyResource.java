@@ -32,10 +32,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * REST controller for managing {@link com.streeam.cims.domain.Company}.
@@ -347,12 +344,7 @@ public class CompanyResource {
     public void rejectEmployee(@PathVariable Long companyId, @PathVariable Long employeeId) {
         log.debug("REST to reject a user's request to join a company.");
 
-        if (employeeId== null) {
-            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
-        }
-        if (companyId == null ) {
-            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
-        }
+        idNotNull(companyId, employeeId);
 
         Company companyWhereEmployeeApplied = companyService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
@@ -390,5 +382,87 @@ public class CompanyResource {
         }
 
    }
+
+    private void idNotNull(@PathVariable Long companyId, @PathVariable Long employeeId) {
+        if (employeeId== null) {
+            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
+        }
+        if (companyId == null ) {
+            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
+        }
+    }
+
+
+    /**
+     * {@code POST  /companies/{companyId}/fire/{employeeId} : fire a employee      *
+     * @param The companyId of the current company. EmployeeId of the employee to be fired
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the company, or with status {@code 404 (Not Found)}.
+     */
+    @PostMapping("/companies/{companyId}/fire/{employeeId}")
+    public ResponseEntity<CompanyDTO> fireEmployee(@PathVariable Long companyId, @PathVariable Long employeeId) {
+
+        if (employeeId== null) {
+            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
+        }
+        if (companyId == null ) {
+            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
+        }
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+
+        User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
+
+        Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+
+        if (!companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER,AuthoritiesConstants.ADMIN)) {
+            throw new BadRequestAlertException("You don't have the authority to fire a employee.", ENTITY_NAME, "fireingemployeeforbiden");
+        }
+
+        Employee employeeToFire = companyService.findEmployeeById(employeeId).orElseThrow(() ->
+            new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+        log.debug("REST request to hire the user: {}", employeeToFire.getLogin());
+
+        User userToFire = companyService.findUserByEmail(employeeToFire.getEmail()).orElseThrow(()->
+            new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserforthisemployee"));
+
+
+        Company companyThatEmployeeWasFiredFrom = companyService.findCompanyById(companyId).orElseThrow(() ->
+            new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
+        if(currentUser.getId().equals(userToFire.getId())){
+            new BadRequestAlertException("You cannot fire yourself.", ENTITY_NAME, "fireingyourselfisforbiden");
+        }
+
+        // Manager can only fire employees within his company
+        if(companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)){
+            Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(()->
+                new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
+
+
+
+            if (!currentCompany.getId().equals(companyThatEmployeeWasFiredFrom.getId())){
+                throw new BadRequestAlertException("The manager cannot fire an employee who isn't from his company.", ENTITY_NAME, "cannotfirefromothercompany");
+            }
+
+        }
+
+        // Admin can reject anyone's application
+        Set<Authority> authorities = new HashSet<>();
+        authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
+        userToFire.setAuthorities(authorities);
+        employeeToFire.setUser(userToFire);
+        CompanyDTO  companyDTO = companyService.saveUserEmployeeAndComapany(employeeToFire, userToFire, companyThatEmployeeWasFiredFrom);
+
+//        mailService.sendRejectionEmail(employeeToFire.getEmail(), currentUser);
+//        companyService.sendNotificationToEmployee(employeeToFire, NotificationType.REJECT_INVITE, "Your application to join " + companyThatEmployeeWasFiredFrom.getName() + " has been rejected!");
+
+
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))
+            .body(companyDTO);
+    }
+
 
 }

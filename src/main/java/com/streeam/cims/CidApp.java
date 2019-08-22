@@ -66,28 +66,30 @@ public class CidApp implements InitializingBean {
                 // * Sends a email to the user to inform him that his request has been approved
                 // TODO Also sends a notification to the user to inform him that his request has been approved.
                 // NEEDS TESTING
-        //TODO 5. api/companies/{companyId}/reject-employee/{employeeId}
+        //TODO 6. api/companies/{companyId}/reject-employee/{employeeId}
                     // TODO Only the manager or the admin rejects the users request. The manager can only reject employees that apply to join his company.
                     // TODO The employee must not have the role of manager nor employee and he is must not be part of a company.
                     // TODO Sends a email to the user to inform him that his request has been rejected
                     // TODO Also sends a notification to the user to inform him that his request has been rejected.
                     // * Use the company name to link the company to the employees notification. A employee cannot apply to join the same company in a period less then 3 days.
                     // NEEDS TESTING
-        //TODO 6. api/employees/{employeeId}/fire-employee (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
-                    // The manager or the admin can fire an employee.
-                    // Removes all the users roles except the default ROLE_USER (update the user, the employee and the company)
-                    // Send a notification to the user informing him that he got fired
-        //TODO 7. api/employees/{employeeId}/leave-company (Pre-Authorize ROLE_EMPLOYEE)
+        //TODO 7. api/companies/{companyId}/fire/{employeeId}
+                //TODO (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+                    //TODO The manager or the admin can fire an employee.
+                    // TODO A manager cannot fire himself, but he can quit. If he quits the company the company is dissolved (see ../companies/delete/{companyId})
+                    // TODO Removes all the employee's roles except the default ROLE_USER (update the user, the employee and the company)
+                    // * Send a notification and a email to the user informing him that he got fired
+        //TODO 8. api/employees/{employeeId}/leave-company (Pre-Authorize ROLE_EMPLOYEE)
                     // The employee resigns from the company
                     // Removes all the users roles except the default ROLE_USER (update the user, the employee and the company)
                     // Send a notification to all the employees from the company to inform that he is leaving the company
-        //TODO 8. api/users (Pre-Authorize ROLE_ADMIN and ROLE_MANAGER only for modifying the user's role )
+        //TODO 9. api/users (Pre-Authorize ROLE_ADMIN and ROLE_MANAGER only for modifying the user's role )
                 // POST When admin creates a user also creates an employee
                 // DELETE when admin deletes an employee it also deletes the linked user and updates the company if he is in one
                 // GET Employees and Managers can see their roles in the company
                 // TODO PUT If you are a manager you can only modify the roles of users in your company (the email cannot be modified)
                     //When user is updated the employee is updated as well.
-        //TODO 9. api/employees
+        //TODO 10. api/employees
 
                 // TODO POST  No one can create an employee. An employee is created only when the user is activated
                 // TODO GET (ADMIN can see all, the rest can only see their own account)
