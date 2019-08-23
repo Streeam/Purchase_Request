@@ -29,6 +29,7 @@ public class CidApp implements InitializingBean {
 
         //TODO 1. api/companies
             // **CREATE MORE TESTS FOR THE MAILSERVICE TEST CLASS
+            // ** ADD COMPANY_ID COLUMN TO THE NOTIFICATION ENTITY
             //TODO POST Create a company and automatically become the manager
                     //TODO If the user is ROLE_MANAGER or ROLE_EMPLOYEE he cannot see this option otherwise he can
                     // Only the ROLE_USER can create a company
@@ -44,7 +45,7 @@ public class CidApp implements InitializingBean {
                     //TODO Only if you are a manager or admin you can update the company (except the company's email)
                     //TODO The current user/employee needs to be in a company
                     //TODO The manager can only update his company. The admin can updated any companies
-                    //TODO Neither the manager nor the admin can update, add nor remove the employees from this endpoint
+                    //TODO Neither the manager nor the admin can update can add nor remove the employees from this endpoint
         //TODO 2. api/activate
                 //TODO  GET When activating the user also create and links to an employee
         //TODO 3. api/employee/{employeeId}/request-to-join/{companyId}
@@ -56,9 +57,12 @@ public class CidApp implements InitializingBean {
                 // NEEDS TESTING
         //TODO 4. POST api/companies/{companyId}/invite-to-join/{email} (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
                 // * The manager or the admin can see all the unemployed users.
+                 // * The logged user has to be either the admin or the manager of the company.
                 // * If the user exists and is not ROLE_MANAGER and ROLE_EMPLOYEE sends a notification and an email to the user
                 // * If the user exists but not activated, resend an email for the user to activate his account
                 // * If the user don't exists send an email with link to the registration page
+                // * If the user don't exists sends a notification to the current user with the users's email as a comment (not ideal).
+                    //* Use this email to find out when the users registers and automatically activate the account and send an invite notification
         //TODO 5. api/companies/{companyId}/approve-employee/{employeeId}(Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
                 // TODO The manager or the admin approves the users request. The manager can only approve employees that apply to join his company.
                 // TODO Check to see if the employee is already taken by another company.
@@ -76,9 +80,10 @@ public class CidApp implements InitializingBean {
         //TODO 7. api/companies/{companyId}/fire/{employeeId}
                 //TODO (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
                     //TODO The manager or the admin can fire an employee.
-                    // TODO A manager cannot fire himself, but he can quit. If he quits the company the company is dissolved (see ../companies/delete/{companyId})
+                    // TODO A manager cannot fire himself, but he can quit. If he quits the company is dissolved (see ../companies/delete/{companyId})
                     // TODO Removes all the employee's roles except the default ROLE_USER (update the user, the employee and the company)
-                    // * Send a notification and a email to the user informing him that he got fired
+                    // TODO Send a notification and a email to the user informing him that he got fired
+                    // * Needs Testing
         //TODO 8. api/employees/{employeeId}/leave-company (Pre-Authorize ROLE_EMPLOYEE)
                     // The employee resigns from the company
                     // Removes all the users roles except the default ROLE_USER (update the user, the employee and the company)

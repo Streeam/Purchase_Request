@@ -145,4 +145,10 @@ public class MailService {
                 sendEmailFromTemplate(user.getEmail(), user,"mail/dissolvedCompanyEmail","email.company.dissolved" );
             });
     }
+
+    public void sendFiredEmail(String email, User currentUser) {
+        log.debug("Sending a fired notification email to '{}'", email);
+        sendEmailFromTemplate(email ,currentUser, "mail/firedEmail", "email.fired.user");
+
+    }
 }
