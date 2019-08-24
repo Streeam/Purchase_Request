@@ -157,4 +157,10 @@ public class MailService {
         log.debug("Sending a invitation notification email to '{}'", invitedUserEmail);
         sendEmailFromTemplate(invitedUserEmail ,manager, "mail/inviteToJoinEmail", "email.invite.to.join");
     }
+
+    public void sendLeaveEmail(String leaveUserEmail ,User manager) {
+
+        log.debug("Sending a resign notification email to '{}'", manager.getEmail());
+        sendEmailFromTemplate(leaveUserEmail ,manager, "mail/inviteToJoinEmail", "email.invite.to.join");
+    }
 }

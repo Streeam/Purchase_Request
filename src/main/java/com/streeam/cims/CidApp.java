@@ -86,10 +86,10 @@ public class CidApp implements InitializingBean {
         // 9. api/companies/{companyId}/leave-company (Pre-Authorize ROLE_EMPLOYEE)
             // POST leave a company.
                     //  Only an user with the employee role can access this endpoint.
-                    // TODO The employee resigns from the company
-                    // TODO Removes all the users roles except the default ROLE_USER (update the user, the employee and the company)
-                    // TODO Send a notification to all the employees from the company to inform that he is leaving the company
-                    // TODO Send email to manager to inform him that he left.
+                    //  The employee resigns from the company
+                    //  Removes all the users roles except the default ROLE_USER (update the user, the employee and the company)
+                    //  TODO Send a notification to all the employees from the company to inform that he is leaving the company
+                    //  Send email to manager to inform him that he left.
         // 10. api/users (Pre-Authorize ROLE_ADMIN and ROLE_MANAGER only for modifying the user's role )
                 // TODO POST When admin creates a user also creates an employee
                 // TODO DELETE when admin deletes an employee it also deletes the linked user and updates the company if he is in one

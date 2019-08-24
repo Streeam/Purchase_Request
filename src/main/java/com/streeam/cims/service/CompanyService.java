@@ -351,4 +351,7 @@ public class CompanyService {
     return employeeService.findOneByEmail(email);
     }
 
+    public void notifyEmployeeThatUserLeft(Company companyEmployeeLeavingFrom) {
+       // companyEmployeeLeavingFrom.stre
+    }
 }

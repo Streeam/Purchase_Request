@@ -481,13 +481,27 @@ public class CompanyResource {
             throw new BadRequestAlertException("A manager cannot leave his own company.", ENTITY_NAME, "managercannotleavecompany");
         }
 
+        Set<Authority> authorities = new HashSet<>();
+        authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
+        currentUser.setAuthorities(authorities);
+        currentEmployee.setUser(currentUser);
+        companyEmployeeLeavingFrom.getEmployees().remove(currentEmployee);
 
+        CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(currentEmployee, currentUser, companyEmployeeLeavingFrom);
 
-        //
-//        return ResponseEntity.ok()
-//            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))
-//        .body(companyDTO);
-        return null;
+        Employee manager = companyService.getCompanysManager(companyEmployeeLeavingFrom).orElseThrow(()->
+            new BadRequestAlertException("A company must have a manager", ENTITY_NAME, "nomanagerincompanyforbiden") );
+        // Send email to the company's manager
+
+        mailService.sendLeaveEmail(manager.getEmail(), currentUser);
+
+        // Send notifications to all employees from the company
+        companyService.notifyEmployeeThatUserLeft(companyEmployeeLeavingFrom);
+
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))
+        .body(companyDTO);
+
     }
 
     private void idNotNull(@PathVariable Long companyId, @PathVariable Long employeeId) {
