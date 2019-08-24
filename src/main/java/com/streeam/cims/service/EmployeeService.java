@@ -177,7 +177,7 @@ public class EmployeeService {
         return result;
     }
 
-    public Optional<User> findLinkedUserByEmail(String email) {
+    public Optional<User> findUserByEmail(String email) {
         return  userService.findOneByEmail(email);
     }
 
@@ -235,5 +235,9 @@ public class EmployeeService {
     public boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee) {
 
         return notificationService.userRequestedToJoinAndWasRejectedLessThen3DaysAgo(currentEmployee);
+    }
+
+    public Page<EmployeeDTO> findAllUnemplyedEmployees(Pageable pageable) {
+        return employeeRepository.findAllNotHired(pageable);
     }
 }

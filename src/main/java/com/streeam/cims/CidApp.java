@@ -29,7 +29,7 @@ public class CidApp implements InitializingBean {
 
         //TODO 1. api/companies
             // **CREATE MORE TESTS FOR THE MAILSERVICE TEST CLASS
-            // ** ADD COMPANY_ID COLUMN TO THE NOTIFICATION ENTITY
+            // ** CREATE Company_Notification ENTITY
             //TODO POST Create a company and automatically become the manager
                     //TODO If the user is ROLE_MANAGER or ROLE_EMPLOYEE he cannot see this option otherwise he can
                     // Only the ROLE_USER can create a company
@@ -55,13 +55,13 @@ public class CidApp implements InitializingBean {
                 // TODO  Creates a notification and sends it to the manager
                 // * Use the company name to link the company to the employees notification. A employee cannot apply to join the same company in a period less then 3 days.
                 // NEEDS TESTING
-        //TODO 4. POST api/companies/{companyId}/invite-to-join/{email} (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+        //TODO 4. POST api/employees/invite-to-join/{email} (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
                 // * The manager or the admin can see all the unemployed users.
                  // * The logged user has to be either the admin or the manager of the company.
                 // * If the user exists and is not ROLE_MANAGER and ROLE_EMPLOYEE sends a notification and an email to the user
                 // * If the user exists but not activated, resend an email for the user to activate his account
-                // * If the user don't exists send an email with link to the registration page
-                // * If the user don't exists sends a notification to the current user with the users's email as a comment (not ideal).
+                // * If the user doesn't exists send an email with link to the registration page
+                // * If the user doesn't exists sends a notification to the current user with the users's email as a comment (not ideal).
                     //* Use this email to find out when the users registers and automatically activate the account and send an invite notification
         //TODO 5. api/companies/{companyId}/approve-employee/{employeeId}(Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
                 // TODO The manager or the admin approves the users request. The manager can only approve employees that apply to join his company.

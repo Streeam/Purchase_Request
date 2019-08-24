@@ -2,6 +2,7 @@ package com.streeam.cims.repository;
 
 import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
+import com.streeam.cims.service.dto.EmployeeDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,4 +25,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     Page<Employee> findAllByCompanyId(Pageable pageable, Long id);
 
     List<Employee> findAllByCompany(Company company);
+
+    Page<EmployeeDTO> findAllNotHired(Pageable pageable);
 }

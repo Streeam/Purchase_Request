@@ -390,7 +390,6 @@ public class CompanyResource {
         }
     }
 
-
     /**
      * {@code POST  /companies/{companyId}/fire/{employeeId} : fire a employee      *
      *
@@ -462,6 +461,9 @@ public class CompanyResource {
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))
             .body(companyDTO);
     }
+
+
+
 
 
 }
