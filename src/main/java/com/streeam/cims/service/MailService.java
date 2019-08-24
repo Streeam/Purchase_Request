@@ -155,6 +155,6 @@ public class MailService {
     public void sendInviteEmail(String invitedUserEmail ,User manager) {
 
         log.debug("Sending a invitation notification email to '{}'", invitedUserEmail);
-        sendEmailFromTemplate(invitedUserEmail ,manager, "mail/rejectionEmail", "email.reject.application");
+        sendEmailFromTemplate(invitedUserEmail ,manager, "mail/inviteToJoinEmail", "email.invite.to.join");
     }
 }

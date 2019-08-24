@@ -40,7 +40,7 @@ public class EmployeeResource {
     private final Logger log = LoggerFactory.getLogger(EmployeeResource.class);
 
     @Autowired
-    private  MailService mailService;
+    private MailService mailService;
 
     private static final String ENTITY_NAME = "employee";
 
@@ -84,46 +84,46 @@ public class EmployeeResource {
     @PutMapping("/employees")
     public ResponseEntity<EmployeeDTO> updateEmployee(@Valid @RequestBody EmployeeDTO employeeDTO) throws URISyntaxException {
         log.debug("REST request to update Employee : {}", employeeDTO);
-        Long employeeId =  employeeDTO.getId();
+        Long employeeId = employeeDTO.getId();
         EmployeeDTO result;
 
-        String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(()->new BadRequestAlertException("No User currently logged in", ENTITY_NAME, "nouserloggedin"));
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new BadRequestAlertException("No User currently logged in", ENTITY_NAME, "nouserloggedin"));
 
-        if ( employeeId == null) {
+        if (employeeId == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "employeenotfound");
         }
 
-        Employee employeeToModify =  employeeService.findOneById(employeeId).orElseThrow(()->new BadRequestAlertException("Employee not found.", ENTITY_NAME, "emailexists"));
+        Employee employeeToModify = employeeService.findOneById(employeeId).orElseThrow(() -> new BadRequestAlertException("Employee not found.", ENTITY_NAME, "emailexists"));
 
-        if(!employeeToModify.getEmail().equalsIgnoreCase(employeeDTO.getEmail())){
+        if (!employeeToModify.getEmail().equalsIgnoreCase(employeeDTO.getEmail())) {
             throw new BadRequestAlertException("You cannot update your email.", ENTITY_NAME, "emailcannotbemodified");
         }
 
-        User linkedUser = employeeService.findUserByEmail(employeeToModify.getEmail()).orElseThrow(()->new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserlinkedtoemployee"));
+        User linkedUser = employeeService.findUserByEmail(employeeToModify.getEmail()).orElseThrow(() -> new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserlinkedtoemployee"));
 
-        if(!employeeToModify.isHired().equals(employeeDTO.isHired())){
+        if (!employeeToModify.isHired().equals(employeeDTO.isHired())) {
             throw new BadRequestAlertException("You cannot update the hire value.", ENTITY_NAME, "hirecannotbemodified");
         }
 
-        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()->new BadRequestAlertException("No User currently logged in", ENTITY_NAME, "nouserloggedin"));
-        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(()->new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() -> new BadRequestAlertException("No User currently logged in", ENTITY_NAME, "nouserloggedin"));
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() -> new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
 
         boolean currentUserIsNOTAdminOrManager = !employeeService.hasCurrentUserRoles(currentUser, AuthoritiesConstants.MANAGER, AuthoritiesConstants.ADMIN);
         // Scenario when a employee is trying to modify the details of another  employee and he is not a manager nor an admin.
-        if(!linkedUser.getEmail().equalsIgnoreCase(currentUser.getEmail()) && currentUserIsNOTAdminOrManager){
+        if (!linkedUser.getEmail().equalsIgnoreCase(currentUser.getEmail()) && currentUserIsNOTAdminOrManager) {
             throw new BadRequestAlertException("Modifying the details of another employee is forbidden.", ENTITY_NAME, "changejustyouraccount");
         }
 
         // The scenario where the user is the manager. He is only allowed to modify his details or the details of the employees from his company.
-        if(employeeService.hasCurrentUserRoles(currentUser, AuthoritiesConstants.MANAGER)){
+        if (employeeService.hasCurrentUserRoles(currentUser, AuthoritiesConstants.MANAGER)) {
             Company currentCompany = employeeService.findEmployeesCompany(currentEmployee)
-                .orElseThrow(()->new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+                .orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
             boolean isEmployeeInTheCompany = currentCompany.getEmployees().stream()
                 .map(Employee::getEmail)
-                .anyMatch(email-> email.equalsIgnoreCase(employeeDTO.getEmail()));
-            if(!isEmployeeInTheCompany){
-                throw  new BadRequestAlertException("You cannot modify the details of employees from other companies then your own.", ENTITY_NAME, "noupdatestoemployeesoutsidethecompany");
+                .anyMatch(email -> email.equalsIgnoreCase(employeeDTO.getEmail()));
+            if (!isEmployeeInTheCompany) {
+                throw new BadRequestAlertException("You cannot modify the details of employees from other companies then your own.", ENTITY_NAME, "noupdatestoemployeesoutsidethecompany");
             }
 
             result = employeeService.save(linkedUser, employeeDTO);
@@ -150,20 +150,18 @@ public class EmployeeResource {
 
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
-        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
-        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(()->new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() -> new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
 
-        Page<EmployeeDTO> page ;
+        Page<EmployeeDTO> page;
 
-        if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN)){
+        if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN)) {
             page = employeeService.findAll(pageable);
-        }
-        else if(employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER , AuthoritiesConstants.EMPLOYEE)) {
+        } else if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
             Company currentCompany = employeeService.findEmployeesCompany(currentEmployee)
-                .orElseThrow(()->new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+                .orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
             page = employeeService.findCompanysEmployees(pageable, currentCompany.getId());
-        }
-        else {
+        } else {
             throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "accessrestricted");
         }
 
@@ -184,10 +182,10 @@ public class EmployeeResource {
 
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
-        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()->
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() ->
             new ResourceNotFoundException("No user logged in."));
 
-        if(!employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN,AuthoritiesConstants.MANAGER) ){
+        if (!employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN, AuthoritiesConstants.MANAGER)) {
             throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "accessrestricted");
         }
 
@@ -203,47 +201,49 @@ public class EmployeeResource {
      * @param email the email of the user to invite
      * @return the {@link ResponseEntity} with status {@code 200 (OK)}
      */
-    public  ResponseEntity inviteToJoin(@PathVariable String email){
+    public ResponseEntity inviteToJoin(@PathVariable String email) {
 
-        if (email==null){
+        if (email == null) {
             throw new BadRequestAlertException("Invalid user email", ENTITY_NAME, "emailnull");
         }
 
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
-        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()->
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() ->
             new ResourceNotFoundException("No user logged in."));
         Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() ->
             new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
         Company currentCompany = employeeService.findEmployeesCompany(currentEmployee).orElseThrow(() ->
             new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
 
-        if(!employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN,AuthoritiesConstants.MANAGER) ){
+        if (!employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN, AuthoritiesConstants.MANAGER)) {
             throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "accessrestricted");
         }
 
         Optional<User> userToInvite = employeeService.findUserByEmail(email);
 
-        if (userToInvite.isPresent()){
+        Employee employeeToJoin = employeeService.findOneByEmail(userToInvite.get().getEmail()).orElseThrow(() ->
+            new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
-            if(employeeService.checkUserHasRoles(userToInvite.get(), AuthoritiesConstants.ADMIN,AuthoritiesConstants.MANAGER,AuthoritiesConstants.EMPLOYEE) ){
+        // Scenario where the employee has registered.
+
+        if (userToInvite.isPresent()) {
+
+            if (employeeService.checkUserHasRoles(userToInvite.get(), AuthoritiesConstants.ADMIN, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
                 throw new BadRequestAlertException("You can't invite a user who is already in a company.", ENTITY_NAME, "cantinviteuseralreadyincompany");
             }
 
-            Employee employeeToJoin = employeeService.findOneByEmail(userToInvite.get().getEmail()).orElseThrow(() ->
-                new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+            employeeService.sendNotificationToEmployee(employeeToJoin, currentEmployee.getEmail(), currentCompany.getId(),
+                NotificationType.INVITATION, "You have been invited to join " + currentCompany.getName() + ".");
 
-            //send notification
+            mailService.sendInviteEmail(employeeToJoin.getEmail(), currentUser);
+        } else {// Scenario where the employee has never registered with the app. The user doesn't yet exists so send the notification to the manager instead.
 
-            employeeService.sendNotificationToEmployee(currentEmployee, employeeToJoin.getEmail(), currentCompany.getId(), NotificationType.INVITATION, "You have been invited to join " + currentCompany.getName() + ".");
+            employeeService.sendNotificationToEmployee(currentEmployee, email, currentCompany.getId(),
+                NotificationType.INVITATION, "You have sent a invitation to join your company" + currentCompany.getName() + " to "+email+".");
 
-            //send email
-            //mailService.
-
+            mailService.sendInviteEmail(email, currentUser);
         }
-
-
-
 
         return ResponseEntity.ok().build();
     }
@@ -271,17 +271,17 @@ public class EmployeeResource {
     @DeleteMapping("/employees/{id}")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
-        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()-> new ResourceNotFoundException("No user logged in."));
-        Employee employeeToDelete =  employeeService.findOneById(id).orElseThrow(()->
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+        Employee employeeToDelete = employeeService.findOneById(id).orElseThrow(() ->
             new BadRequestAlertException("Employee not found.", ENTITY_NAME, "employeenotfound"));
 
 
-        if (!employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN)){
+        if (!employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN)) {
             throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "accessrestricted");
         }
         //also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee
 
-        User linkedUser = employeeService.findUserByEmail(employeeToDelete.getEmail()).orElseThrow(()->new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserlinkedtoemployee"));
+        User linkedUser = employeeService.findUserByEmail(employeeToDelete.getEmail()).orElseThrow(() -> new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserlinkedtoemployee"));
 
         log.debug("REST request to delete Employee : {}", id);
         employeeService.delete(id);
@@ -299,7 +299,7 @@ public class EmployeeResource {
      * {@code SEARCH  /_search/employees?query=:query} : search for the employee corresponding
      * to the query.
      *
-     * @param query the query of the employee search.
+     * @param query    the query of the employee search.
      * @param pageable the pagination information.
      * @return the result of the search.
      */
@@ -312,7 +312,6 @@ public class EmployeeResource {
     }
 
 
-
     /**
      * {@code POST  /companies/:id/request-to-join} : request to join a company/companyID
      *
@@ -320,13 +319,13 @@ public class EmployeeResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
     @PostMapping("/employees/{employeeId}/request-to-join/{companyId}")
-    public ResponseEntity requestToJoinCompany(@PathVariable Long employeeId,@PathVariable Long companyId) {
+    public ResponseEntity requestToJoinCompany(@PathVariable Long employeeId, @PathVariable Long companyId) {
         log.debug("REST request to join the company : {}", companyId);
 
-        if (employeeId== null) {
+        if (employeeId == null) {
             throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
         }
-        if (companyId == null ) {
+        if (companyId == null) {
             throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
         }
 
@@ -334,25 +333,24 @@ public class EmployeeResource {
 
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
         User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
-        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(()->new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() -> new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
 
-        Employee employeeRequestingToJoin =  employeeService.findOneById(employeeId).orElseThrow(()->
+        Employee employeeRequestingToJoin = employeeService.findOneById(employeeId).orElseThrow(() ->
             new BadRequestAlertException("Employee not found.", ENTITY_NAME, "employeenotfound"));
 
-        if(!currentEmployee.getId().equals(employeeRequestingToJoin.getId())){
+        if (!currentEmployee.getId().equals(employeeRequestingToJoin.getId())) {
             throw new BadRequestAlertException("Only the logged in employee can request to join a company.", ENTITY_NAME, "onlycurrentloggedincanjoincomp");
         }
 
-        if(employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.EMPLOYEE,AuthoritiesConstants.MANAGER) && currentEmployee.isHired()){
+        if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER) && currentEmployee.isHired()) {
             throw new BadRequestAlertException("You cannot request to join a company if you are already into one.", ENTITY_NAME, "joinonlyifunemployed");
         }
 
-//        Cannot implement this method until I can find a way to link the notifications to the company
-//
+
 //         find the latest rejected notification. If it has been less then 48h since
-//        if(!employeeService.userRequestedToJoinAndWasRejectedLessThen3DaysAgo(currentEmployee)){
-//            throw new BadRequestAlertException("You have already requested to join this company less then three days ago.", ENTITY_NAME, "3daysbeforeyoucanrequestagain");
-//        }
+        if(!employeeService.userRequestedToJoinCompanyAndWasRejectedLessThen3DaysAgo(currentEmployee, companyId)){
+            throw new BadRequestAlertException("You have already requested to join this company less then three days ago.", ENTITY_NAME, "3daysbeforeyoucanrequestagain");
+        }
 
         Employee manager = employeeService.getCompanysManager(company).orElseThrow(() -> new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
 
@@ -364,7 +362,6 @@ public class EmployeeResource {
 
         return ResponseEntity.ok().build();
     }
-
 
 
 }

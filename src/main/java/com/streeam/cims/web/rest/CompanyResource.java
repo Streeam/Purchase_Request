@@ -384,14 +384,6 @@ public class CompanyResource {
 
     }
 
-    private void idNotNull(@PathVariable Long companyId, @PathVariable Long employeeId) {
-        if (employeeId == null) {
-            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
-        }
-        if (companyId == null) {
-            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
-        }
-    }
 
     /**
      * {@code POST  /companies/{companyId}/fire/{employeeId} : fire a employee      *
@@ -465,6 +457,47 @@ public class CompanyResource {
             .body(companyDTO);
     }
 
+    /**
+     * {@code POST  /companies/{companyId}/leave-company : an employee leaves  a company
+     * @param The companyId of the current company.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the company, or with status {@code 404 (Not Found)}.
+     */
+    @PostMapping("/companies/{companyId}/leave-company")
+    public ResponseEntity<CompanyDTO> leaveCompany(@PathVariable Long companyId) {
+
+        if (companyId == null) {
+            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
+        }
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+
+        User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+
+        Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+        Company companyEmployeeLeavingFrom = companyService.findCompanyById(companyId).orElseThrow(() ->
+            new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
+        if (!companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.EMPLOYEE)) {
+            throw new BadRequestAlertException("A manager cannot leave his own company.", ENTITY_NAME, "managercannotleavecompany");
+        }
+
+
+
+        //
+//        return ResponseEntity.ok()
+//            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))
+//        .body(companyDTO);
+        return null;
+    }
+
+    private void idNotNull(@PathVariable Long companyId, @PathVariable Long employeeId) {
+        if (employeeId == null) {
+            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
+        }
+        if (companyId == null) {
+            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
+        }
+    }
 
 
 

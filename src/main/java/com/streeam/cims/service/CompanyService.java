@@ -289,9 +289,9 @@ public class CompanyService {
         return companyRepository.findOneById(companyId);
     }
 
-    public NotificationDTO   sendNotificationToEmployee(Employee authorEmployee, String referencedEmployeeEmail,Long companyId, NotificationType notificationType, String comment) {
+    public NotificationDTO   sendNotificationToEmployee(Employee authorEmployee, String referencedUserEmail,Long companyId, NotificationType notificationType, String comment) {
 
-       return notificationService.saveWithEmployee(authorEmployee,referencedEmployeeEmail,companyId, notificationType, comment);
+       return notificationService.saveWithEmployee(authorEmployee,referencedUserEmail,companyId, notificationType, comment);
 
     }
 
@@ -328,10 +328,10 @@ public class CompanyService {
         return companyRepository.existsById(id);
     }
 
-    public void notifyEmployeeThatTheyHaveBeenFired(Company company, String managersEmail) {
+    public void notifyEmployeeThatTheyHaveBeenFired(Company company, String referencedUserEmail) {
 
         company.getEmployees().stream().forEach(employee -> {
-            this.sendNotificationToEmployee(employee,managersEmail,company.getId(), NotificationType.FIRED, "The company " + company.getName() + " has been struck off. You are out of job.");
+            this.sendNotificationToEmployee(employee,referencedUserEmail,company.getId(), NotificationType.FIRED, "The company " + company.getName() + " has been struck off. You are out of job.");
         });
 
 

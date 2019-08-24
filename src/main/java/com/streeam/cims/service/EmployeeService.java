@@ -232,9 +232,9 @@ public class EmployeeService {
         notificationService.saveWithEmployee(authorEmployee,referencedUserEmail, companyId,requestToJoin, subject);
     }
 
-    public boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee) {
+    public boolean userRequestedToJoinCompanyAndWasRejectedLessThen3DaysAgo(Employee currentEmployee, Long companyId) {
 
-        return notificationService.userRequestedToJoinAndWasRejectedLessThen3DaysAgo(currentEmployee);
+        return notificationService.userRequestedToJoinAndWasRejectedLessThen3DaysAgo(currentEmployee, companyId);
     }
 
     public Page<EmployeeDTO> findAllUnemplyedEmployees(Pageable pageable) {

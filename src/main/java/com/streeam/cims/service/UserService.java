@@ -4,6 +4,7 @@ import com.streeam.cims.config.Constants;
 import com.streeam.cims.domain.Authority;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
+import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.repository.search.UserSearchRepository;
@@ -51,6 +52,9 @@ public class UserService {
     @Autowired
     private  EmployeeService employeeService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     private final AuthorityRepository authorityRepository;
 
     private final CacheManager cacheManager;
@@ -85,31 +89,7 @@ public class UserService {
         return activatedUser;
     }
 
-    public Optional<User> completePasswordReset(String newPassword, String key) {
-        log.debug("Reset user password for reset key {}", key);
-        return userRepository.findOneByResetKey(key)
-            .filter(user -> user.getResetDate().isAfter(Instant.now().minusSeconds(86400)))
-            .map(user -> {
-                user.setPassword(passwordEncoder.encode(newPassword));
-                user.setResetKey(null);
-                user.setResetDate(null);
-                this.clearUserCaches(user);
-                return user;
-            });
-    }
-
-    public Optional<User> requestPasswordReset(String mail) {
-        return userRepository.findOneByEmailIgnoreCase(mail)
-            .filter(User::getActivated)
-            .map(user -> {
-                user.setResetKey(RandomUtil.generateResetKey());
-                user.setResetDate(Instant.now());
-                this.clearUserCaches(user);
-                return user;
-            });
-    }
-
-    public User registerUser(UserDTO userDTO, String password) {
+      public User registerUser(UserDTO userDTO, String password) {
         userRepository.findOneByLogin(userDTO.getLogin().toLowerCase()).ifPresent(existingUser -> {
             boolean removed = removeNonActivatedUser(existingUser);
             if (!removed) {
@@ -132,19 +112,75 @@ public class UserService {
         newUser.setEmail(userDTO.getEmail().toLowerCase());
         newUser.setImageUrl(userDTO.getImageUrl());
         newUser.setLangKey(userDTO.getLangKey());
-        // new user is not active
-        newUser.setActivated(false);
-        // new user gets registration key
-        newUser.setActivationKey(RandomUtil.generateActivationKey());
-        Set<Authority> authorities = new HashSet<>();
-        authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
-        newUser.setAuthorities(authorities);
-        userRepository.save(newUser);
-        userSearchRepository.save(newUser);
+          Set<Authority> authorities = new HashSet<>();
+
+         List<Long> companyId =  notificationService.hasUserBeenInvited(userDTO.getEmail(), NotificationType.INVITATION);
+         if (!companyId.isEmpty()){
+             // new user is active
+             newUser.setActivated(true);
+             // new user gets registration key
+             newUser.setActivationKey(null);
+
+             authorityRepository.findById(AuthoritiesConstants.EMPLOYEE).ifPresent(authorities::add);
+             newUser.setAuthorities(authorities);
+             userRepository.save(newUser);
+             userSearchRepository.save(newUser);
+
+             companyId.stream()
+                 .map(id -> employeeService.findCompanyById(id))
+                 .filter(Optional::isPresent)
+                 .map(Optional::get)
+                 .forEach(company -> {
+                     notificationService.saveWithEmployee(employeeService.getCompanysManager(company).get()
+                         ,userDTO.getEmail(),company.getId(),NotificationType.INVITATION,"You have been invited to join " + company.getName() + ".");
+                 });
+
+
+         }else {
+             // new user is not active
+             newUser.setActivated(false);
+             // new user gets registration key
+             newUser.setActivationKey(RandomUtil.generateActivationKey());
+
+             authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
+             newUser.setAuthorities(authorities);
+
+             userRepository.save(newUser);
+             userSearchRepository.save(newUser);
+
+
+         }
+
+
+
         this.clearUserCaches(newUser);
         log.debug("Created Information for User: {}", newUser);
 
         return newUser;
+    }
+
+    public Optional<User> completePasswordReset(String newPassword, String key) {
+        log.debug("Reset user password for reset key {}", key);
+        return userRepository.findOneByResetKey(key)
+            .filter(user -> user.getResetDate().isAfter(Instant.now().minusSeconds(86400)))
+            .map(user -> {
+                user.setPassword(passwordEncoder.encode(newPassword));
+                user.setResetKey(null);
+                user.setResetDate(null);
+                this.clearUserCaches(user);
+                return user;
+            });
+    }
+
+    public Optional<User> requestPasswordReset(String mail) {
+        return userRepository.findOneByEmailIgnoreCase(mail)
+            .filter(User::getActivated)
+            .map(user -> {
+                user.setResetKey(RandomUtil.generateResetKey());
+                user.setResetDate(Instant.now());
+                this.clearUserCaches(user);
+                return user;
+            });
     }
 
     private boolean removeNonActivatedUser(User existingUser){

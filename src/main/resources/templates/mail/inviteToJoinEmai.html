@@ -6,11 +6,11 @@
         <link rel="shortcut icon" th:href="@{|${baseUrl}/favicon.ico|}" />
     </head>
     <body>
-        <p th:text="#{email.reset.greeting(${user.login})}">
+        <p th:text="#{email.reset.greeting(${user.email})}">
             Dear
         </p>
-        <p th:text="#{email.request.to.join}">
-            A user has requested to join your company. Sing into CID to accept/reject the request.
+        <p th:text="#{email.invite.to.join}">
+           You have been invited to join a company. To find out the company and other details log into CID.
         </p>
         <p>
             <a th:with="url=(@{|${baseUrl}/login|})" th:href="${url}"

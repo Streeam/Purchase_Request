@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
@@ -137,12 +138,22 @@ public class NotificationService {
             });
     }
 
-    public boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee) {
+    public boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee, Long companyId) {
         LocalDate now = LocalDate.now();
         LocalDate threeDaysAgo = now.minusDays(3);
-        List<Notification> notificationsLessThen3Days = notificationRepository.findAllBySentDateBetweenAndEmployeeIdAndFormat(now, threeDaysAgo, currentEmployee.getId(), NotificationType.REQUEST_TO_JOIN);
+        List<Notification> notificationsLessThen3Days = notificationRepository.
+            findAllBySentDateBetweenAndEmployeeIdAndFormatAndCompany(now, threeDaysAgo, currentEmployee.getId(), NotificationType.REJECT_INVITE, companyId);
         return !notificationsLessThen3Days.isEmpty();
     }
 
 
+    public List<Long> hasUserBeenInvited(String email, NotificationType notificationType) {
+
+        List<Notification> userInviteNotification = notificationRepository.findAllByReferenced_UserAndFormat(email, notificationType);
+
+        return userInviteNotification.stream()
+            .map(notificationMapper::toDto)
+            .map(NotificationDTO::getCompany)
+            .collect(Collectors.toList());
+    }
 }
