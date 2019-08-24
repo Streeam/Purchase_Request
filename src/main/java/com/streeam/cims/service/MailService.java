@@ -151,4 +151,10 @@ public class MailService {
         sendEmailFromTemplate(email ,currentUser, "mail/firedEmail", "email.fired.user");
 
     }
+
+    public void sendInviteEmail(String invitedUserEmail ,User manager) {
+
+        log.debug("Sending a invitation notification email to '{}'", invitedUserEmail);
+        sendEmailFromTemplate(invitedUserEmail ,manager, "mail/rejectionEmail", "email.reject.application");
+    }
 }

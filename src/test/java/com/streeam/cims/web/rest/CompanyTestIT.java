@@ -728,7 +728,6 @@ class CompanyTestIT {
         verify(mockCompanySearchRepository, times(1)).delete(updatedCompany2);
         verify(mockNotificationSearchRepository, times(1))
             .save(Arrays.asList(employee3FiredNotification,employee3FiredNotification).stream().findAny().get());
-        verify(mockEmployeeSearchRepository, times(1)).save(employee3);
 
         notificationRepository.deleteInBatch(Arrays.asList(employee3FiredNotification, employee4FiredNotification));
         userRepository.deleteInBatch(Arrays.asList(user1, user2,user3, user4));

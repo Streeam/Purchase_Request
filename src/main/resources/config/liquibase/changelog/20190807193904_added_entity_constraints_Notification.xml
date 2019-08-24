@@ -6,8 +6,8 @@
     <!--
         Added the constraints for entity Notification.
     -->
-    <changeSet id="20190807193904-2" author="streeam">
-
+    <changeSet id="20190807193904-2" author="jhipster">
+        
         <addForeignKeyConstraint baseColumnNames="employee_id"
                                  baseTableName="notification"
                                  constraintName="fk_notification_employee_id"

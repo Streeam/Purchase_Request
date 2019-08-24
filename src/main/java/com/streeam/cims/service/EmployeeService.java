@@ -228,8 +228,8 @@ public class EmployeeService {
         return companyService.getCompanysManager(company);
     }
 
-    public void sendNotificationToEmployee(Employee manager, NotificationType requestToJoin, String subject) {
-        companyService.sendNotificationToEmployee(manager, requestToJoin, subject);
+    public void sendNotificationToEmployee(Employee authorEmployee,String referencedUserEmail,Long companyId, NotificationType requestToJoin, String subject) {
+        notificationService.saveWithEmployee(authorEmployee,referencedUserEmail, companyId,requestToJoin, subject);
     }
 
     public boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee) {
@@ -238,6 +238,6 @@ public class EmployeeService {
     }
 
     public Page<EmployeeDTO> findAllUnemplyedEmployees(Pageable pageable) {
-        return employeeRepository.findAllNotHired(pageable);
+        return employeeRepository.findAllByHiredFalse(pageable);
     }
 }

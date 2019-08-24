@@ -30,10 +30,10 @@ import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 @Transactional
 public class NotificationService {
 
-    private final Logger log = LoggerFactory.getLogger(NotificationService.class);
-
     @Autowired
     private EmployeeSearchRepository employeeSearchRepository;
+
+    private final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationRepository notificationRepository;
 
@@ -114,17 +114,20 @@ public class NotificationService {
             .map(notificationMapper::toDto);
     }
 
-    NotificationDTO saveWithEmployee(Employee employee, NotificationType notificationType, String comment) {
+    NotificationDTO saveWithEmployee(Employee authorEmployee,String referencedEmployeeEmail,Long companyId, NotificationType notificationType, String comment) {
         Instant now = Instant.now();
         NotificationDTO notificationDTO = new NotificationDTO();
         notificationDTO.setSentDate(now);
         notificationDTO.setFormat(notificationType);
-        notificationDTO.setEmployeeId(employee.getId());
+        notificationDTO.setEmployeeId(authorEmployee.getId());
         notificationDTO.setRead(false);
         notificationDTO.setComment(comment);
+        notificationDTO.setReferenced_user(referencedEmployeeEmail);
+        notificationDTO.setCompany(companyId);
 //        employee.getNotifications().add(notificationMapper.toEntity(notificationDTO));
-        employeeSearchRepository.save(employee);
+//        employeeSearchRepository.save(authorEmployee);
         return this.save(notificationDTO);}
+
 
     public void deleteAllByEmployee(Employee employeeToDelete) {
         List<Notification> notifications = notificationRepository.findAllByEmployee(employeeToDelete);
@@ -132,15 +135,14 @@ public class NotificationService {
             .forEach(notification -> {
                 this.delete(notification.getId());
             });
-
     }
 
     public boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee) {
-
         LocalDate now = LocalDate.now();
         LocalDate threeDaysAgo = now.minusDays(3);
-
         List<Notification> notificationsLessThen3Days = notificationRepository.findAllBySentDateBetweenAndEmployeeIdAndFormat(now, threeDaysAgo, currentEmployee.getId(), NotificationType.REQUEST_TO_JOIN);
         return !notificationsLessThen3Days.isEmpty();
     }
+
+
 }

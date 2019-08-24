@@ -1,11 +1,11 @@
-id;comment;sent_date;read;format;employee_id
-1;mobile Fish;2019-08-13T00:19:09;true;NEW_EMPLOYEE;1
-2;Trace;2019-08-13T11:01:21;true;ACCEPT_INVITE;2
-3;Tasty Metal Bacon;2019-08-12T20:30:23;false;OTHERS;3
-4;Money Market Account;2019-08-13T04:21:07;true;INVITATION;4
-5;Namibia;2019-08-13T09:26:06;false;FIRED;5
-6;Multi-channelled Licensed;2019-08-13T04:11:26;false;OTHERS;6
-7;HDD;2019-08-13T02:42:16;false;COMPANY_DELETED;7
-8;envisioneer Music Public-key;2019-08-13T13:14:49;false;LEFT_COMPANY;8
-9;incentivize Tuna copy;2019-08-13T08:49:40;true;FIRED;9
-10;Industrial;2019-08-12T22:49:01;true;NEW_EMPLOYEE;10
+id;comment;sent_date;read;format;company;referenced_user;employee_id
+1;mobile Fish;2019-08-23T15:16:44;true;COMPANY_DELETED;5808;FTP Savings Account;1
+2;deposit Tasty Metal Bacon Implementation;2019-08-24T09:58:21;false;FIRED;43194;intangible;2
+3;enable Gorgeous Frozen Pants;2019-08-24T04:24:17;false;FIRED;19967;Cambridgeshire Mississippi;3
+4;HDD;2019-08-23T17:39:50;false;REQUEST_TO_JOIN;80839;access Intelligent;4
+5;Monitored Bahamian Dollar Investment Account;2019-08-23T13:59:41;false;REQUEST_TO_JOIN;25877;invoice;5
+6;convergence;2019-08-24T05:00:02;true;NEW_EMPLOYEE;77513;Markets Chief;6
+7;capacitor archive;2019-08-23T20:18:02;false;INVITATION;27134;generating compelling;7
+8;Home Loan Account;2019-08-24T03:22:02;false;ACCEPT_INVITE;7455;Administrator;8
+9;reinvent 24 hour Jewelery;2019-08-24T05:13:08;true;INVITATION;11586;IB Investment Account archive;9
+10;envisioneer;2019-08-23T17:56:21;false;NEW_EMPLOYEE;88721;Junction Frozen;10

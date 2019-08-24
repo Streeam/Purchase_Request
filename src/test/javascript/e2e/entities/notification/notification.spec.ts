@@ -59,6 +59,10 @@ describe('Notification e2e test', () => {
                 expect(await notificationUpdatePage.getReadInput().isSelected()).to.be.true;
             }
             await notificationUpdatePage.formatSelectLastOption();
+            await notificationUpdatePage.setCompanyInput('5');
+            expect(await notificationUpdatePage.getCompanyInput()).to.eq('5');
+            await notificationUpdatePage.setReferenced_userInput('referenced_user');
+            expect(await notificationUpdatePage.getReferenced_userInput()).to.match(/referenced_user/);
             await notificationUpdatePage.employeeSelectLastOption();
             await waitUntilDisplayed(notificationUpdatePage.getSaveButton());
             await notificationUpdatePage.save();

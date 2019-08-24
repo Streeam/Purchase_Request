@@ -21,6 +21,8 @@
       "sentDate": "Sent Date",
       "read": "Read",
       "format": "Format",
+      "company": "Company",
+      "referenced_user": "Referenced User",
       "employee": "Employee"
     }
   }

@@ -18,6 +18,8 @@ export interface INotification {
   sentDate?: Moment;
   read?: boolean;
   format?: NotificationType;
+  company?: number;
+  referenced_user?: string;
   employeeId?: number;
 }
 

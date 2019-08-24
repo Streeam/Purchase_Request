@@ -55,6 +55,18 @@ export class NotificationDetail extends React.Component<INotificationDetailProps
             </dt>
             <dd>{notificationEntity.format}</dd>
             <dt>
+              <span id="company">
+                <Translate contentKey="cidApp.notification.company">Company</Translate>
+              </span>
+            </dt>
+            <dd>{notificationEntity.company}</dd>
+            <dt>
+              <span id="referenced_user">
+                <Translate contentKey="cidApp.notification.referenced_user">Referenced User</Translate>
+              </span>
+            </dt>
+            <dd>{notificationEntity.referenced_user}</dd>
+            <dt>
               <Translate contentKey="cidApp.notification.employee">Employee</Translate>
             </dt>
             <dd>{notificationEntity.employeeId ? notificationEntity.employeeId : ''}</dd>

@@ -20,4 +20,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findAllByEmployee(Employee employeeToDelete);
 
     List<Notification> findAllBySentDateBetweenAndEmployeeIdAndFormat(LocalDate now, LocalDate threeDaysAgo, Long id, NotificationType fired);
+
 }

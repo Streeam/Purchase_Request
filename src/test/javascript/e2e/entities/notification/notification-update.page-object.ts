@@ -8,6 +8,8 @@ export default class NotificationUpdatePage {
   sentDateInput: ElementFinder = element(by.css('input#notification-sentDate'));
   readInput: ElementFinder = element(by.css('input#notification-read'));
   formatSelect: ElementFinder = element(by.css('select#notification-format'));
+  companyInput: ElementFinder = element(by.css('input#notification-company'));
+  referenced_userInput: ElementFinder = element(by.css('input#notification-referenced_user'));
   employeeSelect: ElementFinder = element(by.css('select#notification-employee'));
 
   getPageTitle() {
@@ -47,6 +49,22 @@ export default class NotificationUpdatePage {
       .last()
       .click();
   }
+  async setCompanyInput(company) {
+    await this.companyInput.sendKeys(company);
+  }
+
+  async getCompanyInput() {
+    return this.companyInput.getAttribute('value');
+  }
+
+  async setReferenced_userInput(referenced_user) {
+    await this.referenced_userInput.sendKeys(referenced_user);
+  }
+
+  async getReferenced_userInput() {
+    return this.referenced_userInput.getAttribute('value');
+  }
+
   async employeeSelectLastOption() {
     await this.employeeSelect
       .all(by.tagName('option'))

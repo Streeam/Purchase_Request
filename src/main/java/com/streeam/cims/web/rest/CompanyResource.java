@@ -239,11 +239,11 @@ public class CompanyResource {
                 throw new BadRequestAlertException("The manager doesn't have the authority to delete other companies, only his own.", ENTITY_NAME, "managercanonlyremovehisowncompany");
             }
             companyService.delete(id);
-            companyService.notifyEmployeeThatTheyHaveBeenFired(companyToDelete);
+            companyService.notifyEmployeeThatTheyHaveBeenFired(companyToDelete, currentUser.getEmail());
             companyService.sendEmailToAllEmployees(companyToDelete);
         } else {
             companyService.delete(id);
-            companyService.notifyEmployeeThatTheyHaveBeenFired(companyToDelete);
+            companyService.notifyEmployeeThatTheyHaveBeenFired(companyToDelete, currentUser.getEmail());
         }
         return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, currentUser.getId().toString())).build();
     }
@@ -323,7 +323,8 @@ public class CompanyResource {
 
 
         mailService.sendRejectionEmail(approvedEmployee.getEmail(), currentUser);
-        companyService.sendNotificationToEmployee(approvedEmployee, NotificationType.ACCEPT_INVITE, "Your application to join " + companyWhereEmployeeApplied.getName() + " has been approved!");
+        companyService.sendNotificationToEmployee(approvedEmployee, currentUser.getEmail(),companyId, NotificationType.ACCEPT_INVITE,
+            "Your application to join " + companyWhereEmployeeApplied.getName() + " has been approved!");
 
 
         return ResponseEntity.ok()
@@ -370,13 +371,15 @@ public class CompanyResource {
                 throw new BadRequestAlertException("The manager cannot reject a application by a employee who is applying to a different company then his.", ENTITY_NAME, "cannotrejectemployeeifheapplyestoadiffcompany");
             }
             mailService.sendRejectionEmail(rejectedEmployee.getEmail(), currentUser);
-            companyService.sendNotificationToEmployee(rejectedEmployee, NotificationType.REJECT_INVITE, "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
+            companyService.sendNotificationToEmployee(rejectedEmployee, currentUser.getEmail(), companyId, NotificationType.REJECT_INVITE,
+                "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
 
         }
 // Admin can reject anyone's application
         else {
             mailService.sendRejectionEmail(rejectedEmployee.getEmail(), currentUser);
-            companyService.sendNotificationToEmployee(rejectedEmployee, NotificationType.REJECT_INVITE, "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
+            companyService.sendNotificationToEmployee(rejectedEmployee, currentUser.getEmail(), companyId, NotificationType.REJECT_INVITE,
+                "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
         }
 
     }
@@ -454,7 +457,7 @@ public class CompanyResource {
         CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(employeeToFire, userToFire, companyThatEmployeeWasFiredFrom);
 
         mailService.sendFiredEmail(employeeToFire.getEmail(), currentUser);
-        companyService.sendNotificationToEmployee(employeeToFire, NotificationType.FIRED, "You have been fired from " + companyThatEmployeeWasFiredFrom.getName() + ".");
+        companyService.sendNotificationToEmployee(employeeToFire, currentEmployee.getEmail(),companyId, NotificationType.FIRED, "You have been fired from " + companyThatEmployeeWasFiredFrom.getName() + ".");
 
 
         return ResponseEntity.ok()

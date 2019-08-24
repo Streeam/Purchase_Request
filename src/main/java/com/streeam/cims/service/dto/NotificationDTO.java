@@ -23,6 +23,10 @@ public class NotificationDTO implements Serializable {
     @NotNull
     private NotificationType format;
 
+    private Long company;
+
+    private String referenced_user;
+
 
     private Long employeeId;
 
@@ -66,6 +70,22 @@ public class NotificationDTO implements Serializable {
         this.format = format;
     }
 
+    public Long getCompany() {
+        return company;
+    }
+
+    public void setCompany(Long company) {
+        this.company = company;
+    }
+
+    public String getReferenced_user() {
+        return referenced_user;
+    }
+
+    public void setReferenced_user(String referenced_user) {
+        this.referenced_user = referenced_user;
+    }
+
     public Long getEmployeeId() {
         return employeeId;
     }
@@ -103,6 +123,8 @@ public class NotificationDTO implements Serializable {
             ", sentDate='" + getSentDate() + "'" +
             ", read='" + isRead() + "'" +
             ", format='" + getFormat() + "'" +
+            ", company=" + getCompany() +
+            ", referenced_user='" + getReferenced_user() + "'" +
             ", employee=" + getEmployeeId() +
             "}";
     }

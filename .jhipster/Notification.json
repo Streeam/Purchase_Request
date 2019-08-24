@@ -1,5 +1,16 @@
 {
-    "name": "Notification",
+    "fluentMethods": true,
+    "clientRootFolder": "",
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "employee",
+            "otherEntityRelationshipName": "notification",
+            "relationshipValidateRules": "required",
+            "relationshipName": "employee",
+            "otherEntityField": "id"
+        }
+    ],
     "fields": [
         {
             "fieldName": "comment",
@@ -26,25 +37,22 @@
             "fieldValidateRules": [
                 "required"
             ]
-        }
-    ],
-    "relationships": [
+        },
         {
-            "relationshipType": "many-to-one",
-            "otherEntityName": "employee",
-            "otherEntityRelationshipName": "notification",
-            "relationshipValidateRules": "required",
-            "relationshipName": "employee",
-            "otherEntityField": "id"
+            "fieldName": "company",
+            "fieldType": "Long"
+        },
+        {
+            "fieldName": "referenced_user",
+            "fieldType": "String"
         }
     ],
     "changelogDate": "20190807193904",
-    "entityTableName": "notification",
     "dto": "mapstruct",
-    "pagination": "pagination",
+    "searchEngine": "elasticsearch",
     "service": "serviceClass",
+    "entityTableName": "notification",
+    "databaseType": "sql",
     "jpaMetamodelFiltering": false,
-    "fluentMethods": true,
-    "clientRootFolder": "",
-    "applications": "*"
+    "pagination": "pagination"
 }

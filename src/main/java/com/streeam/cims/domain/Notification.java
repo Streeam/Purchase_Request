@@ -1,14 +1,16 @@
 package com.streeam.cims.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.streeam.cims.domain.enumeration.NotificationType;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
+
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import java.io.Serializable;
 import java.time.Instant;
+
+import com.streeam.cims.domain.enumeration.NotificationType;
 
 /**
  * A Notification.
@@ -42,6 +44,12 @@ public class Notification implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "format", nullable = false)
     private NotificationType format;
+
+    @Column(name = "company")
+    private Long company;
+
+    @Column(name = "referenced_user")
+    private String referenced_user;
 
     @ManyToOne(optional = false)
     @NotNull
@@ -109,6 +117,32 @@ public class Notification implements Serializable {
         this.format = format;
     }
 
+    public Long getCompany() {
+        return company;
+    }
+
+    public Notification company(Long company) {
+        this.company = company;
+        return this;
+    }
+
+    public void setCompany(Long company) {
+        this.company = company;
+    }
+
+    public String getReferenced_user() {
+        return referenced_user;
+    }
+
+    public Notification referenced_user(String referenced_user) {
+        this.referenced_user = referenced_user;
+        return this;
+    }
+
+    public void setReferenced_user(String referenced_user) {
+        this.referenced_user = referenced_user;
+    }
+
     public Employee getEmployee() {
         return employee;
     }
@@ -147,6 +181,8 @@ public class Notification implements Serializable {
             ", sentDate='" + getSentDate() + "'" +
             ", read='" + isRead() + "'" +
             ", format='" + getFormat() + "'" +
+            ", company=" + getCompany() +
+            ", referenced_user='" + getReferenced_user() + "'" +
             "}";
     }
 }

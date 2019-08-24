@@ -138,6 +138,12 @@ export class Notification extends React.Component<INotificationProps, INotificat
                   <th className="hand" onClick={this.sort('format')}>
                     <Translate contentKey="cidApp.notification.format">Format</Translate> <FontAwesomeIcon icon="sort" />
                   </th>
+                  <th className="hand" onClick={this.sort('company')}>
+                    <Translate contentKey="cidApp.notification.company">Company</Translate> <FontAwesomeIcon icon="sort" />
+                  </th>
+                  <th className="hand" onClick={this.sort('referenced_user')}>
+                    <Translate contentKey="cidApp.notification.referenced_user">Referenced User</Translate> <FontAwesomeIcon icon="sort" />
+                  </th>
                   <th>
                     <Translate contentKey="cidApp.notification.employee">Employee</Translate> <FontAwesomeIcon icon="sort" />
                   </th>
@@ -160,6 +166,8 @@ export class Notification extends React.Component<INotificationProps, INotificat
                     <td>
                       <Translate contentKey={`cidApp.NotificationType.${notification.format}`} />
                     </td>
+                    <td>{notification.company}</td>
+                    <td>{notification.referenced_user}</td>
                     <td>
                       {notification.employeeId ? <Link to={`employee/${notification.employeeId}`}>{notification.employeeId}</Link> : ''}
                     </td>

@@ -26,5 +26,5 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     List<Employee> findAllByCompany(Company company);
 
-    Page<EmployeeDTO> findAllNotHired(Pageable pageable);
+    Page<EmployeeDTO> findAllByHiredFalse(Pageable pageable);
 }

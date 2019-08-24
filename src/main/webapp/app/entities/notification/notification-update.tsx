@@ -148,6 +148,18 @@ export class NotificationUpdate extends React.Component<INotificationUpdateProps
                   </AvInput>
                 </AvGroup>
                 <AvGroup>
+                  <Label id="companyLabel" for="notification-company">
+                    <Translate contentKey="cidApp.notification.company">Company</Translate>
+                  </Label>
+                  <AvField id="notification-company" type="string" className="form-control" name="company" />
+                </AvGroup>
+                <AvGroup>
+                  <Label id="referenced_userLabel" for="notification-referenced_user">
+                    <Translate contentKey="cidApp.notification.referenced_user">Referenced User</Translate>
+                  </Label>
+                  <AvField id="notification-referenced_user" type="text" name="referenced_user" />
+                </AvGroup>
+                <AvGroup>
                   <Label for="notification-employee">
                     <Translate contentKey="cidApp.notification.employee">Employee</Translate>
                   </Label>

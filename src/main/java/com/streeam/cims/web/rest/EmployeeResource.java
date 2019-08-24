@@ -213,6 +213,10 @@ public class EmployeeResource {
 
         User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(()->
             new ResourceNotFoundException("No user logged in."));
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() ->
+            new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+        Company currentCompany = employeeService.findEmployeesCompany(currentEmployee).orElseThrow(() ->
+            new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
 
         if(!employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN,AuthoritiesConstants.MANAGER) ){
             throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "accessrestricted");
@@ -225,6 +229,16 @@ public class EmployeeResource {
             if(employeeService.checkUserHasRoles(userToInvite.get(), AuthoritiesConstants.ADMIN,AuthoritiesConstants.MANAGER,AuthoritiesConstants.EMPLOYEE) ){
                 throw new BadRequestAlertException("You can't invite a user who is already in a company.", ENTITY_NAME, "cantinviteuseralreadyincompany");
             }
+
+            Employee employeeToJoin = employeeService.findOneByEmail(userToInvite.get().getEmail()).orElseThrow(() ->
+                new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+            //send notification
+
+            employeeService.sendNotificationToEmployee(currentEmployee, employeeToJoin.getEmail(), currentCompany.getId(), NotificationType.INVITATION, "You have been invited to join " + currentCompany.getName() + ".");
+
+            //send email
+            //mailService.
 
         }
 
@@ -346,7 +360,7 @@ public class EmployeeResource {
         mailService.sendRequestToJoinEmail(manager.getEmail(), currentUser);
 
         // create a Notification(REQUEST_TO_JOIN) and link it to the manager
-        employeeService.sendNotificationToEmployee(manager, NotificationType.REQUEST_TO_JOIN, "A user submitted a request to join your company " + company.getName());
+        employeeService.sendNotificationToEmployee(manager, employeeRequestingToJoin.getEmail(), companyId, NotificationType.REQUEST_TO_JOIN, "A user submitted a request to join your company " + company.getName());
 
         return ResponseEntity.ok().build();
     }

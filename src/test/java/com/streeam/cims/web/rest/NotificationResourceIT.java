@@ -57,6 +57,13 @@ public class NotificationResourceIT {
     private static final NotificationType DEFAULT_FORMAT = NotificationType.INVITATION;
     private static final NotificationType UPDATED_FORMAT = NotificationType.NEW_EMPLOYEE;
 
+    private static final Long DEFAULT_COMPANY = 1L;
+    private static final Long UPDATED_COMPANY = 2L;
+    private static final Long SMALLER_COMPANY = 1L - 1L;
+
+    private static final String DEFAULT_REFERENCED_USER = "AAAAAAAAAA";
+    private static final String UPDATED_REFERENCED_USER = "BBBBBBBBBB";
+
     @Autowired
     private NotificationRepository notificationRepository;
 
@@ -116,7 +123,9 @@ public class NotificationResourceIT {
             .comment(DEFAULT_COMMENT)
             .sentDate(DEFAULT_SENT_DATE)
             .read(DEFAULT_READ)
-            .format(DEFAULT_FORMAT);
+            .format(DEFAULT_FORMAT)
+            .company(DEFAULT_COMPANY)
+            .referenced_user(DEFAULT_REFERENCED_USER);
         // Add required entity
         Employee employee;
         if (TestUtil.findAll(em, Employee.class).isEmpty()) {
@@ -140,7 +149,9 @@ public class NotificationResourceIT {
             .comment(UPDATED_COMMENT)
             .sentDate(UPDATED_SENT_DATE)
             .read(UPDATED_READ)
-            .format(UPDATED_FORMAT);
+            .format(UPDATED_FORMAT)
+            .company(UPDATED_COMPANY)
+            .referenced_user(UPDATED_REFERENCED_USER);
         // Add required entity
         Employee employee;
         if (TestUtil.findAll(em, Employee.class).isEmpty()) {
@@ -179,6 +190,8 @@ public class NotificationResourceIT {
         assertThat(testNotification.getSentDate()).isEqualTo(DEFAULT_SENT_DATE);
         assertThat(testNotification.isRead()).isEqualTo(DEFAULT_READ);
         assertThat(testNotification.getFormat()).isEqualTo(DEFAULT_FORMAT);
+        assertThat(testNotification.getCompany()).isEqualTo(DEFAULT_COMPANY);
+        assertThat(testNotification.getReferenced_user()).isEqualTo(DEFAULT_REFERENCED_USER);
 
         // Validate the Notification in Elasticsearch
         verify(mockNotificationSearchRepository, times(1)).save(testNotification);
@@ -279,7 +292,9 @@ public class NotificationResourceIT {
             .andExpect(jsonPath("$.[*].comment").value(hasItem(DEFAULT_COMMENT.toString())))
             .andExpect(jsonPath("$.[*].sentDate").value(hasItem(DEFAULT_SENT_DATE.toString())))
             .andExpect(jsonPath("$.[*].read").value(hasItem(DEFAULT_READ.booleanValue())))
-            .andExpect(jsonPath("$.[*].format").value(hasItem(DEFAULT_FORMAT.toString())));
+            .andExpect(jsonPath("$.[*].format").value(hasItem(DEFAULT_FORMAT.toString())))
+            .andExpect(jsonPath("$.[*].company").value(hasItem(DEFAULT_COMPANY.intValue())))
+            .andExpect(jsonPath("$.[*].referenced_user").value(hasItem(DEFAULT_REFERENCED_USER.toString())));
     }
 
     @Test
@@ -296,7 +311,9 @@ public class NotificationResourceIT {
             .andExpect(jsonPath("$.comment").value(DEFAULT_COMMENT.toString()))
             .andExpect(jsonPath("$.sentDate").value(DEFAULT_SENT_DATE.toString()))
             .andExpect(jsonPath("$.read").value(DEFAULT_READ.booleanValue()))
-            .andExpect(jsonPath("$.format").value(DEFAULT_FORMAT.toString()));
+            .andExpect(jsonPath("$.format").value(DEFAULT_FORMAT.toString()))
+            .andExpect(jsonPath("$.company").value(DEFAULT_COMPANY.intValue()))
+            .andExpect(jsonPath("$.referenced_user").value(DEFAULT_REFERENCED_USER.toString()));
     }
 
     @Test
@@ -323,7 +340,9 @@ public class NotificationResourceIT {
             .comment(UPDATED_COMMENT)
             .sentDate(UPDATED_SENT_DATE)
             .read(UPDATED_READ)
-            .format(UPDATED_FORMAT);
+            .format(UPDATED_FORMAT)
+            .company(UPDATED_COMPANY)
+            .referenced_user(UPDATED_REFERENCED_USER);
         NotificationDTO notificationDTO = notificationMapper.toDto(updatedNotification);
 
         restNotificationMockMvc.perform(put("/api/notifications")
@@ -339,6 +358,8 @@ public class NotificationResourceIT {
         assertThat(testNotification.getSentDate()).isEqualTo(UPDATED_SENT_DATE);
         assertThat(testNotification.isRead()).isEqualTo(UPDATED_READ);
         assertThat(testNotification.getFormat()).isEqualTo(UPDATED_FORMAT);
+        assertThat(testNotification.getCompany()).isEqualTo(UPDATED_COMPANY);
+        assertThat(testNotification.getReferenced_user()).isEqualTo(UPDATED_REFERENCED_USER);
 
         // Validate the Notification in Elasticsearch
         verify(mockNotificationSearchRepository, times(1)).save(testNotification);
@@ -402,7 +423,9 @@ public class NotificationResourceIT {
             .andExpect(jsonPath("$.[*].comment").value(hasItem(DEFAULT_COMMENT)))
             .andExpect(jsonPath("$.[*].sentDate").value(hasItem(DEFAULT_SENT_DATE.toString())))
             .andExpect(jsonPath("$.[*].read").value(hasItem(DEFAULT_READ.booleanValue())))
-            .andExpect(jsonPath("$.[*].format").value(hasItem(DEFAULT_FORMAT.toString())));
+            .andExpect(jsonPath("$.[*].format").value(hasItem(DEFAULT_FORMAT.toString())))
+            .andExpect(jsonPath("$.[*].company").value(hasItem(DEFAULT_COMPANY.intValue())))
+            .andExpect(jsonPath("$.[*].referenced_user").value(hasItem(DEFAULT_REFERENCED_USER)));
     }
 
     @Test
