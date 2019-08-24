@@ -21,7 +21,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     List<Notification> findAllBySentDateBetweenAndEmployeeIdAndFormatAndCompany(LocalDate now, LocalDate threeDaysAgo, Long id, NotificationType fired, Long companyId);
 
-    List<Notification> findAllByReferenced_User(String email);
+    List<Notification> findAllByFormat(NotificationType notificationType);
 
-    List<Notification> findAllByReferenced_UserAndFormat(String email, NotificationType notificationType);
 }

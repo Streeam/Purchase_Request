@@ -147,11 +147,12 @@ public class NotificationService {
     }
 
 
-    public List<Long> hasUserBeenInvited(String email, NotificationType notificationType) {
+    public List<Long> hasUserBeenInvited(String email,  NotificationType notificationType) {
 
-        List<Notification> userInviteNotification = notificationRepository.findAllByReferenced_UserAndFormat(email, notificationType);
+        List<Notification> userInviteNotification = notificationRepository.findAllByFormat( notificationType);
 
         return userInviteNotification.stream()
+            .filter(notification -> notification.getReferenced_user().equalsIgnoreCase(email))
             .map(notificationMapper::toDto)
             .map(NotificationDTO::getCompany)
             .collect(Collectors.toList());
