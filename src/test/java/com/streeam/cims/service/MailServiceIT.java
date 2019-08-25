@@ -1,8 +1,9 @@
 package com.streeam.cims.service;
 
-import com.streeam.cims.config.Constants;
-
 import com.streeam.cims.CidApp;
+import com.streeam.cims.config.Constants;
+import com.streeam.cims.domain.Company;
+import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import io.github.jhipster.config.JHipsterProperties;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,8 +35,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -193,6 +195,93 @@ public class MailServiceIT {
         verify(javaMailSender).send(messageCaptor.capture());
         MimeMessage message = messageCaptor.getValue();
         assertThat(message.getAllRecipients()[0].toString()).isEqualTo(user.getEmail());
+        assertThat(message.getFrom()[0].toString()).isEqualTo(jHipsterProperties.getMail().getFrom());
+        assertThat(message.getContent().toString()).isNotEmpty();
+        assertThat(message.getDataHandler().getContentType()).isEqualTo("text/html;charset=UTF-8");
+    }
+
+
+    @Test
+    public void testLeaveEmail() throws Exception {
+        User user = new User();
+        user.setLangKey(Constants.DEFAULT_LANGUAGE);
+        user.setLogin("john");
+        user.setEmail("john.doe@example.com");
+        Employee manager = new Employee();
+        manager.setEmail("manager@example.com");
+
+        mailService.sendLeaveEmail(manager.getEmail(),user);
+        verify(javaMailSender).send(messageCaptor.capture());
+        MimeMessage message = messageCaptor.getValue();
+        assertThat(message.getAllRecipients()[0].toString()).isEqualTo(user.getEmail());
+        assertThat(message.getFrom()[0].toString()).isEqualTo(jHipsterProperties.getMail().getFrom());
+        assertThat(message.getContent().toString()).isNotEmpty();
+        assertThat(message.getDataHandler().getContentType()).isEqualTo("text/html;charset=UTF-8");
+    }
+
+
+    @Test
+    public void testFiredMail() throws Exception {
+        User user = new User();
+        user.setLangKey(Constants.DEFAULT_LANGUAGE);
+        user.setLogin("john");
+        user.setEmail("john.doe@example.com");
+        Employee employeeToGetFired = new Employee();
+        employeeToGetFired.setEmail("jane.doe@example.com");
+
+        mailService.sendFiredEmail(employeeToGetFired.getEmail(), user);
+        verify(javaMailSender).send(messageCaptor.capture());
+        MimeMessage message = messageCaptor.getValue();
+        assertThat(message.getAllRecipients()[0].toString()).isEqualTo(user.getEmail());
+        assertThat(message.getFrom()[0].toString()).isEqualTo(jHipsterProperties.getMail().getFrom());
+        assertThat(message.getContent().toString()).isNotEmpty();
+        assertThat(message.getDataHandler().getContentType()).isEqualTo("text/html;charset=UTF-8");
+    }
+
+
+    @Test
+    public void testRejectionMail() throws Exception {
+        User user = new User();
+        user.setLangKey(Constants.DEFAULT_LANGUAGE);
+        user.setLogin("john");
+        user.setEmail("john.doe@example.com");
+        Employee rejectedEmployee = new Employee();
+        rejectedEmployee.setEmail("jane.doe@example.com");
+
+        mailService.sendRejectionEmail(rejectedEmployee.getEmail(), user);
+        verify(javaMailSender).send(messageCaptor.capture());
+        MimeMessage message = messageCaptor.getValue();
+        assertThat(message.getAllRecipients()[0].toString()).isEqualTo(user.getEmail());
+        assertThat(message.getFrom()[0].toString()).isEqualTo(jHipsterProperties.getMail().getFrom());
+        assertThat(message.getContent().toString()).isNotEmpty();
+        assertThat(message.getDataHandler().getContentType()).isEqualTo("text/html;charset=UTF-8");
+    }
+
+
+    @Test
+    public void testSendMailToAllWhenCompanyIsDissolved() throws Exception {
+
+        Employee employeeOne = new Employee();
+        employeeOne.setEmail("jane.doe@example.com");
+        Employee employeeTwo = new Employee();
+        employeeTwo.setEmail("jane.doe@example.com");
+        Employee employeeThree = new Employee();
+        employeeThree.setEmail("jane.doe@example.com");
+        Employee employeeFour = new Employee();
+        employeeFour.setEmail("jane.doe@example.com");
+
+        Company deletedCompany = new Company();
+        deletedCompany.setEmployees(Arrays.asList(employeeOne, employeeTwo, employeeThree, employeeFour).stream().collect(Collectors.toSet()));
+
+        List<Employee> employees = deletedCompany.getEmployees().stream().collect(Collectors.toList());
+
+        mailService.sendEmailToAllFromCompany(employees);
+        verify(javaMailSender).send(messageCaptor.capture());
+        MimeMessage message = messageCaptor.getValue();
+        assertThat(message.getAllRecipients()[0].toString()).contains(employeeOne.getEmail());
+        assertThat(message.getAllRecipients()[1].toString()).contains(employeeTwo.getEmail());
+        assertThat(message.getAllRecipients()[2].toString()).contains(employeeThree.getEmail());
+        assertThat(message.getAllRecipients()[3].toString()).contains(employeeFour.getEmail());
         assertThat(message.getFrom()[0].toString()).isEqualTo(jHipsterProperties.getMail().getFrom());
         assertThat(message.getContent().toString()).isNotEmpty();
         assertThat(message.getDataHandler().getContentType()).isEqualTo("text/html;charset=UTF-8");
