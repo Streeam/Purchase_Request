@@ -161,6 +161,6 @@ public class MailService {
     public void sendLeaveEmail(String leaveUserEmail ,User manager) {
 
         log.debug("Sending a resign notification email to '{}'", manager.getEmail());
-        sendEmailFromTemplate(leaveUserEmail ,manager, "mail/inviteToJoinEmail", "email.invite.to.join");
+        sendEmailFromTemplate(leaveUserEmail ,manager, "mail/leaveCompanyEmail", "email.invite.to.join");
     }
 }

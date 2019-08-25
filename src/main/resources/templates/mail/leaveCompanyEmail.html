@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title th:text="#{email.reset.title}">User Application</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link rel="shortcut icon" th:href="@{|${baseUrl}/favicon.ico|}" />
+    </head>
+    <body>
+        <p th:text="#{email.reset.greeting(${user.email})}">
+            Dear
+        </p>
+        <p th:text="#{email.leave.company}">
+            A employee from your company has resign. Please log in to find out more details.
+        </p>
+        <p>
+            <a th:with="url=(@{|${baseUrl}/login|})" th:href="${url}"
+            th:text="${url}">Login link</a>
+        </p>
+        <p>
+            <span th:text="#{email.reset.text2}">Regards, </span>
+            <br/>
+            <em th:text="#{email.signature}">Streeam.</em>
+        </p>
+    </body>
+</html>

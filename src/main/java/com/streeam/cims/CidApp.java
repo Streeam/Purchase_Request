@@ -28,7 +28,6 @@ public class CidApp implements InitializingBean {
     //                                                  ****API's****
 
         // 1. api/companies
-            // TODO CREATE MORE TESTS FOR THE MAILSERVICE TEST CLASS
             // POST Create a company and automatically become the manager
                     // If the user is ROLE_MANAGER or ROLE_EMPLOYEE he cannot see this option otherwise he can
                     // Only the ROLE_USER can create a company
