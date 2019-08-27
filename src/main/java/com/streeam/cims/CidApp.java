@@ -53,7 +53,7 @@ public class CidApp implements InitializingBean {
                 //   Creates a notification and sends it to the manager
                 //  A employee cannot apply to join the same company in a period less then 3 days.
                 //TODO NEEDS TESTING
-        // 4. POST api/employees/invite-to-join (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+        // 4. POST api/employees/unemployed (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
                 //  The manager or the admin can see all the unemployed users.
                 //  The logged user has to be either the admin or the manager of the company.
         // 5. POST api/employees/invite-to-join/{email} (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)

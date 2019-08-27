@@ -176,7 +176,7 @@ public class EmployeeResource {
      * @param pageable the pagination information.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of employees in body.
      */
-    @GetMapping("/employees/invite-to-join")
+    @GetMapping("/employees/unemployed")
     public ResponseEntity<List<EmployeeDTO>> getAllUnemployed(Pageable pageable) {
         log.debug("REST request to get a page of all unemployed Employees");
 

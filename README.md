@@ -1,6 +1,97 @@
-# CID
+# Company Information Database
 
-This application was generated using JHipster 6.2.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v6.2.0](https://www.jhipster.tech/documentation-archive/v6.2.0).
+This is a monolithic application where a user can choose to either to create his own company or join an existing one. This application can easily be turned into
+a gateway microservice.
+There are 4 roles that a user can have:
+1.ROLE_USER - Every user after registration is given the this role. This role can never be replaced. All other roles will be added on top of this role.
+2.ROLE_ADMIN - Only one user can be in this role. This user can create, see, update and delete almost anything.
+3.ROLE_MANAGER - A user is given this role when he creates his own company.
+4.ROLE_EMPLOYEE - A user is given this role when he joins a company. A user cannot have the ROLE_EMPLOYEE
+and ROLE_MANAGER at the same time.
+
+                                                 Endpoints
+
+         1. api/companies
+             POST api/companies
+                     Create a company and automatically become the manager
+                     If the user has ROLE_MANAGER or ROLE_EMPLOYEE he cannot see this option otherwise he can.
+                     Only the ROLE_USER can create a company.
+                     He then automatically becomes the manager of the company.
+             GET api/companies
+                     List all the companies and its details.
+                     Manager and employees can see only their company, admin and user can see all companies.
+             DELETE api/companies/{companyId}
+                     Delete a company
+                     Manager can delete only his company, admin can delete any company.
+                     Get all the employees from the company and remove the ROLE_EMPLOYEE. Remove the ROLE_MANAGER from the company's manager.
+                     Delete the company update the employee company id
+                     Send notifications and emails to all employees that they all been fired
+             PUT api/companies/{companyId}
+                     Update a company. Manager can only update his company. The admin can update any companies.
+                     Only if you are a manager or an admin you can update the company.
+                     Neither the manager nor the admin can update, add nor remove the employees from this endpoint
+         2. api/activate
+             GET When the user is activated it also creates and links to an employee.
+         3. api/employee/{employeeId}/request-to-join/{companyId}
+             POST Request to join a company
+                   The users with the roles ROLE_MANAGER and ROLE_EMPLOYEE are restricted from using this endpoint.
+                   Sends a email to the company's manager to request to join the company.
+                   Also creates a notification and sends it to the manager.
+                   A employee cannot apply to join the same company in a period less then 3 days.
+                   Once an employee requests to join a company he cannot apply to join another.
+                   He can apply to join another company only if his request is rejected by the current company.
+                   TODO NEEDS TESTING
+         4. api/employees/unemployed (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+             GET List all unemployed
+                  The manager or the admin can see all the unemployed users from all companies.
+                  The logged user has to be either the admin or the manager of the company.
+         5. api/employees/invite-to-join/{email} (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+             POST Invite join a company
+                  The logged user has to be either the admin or the manager of the company.
+                  If the user exists and is not ROLE_MANAGER nor ROLE_EMPLOYEE sends an invite notification and an email to the user.
+                  If the user doesn't exists sends a notification to the current user(manager or admin).
+                  When the users registers automatically activate the account and send an invite notification
+                  If the user was invited by multiple companies send an invite notification for each company.
+         6. api/companies/{companyId}/approve-employee/{employeeId}(Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+             POST approve a request from an employee
+                  The manager or the admin approves the users request. The manager can only approve employees that apply to join his company.
+                  Check to see if the employee is already taken by another company.
+                  The user is given the ROLE_EMPLOYEE and it is added to the company.
+                  Sends a email and a notification to the user to inform him that his request has been approved.
+                  TODO NEEDS TESTING
+         7. api/companies/{companyId}/reject-employee/{employeeId}
+             POST reject a request from an employee
+                  Only the manager or the admin rejects the users request. The manager can only reject employees that apply to join his company.
+                  The user must not have the role of manager nor employee and he must not be part of a company.
+                  Sends an email and a notification to the user to inform him that his request has been rejected
+                  TODO NEEDS TESTING
+         8. api/companies/{companyId}/fire/{employeeId}  (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+             POST Fire a employee from a specific company
+                  Only the manager or the admin can fire an employee.
+                  A manager cannot fire himself, but he can quit. If he quits, the company is dissolved (see ../companies/delete/{companyId})
+                  Removes all the employee's roles except the default ROLE_USER.
+                  Send a notification and a email to the user informing him that he got fired.
+                  TODO NEEDS TESTING
+         9. api/companies/{companyId}/leave-company (Pre-Authorize ROLE_EMPLOYEE)
+             POST Employee resigns from his company
+                  Only an user with the employee role can access this endpoint.
+                  The employee resigns from the company
+                  Removes all the users roles except the default ROLE_USER (update the user, the employee and the company)
+                  TODO Send a notification to all the employees from the company to inform that he is leaving the company
+                  Send email to manager to inform him that he left.
+                  TODO NEEDS TESTING
+         10. api/users (Pre-Authorize ROLE_ADMIN and ROLE_MANAGER only for modifying the user's role )
+             TODO POST When admin creates a user also creates an employee
+             TODO DELETE when admin deletes an employee it also deletes the linked user and updates the company if he is in one
+             TODO GET Employees and Managers can see their roles in the company
+             PUT If you are a manager you can only modify the roles of users in your company (the email cannot be modified)
+                  TODO When user is updated the employee is updated as well.
+         11. api/employees
+              POST  No one can create an employee. An employee is created only when the user is activated.
+              GET ADMIN can see all employees, the rest can only see their own account.
+              DELETE  (Pre-Authorize ROLE_ADMIN) when admin deletes an employee it also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee
+              PUT  ADMIN can update all employees, Manager can update all employees from his company,  the rest can only update their own account.
+                   TODO When employee is updated the user is updated as well (no one can updated the employee's or the user's email). The admin and managers can also update the employee roles.
 
 ## Development
 
@@ -20,7 +111,7 @@ Run the following commands in two separate terminals to create a blissful develo
 auto-refreshes when files change on your hard drive.
 
     ./gradlew
-    npm start
+    npm start / yarn start
 
 Npm is also used to manage CSS and JavaScript dependencies used in this application. You can upgrade dependencies by
 specifying a newer version in [package.json](package.json). You can also run `npm update` and `npm install` to manage dependencies.
