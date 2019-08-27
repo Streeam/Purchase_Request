@@ -28,6 +28,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -195,12 +196,12 @@ public class EmployeeResource {
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
 
-    @PostMapping
     /**
      * {@code POST  employees/invite-to-join/{email}  : invite the "email" employee.
      * @param email the email of the user to invite
      * @return the {@link ResponseEntity} with status {@code 200 (OK)}
      */
+    @PostMapping("employees/invite-to-join/{email}")
     public ResponseEntity inviteToJoin(@PathVariable String email) {
 
         if (email == null) {
@@ -319,7 +320,7 @@ public class EmployeeResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
     @PostMapping("/employees/{employeeId}/request-to-join/{companyId}")
-    public ResponseEntity requestToJoinCompany(@PathVariable Long employeeId, @PathVariable Long companyId) {
+    public ResponseEntity<Void>  requestToJoinCompany(@PathVariable Long employeeId, @PathVariable Long companyId) {
         log.debug("REST request to join the company : {}", companyId);
 
         if (employeeId == null) {
@@ -329,11 +330,14 @@ public class EmployeeResource {
             throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
         }
 
-        Company company = employeeService.findCompanyById(companyId).orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+        Company company = employeeService.findCompanyById(companyId).orElseThrow(() ->
+            new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
-        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
-        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() -> new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() ->
+            new ResourceNotFoundException("No user logged in."));
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() ->
+            new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
 
         Employee employeeRequestingToJoin = employeeService.findOneById(employeeId).orElseThrow(() ->
             new BadRequestAlertException("Employee not found.", ENTITY_NAME, "employeenotfound"));
@@ -342,22 +346,20 @@ public class EmployeeResource {
             throw new BadRequestAlertException("Only the logged in employee can request to join a company.", ENTITY_NAME, "onlycurrentloggedincanjoincomp");
         }
 
-        if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER) && currentEmployee.isHired()) {
+        if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER) && Objects.nonNull(currentEmployee.getCompany())) {
             throw new BadRequestAlertException("You cannot request to join a company if you are already into one.", ENTITY_NAME, "joinonlyifunemployed");
         }
 
 
-//         find the latest rejected notification. If it has been less then 48h since
         if(!employeeService.userRequestedToJoinCompanyAndWasRejectedLessThen3DaysAgo(currentEmployee, companyId)){
             throw new BadRequestAlertException("You have already requested to join this company less then three days ago.", ENTITY_NAME, "3daysbeforeyoucanrequestagain");
         }
 
-        Employee manager = employeeService.getCompanysManager(company).orElseThrow(() -> new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
+        Employee manager = employeeService.getCompanysManager(company).orElseThrow(() ->
+            new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
 
-        // send an email to the manager to inform him of a employee wanting to join the company
         mailService.sendRequestToJoinEmail(manager.getEmail(), currentUser);
 
-        // create a Notification(REQUEST_TO_JOIN) and link it to the manager
         employeeService.sendNotificationToEmployee(manager, employeeRequestingToJoin.getEmail(), companyId, NotificationType.REQUEST_TO_JOIN, "A user submitted a request to join your company " + company.getName());
 
         return ResponseEntity.ok().build();
