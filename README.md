@@ -9,7 +9,8 @@ There are 4 roles that a user can have:
 4.ROLE_EMPLOYEE - A user is given this role when he joins a company. A user cannot have the ROLE_EMPLOYEE
 and ROLE_MANAGER at the same time.
 
-                                                 Endpoints
+## Endpoints
+                                                
 
          1. api/companies
              POST api/companies
@@ -92,6 +93,10 @@ and ROLE_MANAGER at the same time.
               DELETE  (Pre-Authorize ROLE_ADMIN) when admin deletes an employee it also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee
               PUT  ADMIN can update all employees, Manager can update all employees from his company,  the rest can only update their own account.
                    TODO When employee is updated the user is updated as well (no one can updated the employee's or the user's email). The admin and managers can also update the employee roles.
+
+## User Interface Wireframe
+
+![Image](./src/main/webapp/content/images/ui.jpg?raw=true "Title")
 
 ## Development
 
