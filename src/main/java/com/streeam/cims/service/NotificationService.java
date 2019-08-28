@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -125,9 +125,10 @@ public class NotificationService {
         notificationDTO.setComment(comment);
         notificationDTO.setReferenced_user(referencedEmployeeEmail);
         notificationDTO.setCompany(companyId);
-//        employee.getNotifications().add(notificationMapper.toEntity(notificationDTO));
-//        employeeSearchRepository.save(authorEmployee);
-        return this.save(notificationDTO);}
+        authorEmployee.getNotifications().add(notificationMapper.toEntity(notificationDTO));
+        employeeSearchRepository.save(authorEmployee);
+        notificationSearchRepository.save(notificationMapper.toEntity(notificationDTO));
+        return notificationDTO;}
 
 
     public void deleteAllByEmployee(Employee employeeToDelete) {
@@ -139,11 +140,17 @@ public class NotificationService {
     }
 
     public boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee, Long companyId) {
-        LocalDate now = LocalDate.now();
-        LocalDate threeDaysAgo = now.minusDays(3);
+        Instant now = Instant.now();
+        Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
+
         List<Notification> notificationsLessThen3Days = notificationRepository.
-            findAllBySentDateBetweenAndEmployeeIdAndFormatAndCompany(now, threeDaysAgo, currentEmployee.getId(), NotificationType.REJECT_INVITE, companyId);
-        return !notificationsLessThen3Days.isEmpty();
+        findAllByEmployeeAndFormatAndCompany(currentEmployee, NotificationType.REJECT_INVITE, companyId);
+
+        return notificationsLessThen3Days.stream()
+            .filter(notification -> {
+                return notification.getSentDate().isAfter(threeDaysAgo);})
+            .findAny()
+            .isPresent();
     }
 
 

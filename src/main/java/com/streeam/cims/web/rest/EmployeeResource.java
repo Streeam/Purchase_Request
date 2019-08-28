@@ -350,8 +350,7 @@ public class EmployeeResource {
             throw new BadRequestAlertException("You cannot request to join a company if you are already into one.", ENTITY_NAME, "joinonlyifunemployed");
         }
 
-
-        if(!employeeService.userRequestedToJoinCompanyAndWasRejectedLessThen3DaysAgo(currentEmployee, companyId)){
+        if(employeeService.userRequestedToJoinCompanyAndWasRejectedLessThen3DaysAgo(currentEmployee, companyId)){
             throw new BadRequestAlertException("You have already requested to join this company less then three days ago.", ENTITY_NAME, "3daysbeforeyoucanrequestagain");
         }
 

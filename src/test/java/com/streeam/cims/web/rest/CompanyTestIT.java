@@ -726,10 +726,10 @@ class CompanyTestIT {
 
         verify(mockNotificationSearchRepository, times(2)).save(any(Notification.class));
         verify(mockCompanySearchRepository, times(1)).delete(updatedCompany2);
-        verify(mockNotificationSearchRepository, times(1))
-            .save(Arrays.asList(employee3FiredNotification,employee3FiredNotification).stream().findAny().get());
 
-        notificationRepository.deleteInBatch(Arrays.asList(employee3FiredNotification, employee4FiredNotification));
+        notificationRepository.deleteInBatch(testEmmployee3.getNotifications());
+        notificationRepository.deleteInBatch(testEmmployee4.getNotifications());
+        assertThat(notificationRepository.findAll()).hasSize(initialNotifications.size());
         userRepository.deleteInBatch(Arrays.asList(user1, user2,user3, user4));
         companyRepository.deleteInBatch(Arrays.asList(company,company2));
         employeeRepository.deleteInBatch(Arrays.asList(employee1, employee2, employee3, employee4));
@@ -1337,88 +1337,6 @@ class CompanyTestIT {
             .content(TestUtil.convertObjectToJsonBytes(companyDTO)))
             .andExpect(status().isBadRequest());
 
-    }
-
-    @Test
-    @Transactional
-    void assertThatRequestToJoinBehavesAsIntended() throws Exception {
-
-        securityAwareMockMVC();
-
-        userService.allocateAuthority(AuthoritiesConstants.USER, user1);
-        User user_one = userRepository.saveAndFlush(user1);
-        userService.allocateAuthority(AuthoritiesConstants.USER, user2);
-        User user_two = userRepository.saveAndFlush(user2);
-        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user3);
-        User user_employee = userRepository.saveAndFlush(user3);
-        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user4);
-        User user_manager = userRepository.saveAndFlush(user4);
-
-        Company updatedCompany = companyRepository.saveAndFlush(company);
-        Company updatedCompany2 = companyRepository.saveAndFlush(company2);
-
-
-        List<Company> initialCompanies;
-        List<Employee> initialEmployees;
-        List<User> initialUsers;
-        List<Notification> initialNotifications;
-
-        employee1.setCompany(null);
-        employee2.setCompany(null);
-        employee1.setHired(false);
-        employee2.setHired(false);
-        employee3.setHired(true);
-        employee4.setHired(true);
-        employee3.setCompany(updatedCompany2);
-        employee4.setCompany(updatedCompany2);
-
-        Employee employee_user1 = employeeRepository.saveAndFlush(employee1);
-        Employee employee_user2 = employeeRepository.saveAndFlush(employee2);
-        Employee employee = employeeRepository.saveAndFlush(employee3);
-        Employee manager = employeeRepository.saveAndFlush(employee4);
-
-
-        int databaseEmployeesSizeBeforeUpdate = employeeRepository.findAll().size();
-        int databaseUsersSizeBeforeUpdate = userRepository.findAll().size();
-        int databaseCompaniesSizeBeforeUpdate = companyRepository.findAll().size();
-        int databaseNotificationsSizeBeforeUpdate = notificationRepository.findAll().size();
-
-        assertThat(employee_user1.getId()).isNotNull();
-        assertThat(updatedCompany2.getId()).isNotNull();
-        assertThat(employeeService.findOneById(employee_user1.getId())).isPresent();
-        assertThat(companyService.findCompanyById(updatedCompany2.getId())).isPresent();
-        assertThat(user_one.getEmail()).isEqualTo(employee_user1.getEmail());
-        assertThat(employee_user1.getCompany()).isNull();
-
-        /**
-         * Only the logged in employee can request to join a company.
-         */
-        restCompanyMockMvc.perform(post("/api/employees/{employeeId}/request-to-join/{companyId}", employee_user1.getId(), updatedCompany2.getId())
-            .with(user(user_two.getLogin().toLowerCase()))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.onlycurrentloggedincanjoincomp")));
-
-        /**
-         * You cannot request to join a company if you are already into one.
-         */
-//        restCompanyMockMvc.perform(post("/api/employees/{employeeId}/request-to-join/{companyId}", manager.getId(), updatedCompany2.getId())
-//            .with(user(user_manager.getLogin().toLowerCase()))
-//            .accept(TestUtil.APPLICATION_JSON_UTF8))
-//            .andExpect(status().isBadRequest())
-//            .andExpect(jsonPath("$.message", Matchers.equalTo("error.joinonlyifunemployed")));
-
-
-        restCompanyMockMvc.perform(post("/api/employees/{employeeId}/request-to-join/{companyId}", employee_user1.getId(), updatedCompany2.getId())
-            .with(user(user1.getLogin().toLowerCase()))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isOk());
-
-
-
-        userRepository.deleteInBatch(Arrays.asList(user1, user2,user3, user4));
-        companyRepository.deleteInBatch(Arrays.asList(company,company2));
-        employeeRepository.deleteInBatch(Arrays.asList(employee1, employee2, employee3, employee4));
     }
 
     private void securityAwareMockMVC() {

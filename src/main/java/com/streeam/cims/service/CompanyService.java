@@ -331,10 +331,8 @@ public class CompanyService {
     public void notifyEmployeeThatTheyHaveBeenFired(Company company, String referencedUserEmail) {
 
         company.getEmployees().stream().forEach(employee -> {
-            this.sendNotificationToEmployee(employee,referencedUserEmail,company.getId(), NotificationType.FIRED, "The company " + company.getName() + " has been struck off. You are out of job.");
+            this.sendNotificationToEmployee(employee,employee.getEmail(),company.getId(), NotificationType.FIRED, "The company " + company.getName() + " has been struck off. You are out of job.");
         });
-
-
     }
 
     public void sendEmailToAllEmployees(Company company) {

@@ -39,14 +39,13 @@ a gateway microservice.
                    Sends a email to the company's manager to request to join the company.
                    Also creates a notification and sends it to the manager.
                    A employee cannot apply to join the same company in a period less then 3 days.
-                   Once an employee requests to join a company he cannot apply to join another.
-                   He can apply to join another company only if his request is rejected by the current company.
-                   TODO NEEDS TESTING
+                   The employee can request to join more then one company.
                    TODO FRONTEND
          4. api/employees/unemployed (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
              GET List all unemployed
                   The manager or the admin can see all the unemployed users from all companies.
                   The logged user has to be either the admin or the manager of the company.
+                  TODO NEEDS TESTING
                   TODO FRONTEND
          5. api/employees/invite-to-join/{email} (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
              POST Invite join a company

@@ -2,9 +2,7 @@ package com.streeam.cims;
 
 import com.streeam.cims.config.ApplicationProperties;
 import com.streeam.cims.config.DefaultProfileUtil;
-
 import io.github.jhipster.config.JHipsterConstants;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,8 +50,8 @@ public class CidApp implements InitializingBean {
                 //   Sends a email to the company's manager to request to join the company
                 //   Creates a notification and sends it to the manager
                 //  A employee cannot apply to join the same company in a period less then 3 days.
-                //TODO NEEDS TESTING
-        // 4. POST api/employees/unemployed (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+                //  TODO FRONTEND
+        // 4. GET api/employees/unemployed (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
                 //  The manager or the admin can see all the unemployed users.
                 //  The logged user has to be either the admin or the manager of the company.
         // 5. POST api/employees/invite-to-join/{email} (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
