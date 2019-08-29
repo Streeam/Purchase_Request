@@ -30,6 +30,8 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * REST controller for managing {@link com.streeam.cims.domain.Employee}.
@@ -39,6 +41,7 @@ import java.util.Optional;
 public class EmployeeResource {
 
     private final Logger log = LoggerFactory.getLogger(EmployeeResource.class);
+    private final String emailRegex = "^([_a-zA-Z0-9-]+(\\.[_a-zA-Z0-9-]+)*@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*(\\.[a-zA-Z]{1,6}))?$";
 
     @Autowired
     private MailService mailService;
@@ -201,14 +204,24 @@ public class EmployeeResource {
             throw new BadRequestAlertException("Invalid user email", ENTITY_NAME, "emailnull");
         }
 
+        Pattern pattern = Pattern.compile(emailRegex);
+        Matcher matcher = pattern.matcher(email);
+        if (!matcher.matches()) {
+            throw  new BadRequestAlertException("Invalid email.", ENTITY_NAME, "invalidemail");
+        }
+
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
         User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() ->
             new ResourceNotFoundException("No user logged in."));
         Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() ->
             new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
-        Company currentCompany = employeeService.findEmployeesCompany(currentEmployee).orElseThrow(() ->
-            new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
+
+        if (currentEmployee.getCompany() == null || !employeeService.findEmployeesCompany(currentEmployee).isPresent()){
+           throw  new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee");
+        }
+
+        Company currentCompany = employeeService.findEmployeesCompany(currentEmployee).get();
 
         if (!employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN, AuthoritiesConstants.MANAGER)) {
             throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "accessrestricted");
@@ -216,12 +229,10 @@ public class EmployeeResource {
 
         Optional<User> userToInvite = employeeService.findUserByEmail(email);
 
-        Employee employeeToJoin = employeeService.findOneByEmail(userToInvite.get().getEmail()).orElseThrow(() ->
-            new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+        if (userToInvite.isPresent()) { // Scenario where the user has registered.
 
-        // Scenario where the employee has registered.
-
-        if (userToInvite.isPresent()) {
+            Employee employeeToJoin = employeeService.findOneByEmail(userToInvite.get().getEmail()).orElseThrow(() ->
+                new BadRequestAlertException("No employee linked to this user "+ userToInvite.get().getLogin(), ENTITY_NAME, "employeenotfound"));
 
             if (employeeService.checkUserHasRoles(userToInvite.get(), AuthoritiesConstants.ADMIN, AuthoritiesConstants.MANAGER, AuthoritiesConstants.EMPLOYEE)) {
                 throw new BadRequestAlertException("You can't invite a user who is already in a company.", ENTITY_NAME, "cantinviteuseralreadyincompany");
@@ -231,10 +242,11 @@ public class EmployeeResource {
                 NotificationType.INVITATION, "You have been invited to join " + currentCompany.getName() + ".");
 
             mailService.sendInviteEmail(employeeToJoin.getEmail(), currentUser);
-        } else {// Scenario where the employee has never registered with the app. The user doesn't yet exists so send the notification to the manager instead.
+        } else {// Scenario where the user has never registered. The user doesn't yet exists so send the notification to the manager instead. Based on this notification when the user does registers he will automatically
+            // have his account activated and an invite notification sent to him.
 
             employeeService.sendNotificationToEmployee(currentEmployee, email, currentCompany.getId(),
-                NotificationType.INVITATION, "You have sent a invitation to join your company" + currentCompany.getName() + " to "+email+".");
+                NotificationType.INVITATION, "You have invited "+email + " to join your company.");
 
             mailService.sendInviteEmail(email, currentUser);
         }

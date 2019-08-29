@@ -1091,6 +1091,119 @@ class EmployeeTestIT {
     }
 
 
+    @Test
+    @Transactional
+    void assertThatInviteToJoinBehavesAsIntended() throws Exception {
+
+        securityAwareMockMVC();
+
+        userService.allocateAuthority(AuthoritiesConstants.USER, user1);
+        User user_one = userRepository.saveAndFlush(user1);
+        userService.allocateAuthority(AuthoritiesConstants.USER, user2);
+        User user_two = userRepository.saveAndFlush(user2);
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user3);
+        User user_employee = userRepository.saveAndFlush(user3);
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user4);
+        User user_manager = userRepository.saveAndFlush(user4);
+
+        Company updatedCompany = companyRepository.saveAndFlush(company);
+        Company updatedCompany2 = companyRepository.saveAndFlush(company2);
+
+        employee1.setCompany(null);
+        employee2.setCompany(null);
+        employee1.setHired(false);
+        employee2.setHired(false);
+        employee3.setHired(true);
+        employee4.setHired(true);
+        employee3.setCompany(updatedCompany2);
+        employee4.setCompany(updatedCompany2);
+
+        Employee employee_user1 = employeeRepository.saveAndFlush(employee1);
+        Employee employee_user2 = employeeRepository.saveAndFlush(employee2);
+        Employee employee = employeeRepository.saveAndFlush(employee3);
+        Employee manager = employeeRepository.saveAndFlush(employee4);
+
+        int databaseNotificationsSizeBeforeUpdate = notificationRepository.findAll().size();
+
+        /**
+         * The email cannot be null. And the current user must be linked to a company.
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/invite-to-join/{email}", employee_user1.getEmail())
+            .with(user(user_two.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.nocompanylinkedtoemployee")));
+
+        /**
+         * Invalid email.
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/invite-to-join/{email}", "invalidEmail@com")
+            .with(user(user_two.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.invalidemail")));
+
+        /**
+         * Only the manager and the admin can access this endpoint
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/invite-to-join/{email}", employee_user1.getEmail())
+            .with(user(user_employee.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.accessrestricted")));
+
+        /**
+         * Can't invite a user who is already in a company.
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/invite-to-join/{email}", employee.getEmail())
+            .with(user(user_manager.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.cantinviteuseralreadyincompany")));
+
+
+        /**
+         * Invite an existing user to join updatedCompany2.
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/invite-to-join/{email}", user_one.getEmail())
+            .with(user(user_manager.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isOk());
+
+        assertThat(employeeRepository.findOneByEmail(employee_user1.getEmail())).isPresent();
+        Employee employeeToJoin = employeeRepository.findOneByEmail(employee_user1.getEmail()).get();
+        assertThat(employeeToJoin.getNotifications().size()).isEqualTo(1);
+        assertThat(employeeToJoin.getNotifications().stream().findFirst().get().getFormat()).isEqualTo(NotificationType.INVITATION);
+        assertThat(employeeToJoin.getNotifications().stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
+        assertThat(employeeToJoin.getNotifications().stream().findFirst().get().getReferenced_user()).isEqualTo(manager.getEmail());
+        assertThat(notificationRepository.findAll().size()).isEqualTo(databaseNotificationsSizeBeforeUpdate+1);
+
+
+        /**
+         * Invite an non-existing user to join updatedCompany2.
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/invite-to-join/{email}", "non-existing@UserEmail.com")
+            .with(user(user_manager.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isOk());
+
+        assertThat(employeeRepository.findOneByEmail("non-existing@UserEmail.com")).isNotPresent();
+        assertThat(manager.getNotifications().size()).isEqualTo(1);
+        assertThat(manager.getNotifications().stream().findFirst().get().getFormat()).isEqualTo(NotificationType.INVITATION);
+        assertThat(manager.getNotifications().stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
+        assertThat(manager.getNotifications().stream().findFirst().get().getReferenced_user()).isEqualTo("non-existing@UserEmail.com");
+        assertThat(notificationRepository.findAll().size()).isEqualTo(databaseNotificationsSizeBeforeUpdate+2);
+
+        // Validate the Notification in Elasticsearch
+        verify(mockNotificationSearchRepository, times(2)).save(any(Notification.class));
+
+        notificationRepository.deleteInBatch(manager.getNotifications());
+        notificationRepository.deleteInBatch(employeeToJoin.getNotifications());
+        userRepository.deleteInBatch(Arrays.asList(user_one, user_two, user_employee, user_manager));
+        companyRepository.deleteInBatch(Arrays.asList(updatedCompany, updatedCompany2));
+        employeeRepository.deleteInBatch(Arrays.asList(employee_user1, employee_user2, employee, manager));
+    }
+
     private void securityAwareMockMVC() {
         // Create security-aware mockMvc
         restEmployeeMockMvc = MockMvcBuilders

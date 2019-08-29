@@ -49,12 +49,28 @@ a gateway microservice.
          5. api/employees/invite-to-join/{email} (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
              POST Invite join a company
                   The logged user has to be either the admin or the manager of the company.
+                  Validate email.
                   If the user exists and is not ROLE_MANAGER nor ROLE_EMPLOYEE sends an invite notification and an email to the user.
                   If the user doesn't exists sends a notification to the current user(manager or admin).
                   When the users registers automatically activate the account and send an invite notification
                   If the user was invited by multiple companies send an invite notification for each company.
                   TODO FRONTEND
-         6. api/companies/{companyId}/approve-employee/{employeeId}(Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+         6. api/employees/{employeeId}/approve-request/{companyId}
+             POST Approve a request to join a company
+                  The logged user has to be unemployed.
+                  Validate employeeId and companyId.
+                  An email and a notification is sent to the company's manager informing him that the employee has accepted the invitation.
+                  The user is added to the company and given the emplopyee role.
+                  TODO NEEDS TESTING
+                  TODO FRONTEND
+         7. api/employees/{employeeId}/decline-request/{companyId}
+             POST Decline a request to join a company
+                  The logged user has to be an unemployed user.
+                  Validate employeeId and companyId.
+                  An email and a notification is sent to the company's manager informing him that the employee has declined the invitation.
+                  TODO NEEDS TESTING
+                  TODO FRONTEND
+         8. api/companies/{companyId}/approve-employee/{employeeId}(Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
              POST approve a request from an employee
                   The manager or the admin approves the users request. The manager can only approve employees that apply to join his company.
                   Check to see if the employee is already taken by another company.
@@ -62,14 +78,14 @@ a gateway microservice.
                   Sends a email and a notification to the user to inform him that his request has been approved.
                   TODO NEEDS TESTING
                   TODO FRONTEND
-         7. api/companies/{companyId}/reject-employee/{employeeId}
+         9. api/companies/{companyId}/reject-employee/{employeeId}
              POST reject a request from an employee
                   Only the manager or the admin rejects the users request. The manager can only reject employees that apply to join his company.
                   The user must not have the role of manager nor employee and he must not be part of a company.
                   Sends an email and a notification to the user to inform him that his request has been rejected
                   TODO NEEDS TESTING
                   TODO FRONTEND
-         8. api/companies/{companyId}/fire/{employeeId}  (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+         10. api/companies/{companyId}/fire/{employeeId}  (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
              POST Fire a employee from a specific company
                   Only the manager or the admin can fire an employee.
                   A manager cannot fire himself, but he can quit. If he quits, the company is dissolved (see ../companies/delete/{companyId})
@@ -77,7 +93,7 @@ a gateway microservice.
                   Send a notification and a email to the user informing him that he got fired.
                   TODO NEEDS TESTING
                   TODO FRONTEND
-         9. api/companies/{companyId}/leave-company (Pre-Authorize ROLE_EMPLOYEE)
+         11. api/companies/{companyId}/leave-company (Pre-Authorize ROLE_EMPLOYEE)
              POST Employee resigns from his company
                   Only an user with the employee role can access this endpoint.
                   The employee resigns from the company
@@ -86,13 +102,13 @@ a gateway microservice.
                   Send email to manager to inform him that he left.
                   TODO NEEDS TESTING
                   TODO FRONTEND
-         10. api/users (Pre-Authorize ROLE_ADMIN and ROLE_MANAGER only for modifying the user's role )
+         12. api/users (Pre-Authorize ROLE_ADMIN and ROLE_MANAGER only for modifying the user's role )
              TODO POST When admin creates a user also creates an employee
-             TODO DELETE when admin deletes an employee it also deletes the linked user and updates the company if he is in one
+             TODO DELETE when admin deletes an user it also deletes the linked employee and updates the company if he is in one. Also deletes all the employee's notifications
              TODO GET Employees and Managers can see their roles in the company
              PUT If you are a manager you can only modify the roles of users in your company (the email cannot be modified)
                   TODO When user is updated the employee is updated as well.
-         11. api/employees
+         13. api/employees
               POST  No one can create an employee. An employee is created only when the user is activated.
               GET ADMIN can see all employees, the rest can only see their own account.
               DELETE  (Pre-Authorize ROLE_ADMIN) when admin deletes an employee it also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee
