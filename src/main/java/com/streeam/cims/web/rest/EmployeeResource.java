@@ -63,14 +63,7 @@ public class EmployeeResource {
      */
     @PostMapping("/employees")
     public void createEmployee(@Valid @RequestBody EmployeeDTO employeeDTO) throws URISyntaxException {
-//        log.debug("REST request to save Employee : {}", employeeDTO);
-//        if (employeeDTO.getId() != null) {
-//            throw new BadRequestAlertException("A new employee cannot already have an ID", ENTITY_NAME, "idexists");
-//        }
-//        EmployeeDTO result = employeeService.save(employeeDTO);
-//        return ResponseEntity.created(new URI("/api/employees/" + result.getId()))
-//            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-//            .body(result);
+        throw new BadRequestAlertException("It is forbidden to create a employee from this endpoint", ENTITY_NAME, "endpointdisabled");
     }
 
     /**

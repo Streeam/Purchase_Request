@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.streeam.cims.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -309,7 +310,7 @@ class EmployeeTestIT {
 
     /**
      * Create an updated entity for this test.
-     *
+     * <p>
      * This is a static method, as tests for other entities might also need it,
      * if they test an entity which requires the current entity.
      */
@@ -324,7 +325,7 @@ class EmployeeTestIT {
             .image(DEFAULT_EMPLOYEE_IMAGE)
             .imageContentType(UPDATED_EMPLOYEE_IMAGE_CONTENT_TYPE);
         // Add required entity
-        User user ;
+        User user;
 
         if (TestUtil.findAll(em, User.class).isEmpty()) {
             user = UserResourceIT.createEntity(em);
@@ -341,7 +342,7 @@ class EmployeeTestIT {
     void init() {
 
         MockitoAnnotations.initMocks(this);
-        doNothing().when(mockMailService).sendEmailFromTemplate(any(User.class),anyString(),anyString());
+        doNothing().when(mockMailService).sendEmailFromTemplate(any(User.class), anyString(), anyString());
 
         final EmployeeResource employeeResource = new EmployeeResource(employeeService);
         this.restEmployeeMockMvc = MockMvcBuilders.standaloneSetup(employeeResource)
@@ -499,20 +500,22 @@ class EmployeeTestIT {
 
     @Test
     @Transactional
-    void assertEmployeesPostEndpointsBehaveAsRequired() throws Exception {
+    void assertEmployeesPostIsNotAccessible() throws Exception {
 
         securityAwareMockMVC();
         userService.allocateAuthority(AuthoritiesConstants.MANAGER, user1);
         userRepository.saveAndFlush(user1);
+        EmployeeDTO employeeDTO = employeeMapper.toDto(employee1);
 
         /**
-         * This endpoint is not accessible since it is forbidden to to create a employee directly.
+         * This endpoint is not accessible since it is forbidden to create a employee directly.
          */
         restEmployeeMockMvc.perform(post("/api/employees")
             .with(user(user1.getLogin().toLowerCase()))
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(new EmployeeDTO())))
-            .andExpect(status().isMethodNotAllowed());
+            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.endpointdisabled")));
 
         userRepository.delete(user1);
     }
@@ -610,9 +613,9 @@ class EmployeeTestIT {
         ;
 
         employeeDTO.setHired(false);
-         /**
-          *  As a manager you cannot modify the details of employees from other companies then your own.
-          */
+        /**
+         *  As a manager you cannot modify the details of employees from other companies then your own.
+         */
         restEmployeeMockMvc.perform(put("/api/employees")
             .with(user(user4.getLogin()))
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -685,7 +688,6 @@ class EmployeeTestIT {
             .andExpect(jsonPath("$.[*].language").value(hasItem(DEFAULT_USER4_LANGKEY)))
             .andExpect(jsonPath("$.[*].imageContentType").value(hasItem(UPDATED_EMPLOYEE2_IMAGE_CONTENT_TYPE)))
             .andExpect(jsonPath("$.[*].image").value(hasItem(Base64Utils.encodeToString(UPDATED_EMPLOYEE2_IMAGE))));
-
 
 
 /**
@@ -778,17 +780,15 @@ class EmployeeTestIT {
         assertThat(allEmployeeNotificationsAfterDelete).hasSize(databaseSizeEmployeesNotifications - 1);
 
 
-
         // Validate the Employee in Elasticsearch
         verify(mockEmployeeSearchRepository, times(1)).deleteById(employee4.getId());
 
-        notificationRepository.deleteInBatch(Arrays.asList(notification1,notification2, notification3,notification4));
-        userRepository.deleteInBatch(Arrays.asList(testUser, user2,user3, user4));
-        companyRepository.deleteInBatch(Arrays.asList(company,company2));
+        notificationRepository.deleteInBatch(Arrays.asList(notification1, notification2, notification3, notification4));
+        userRepository.deleteInBatch(Arrays.asList(testUser, user2, user3, user4));
+        companyRepository.deleteInBatch(Arrays.asList(company, company2));
         employeeRepository.deleteInBatch(Arrays.asList(employee1, employee2, employee3, employee4));
 
     }
-
 
 
     @Test
@@ -887,63 +887,6 @@ class EmployeeTestIT {
         // Get the employee
         restEmployeeMockMvc.perform(get("/api/employees/{id}", Long.MAX_VALUE))
             .andExpect(status().isNotFound());
-    }
-
-    @Test
-    @Transactional
-    public void checkLoginIsRequired() throws Exception {
-        int databaseSizeBeforeTest = employeeRepository.findAll().size();
-        // set the field null
-        employee1.setLogin(null);
-
-        // Create the Employee, which fails.
-        EmployeeDTO employeeDTO = employeeMapper.toDto(employee1);
-
-        restEmployeeMockMvc.perform(post("/api/employees")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
-            .andExpect(status().isBadRequest());
-
-        List<Employee> employeeList = employeeRepository.findAll();
-        assertThat(employeeList).hasSize(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
-    public void checkEmailIsRequired() throws Exception {
-        int databaseSizeBeforeTest = employeeRepository.findAll().size();
-        // set the field null
-        employee1.setEmail(null);
-
-        // Create the Employee, which fails.
-        EmployeeDTO employeeDTO = employeeMapper.toDto(employee1);
-
-        restEmployeeMockMvc.perform(post("/api/employees")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
-            .andExpect(status().isBadRequest());
-
-        List<Employee> employeeList = employeeRepository.findAll();
-        assertThat(employeeList).hasSize(databaseSizeBeforeTest);
-    }
-
-    @Test
-    @Transactional
-    public void checkHiredIsRequired() throws Exception {
-        int databaseSizeBeforeTest = employeeRepository.findAll().size();
-        // set the field null
-        employee1.setHired(null);
-
-        // Create the Employee, which fails.
-        EmployeeDTO employeeDTO = employeeMapper.toDto(employee1);
-
-        restEmployeeMockMvc.perform(post("/api/employees")
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(employeeDTO)))
-            .andExpect(status().isBadRequest());
-
-        List<Employee> employeeList = employeeRepository.findAll();
-        assertThat(employeeList).hasSize(databaseSizeBeforeTest);
     }
 
 
@@ -1060,9 +1003,91 @@ class EmployeeTestIT {
         notificationRepository.deleteInBatch(notificationRepository.findAllByEmployee(employee_user1));
         notificationRepository.deleteInBatch(notificationRepository.findAllByEmployee(employee_user2));
         notificationRepository.deleteInBatch(notificationRepository.findAllByEmployee(manager));
-        userRepository.deleteInBatch(Arrays.asList(user_one, user_two,user_employee, user_manager));
-        companyRepository.deleteInBatch(Arrays.asList(updatedCompany,updatedCompany2));
+        userRepository.deleteInBatch(Arrays.asList(user_one, user_two, user_employee, user_manager));
+        companyRepository.deleteInBatch(Arrays.asList(updatedCompany, updatedCompany2));
         employeeRepository.deleteInBatch(Arrays.asList(employee_user1, employee_user2, employee, manager));
+    }
+
+
+    @Test
+    @Transactional
+    void assertThatGetAllUnemployedEmployees() throws Exception {
+
+        securityAwareMockMVC();
+
+        userService.allocateAuthority(AuthoritiesConstants.USER, user1);
+        User user_unemployed1 = userRepository.saveAndFlush(user1);
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user2);
+        User user_employee = userRepository.saveAndFlush(user2);
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user3);
+        User user_manager = userRepository.saveAndFlush(user3);
+        userService.allocateAuthority(AuthoritiesConstants.USER, user4);
+        User user_unemployed2 = userRepository.saveAndFlush(user4);
+
+        Company updatedCompany = companyRepository.saveAndFlush(company);
+
+        employee1.setCompany(null);
+        employee4.setCompany(null);
+        employee1.setHired(false);
+        employee2.setHired(true);
+        employee3.setHired(true);
+        employee4.setHired(false);
+        employee2.setCompany(updatedCompany);
+        employee3.setCompany(updatedCompany);
+
+        Employee unemployed1 = employeeRepository.saveAndFlush(employee1);
+        Employee employee = employeeRepository.saveAndFlush(employee2);
+        Employee manager = employeeRepository.saveAndFlush(employee3);
+        Employee unemployed2 = employeeRepository.saveAndFlush(employee4);
+
+
+        /**
+         * An user that does not have the role of manager nor admin.
+         * He does not have the authority to access this endpoint.
+         */
+        restEmployeeMockMvc.perform(get("/api/employees/unemployed?sort=id,desc")
+            .with(user(user_unemployed1.getLogin())))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.accessrestricted")));
+
+        /**
+         * An user that does not have the role of manager nor admin.
+         * He does not have the authority to access this endpoint.
+         */
+        restEmployeeMockMvc.perform(get("/api/employees/unemployed?sort=id,desc")
+            .with(user(user_employee.getLogin())))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.accessrestricted")));
+
+        assertThat(employeeRepository.findAll().stream().filter(empl -> !empl.isHired() )).isNotEmpty();
+        List<Employee> allUnemployeedEmployees =  employeeRepository.findAll().stream().filter(empl -> !empl.isHired()).collect(Collectors.toList());
+        Employee randomUnemployedEmployee = allUnemployeedEmployees.stream().findAny().get();
+
+        assertThat(employeeRepository.findAll().stream().filter(empl -> empl.isHired() )).isNotEmpty();
+        List<Employee> allEmployeedEmployees =  employeeRepository.findAll().stream().filter(empl -> empl.isHired()).collect(Collectors.toList());
+        Employee randomEmployedEmployee = allEmployeedEmployees.stream().findAny().get();
+
+        restEmployeeMockMvc.perform(get("/api/employees/unemployed?sort=id,desc")
+            .with(user(user_manager.getLogin())))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(not(randomEmployedEmployee.getId().intValue())))
+            .andExpect(jsonPath("$.[*].login").value(not(randomEmployedEmployee.getLogin())))
+            .andExpect(jsonPath("$.[*].firstName").value(not(randomEmployedEmployee.getFirstName())))
+            .andExpect(jsonPath("$.[*].lastName").value(not(randomEmployedEmployee.getLastName())))
+            .andExpect(jsonPath("$.[*].email").value(not(randomEmployedEmployee.getEmail())))
+            .andExpect(jsonPath("$.[*].hired").value(not(randomEmployedEmployee.isHired())))
+
+            .andExpect(jsonPath("$.[*].id").value(hasItem(randomUnemployedEmployee.getId().intValue())))
+            .andExpect(jsonPath("$.[*].login").value(hasItem(randomUnemployedEmployee.getLogin())))
+            .andExpect(jsonPath("$.[*].firstName").value(hasItem(randomUnemployedEmployee.getFirstName())))
+            .andExpect(jsonPath("$.[*].lastName").value(hasItem(randomUnemployedEmployee.getLastName())))
+            .andExpect(jsonPath("$.[*].email").value(hasItem(randomUnemployedEmployee.getEmail())))
+            .andExpect(jsonPath("$.[*].hired").value(not(true)));
+
+        userRepository.deleteInBatch(Arrays.asList(user_unemployed1, user_unemployed2, user_employee, user_manager));
+        companyRepository.delete(updatedCompany);
+        employeeRepository.deleteInBatch(Arrays.asList(unemployed1, unemployed2, employee, manager));
     }
 
 

@@ -238,6 +238,9 @@ public class EmployeeService {
     }
 
     public Page<EmployeeDTO> findAllUnemplyedEmployees(Pageable pageable) {
-        return employeeRepository.findAllByHiredFalse(pageable);
+
+
+        return employeeRepository.findAllByHiredFalse(pageable)
+            .map(employeeMapper::toDto);
     }
 }

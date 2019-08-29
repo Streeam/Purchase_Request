@@ -42,10 +42,9 @@ a gateway microservice.
                    The employee can request to join more then one company.
                    TODO FRONTEND
          4. api/employees/unemployed (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
-             GET List all unemployed
+             GET List all unemployed employees
                   The manager or the admin can see all the unemployed users from all companies.
                   The logged user has to be either the admin or the manager of the company.
-                  TODO NEEDS TESTING
                   TODO FRONTEND
          5. api/employees/invite-to-join/{email} (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
              POST Invite join a company
