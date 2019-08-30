@@ -1,8 +1,9 @@
 # Company Information Database
 
-This is a monolithic application where a user can choose to either to create his own company or join an existing one. This application can easily be turned into
+This is a monolithic application where a user can choose to either create his own company or join an existing one. This application can easily be turned into
 a gateway microservice.
-#####There are 4 roles that a user can have:
+
+There are 4 roles that a user can have:
 
 1. ROLE_USER - Every user after registration is given the this role. This role can never be replaced. All other roles will be added on top of this role.
 2. ROLE_ADMIN - Only one user can be in this role. This user can create, see, update and delete almost anything.
