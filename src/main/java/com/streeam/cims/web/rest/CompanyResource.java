@@ -270,8 +270,8 @@ public class CompanyResource {
      * @param userEmail the email of the user who wants to join the company.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
-    @PostMapping("/companies/{companyId}/approve-employee/{employeeId}")
-    public ResponseEntity<CompanyDTO> approveEmployee(@PathVariable Long companyId, @PathVariable Long employeeId) {
+    @PostMapping("/companies/{companyId}/hire-employee/{employeeId}")
+    public ResponseEntity<CompanyDTO> hireEmployee(@PathVariable Long companyId, @PathVariable Long employeeId) {
 
         if (employeeId == null) {
             throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
@@ -304,7 +304,7 @@ public class CompanyResource {
         Company companyWhereEmployeeApplied = companyService.findCompanyById(companyId).orElseThrow(() ->
             new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
-// Manager can only reject employees applying to his company
+// Manager can only approve employees applying to his company
         if (companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)) {
             Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(() ->
                 new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
@@ -314,7 +314,7 @@ public class CompanyResource {
             }
 
         }
-// Admin can reject anyone's application
+// Admin can approve anyone's application
         Set<Authority> authorities = approvedUser.getAuthorities();
         authorityRepository.findById(AuthoritiesConstants.EMPLOYEE).ifPresent(authorities::add);
         approvedUser.setAuthorities(authorities);
@@ -323,7 +323,7 @@ public class CompanyResource {
 
 
         mailService.sendRejectionEmail(approvedEmployee.getEmail(), currentUser);
-        companyService.sendNotificationToEmployee(approvedEmployee, currentUser.getEmail(),companyId, NotificationType.ACCEPT_INVITE,
+        companyService.sendNotificationToEmployee(approvedEmployee, currentUser.getEmail(),companyId, NotificationType.ACCEPT_REQUEST,
             "Your application to join " + companyWhereEmployeeApplied.getName() + " has been approved!");
 
 
@@ -371,14 +371,14 @@ public class CompanyResource {
                 throw new BadRequestAlertException("The manager cannot reject a application by a employee who is applying to a different company then his.", ENTITY_NAME, "cannotrejectemployeeifheapplyestoadiffcompany");
             }
             mailService.sendRejectionEmail(rejectedEmployee.getEmail(), currentUser);
-            companyService.sendNotificationToEmployee(rejectedEmployee, currentUser.getEmail(), companyId, NotificationType.REJECT_INVITE,
+            companyService.sendNotificationToEmployee(rejectedEmployee, currentUser.getEmail(), companyId, NotificationType.REJECT_REQUEST,
                 "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
 
         }
 // Admin can reject anyone's application
         else {
             mailService.sendRejectionEmail(rejectedEmployee.getEmail(), currentUser);
-            companyService.sendNotificationToEmployee(rejectedEmployee, currentUser.getEmail(), companyId, NotificationType.REJECT_INVITE,
+            companyService.sendNotificationToEmployee(rejectedEmployee, currentUser.getEmail(), companyId, NotificationType.REJECT_REQUEST,
                 "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
         }
 

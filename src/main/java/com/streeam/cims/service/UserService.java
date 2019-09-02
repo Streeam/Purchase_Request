@@ -131,7 +131,7 @@ public class UserService {
                  .filter(Optional::isPresent)
                  .map(Optional::get)
                  .forEach(company -> {
-                     notificationService.saveWithEmployee(employeeService.getCompanysManager(company).get()
+                     notificationService.saveWithEmployee(employeeService.getCompanyManager(company).get()
                          ,userDTO.getEmail(),company.getId(),NotificationType.INVITATION,"You have been invited to join " + company.getName() + ".");
                  });
 

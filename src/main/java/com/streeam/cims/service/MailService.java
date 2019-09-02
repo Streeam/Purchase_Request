@@ -161,6 +161,17 @@ public class MailService {
     public void sendLeaveEmail(String leaveUserEmail ,User manager) {
 
         log.debug("Sending a resign notification email to '{}'", manager.getEmail());
-        sendEmailFromTemplate(leaveUserEmail ,manager, "mail/leaveCompanyEmail", "email.invite.to.join");
+        sendEmailFromTemplate(leaveUserEmail ,manager, "mail/leaveCompanyEmail", "email.leave.company");
+    }
+
+    public void sendEmployeeDeclineEmail(String declineEmployeeEmail, User currentUser) {
+
+        log.debug("Sending a rejection notification email to '{}'", declineEmployeeEmail);
+        sendEmailFromTemplate(declineEmployeeEmail ,currentUser, "mail/declineCompanyInvitationEmail", "email.decline.to.join");
+    }
+
+    public void sendAcceptInvitationEmail(String managersEmail, User currentUser) {
+        log.debug("Sending a email to company's manager to inform that a new employee has been taken on:'{}'", managersEmail);
+        sendEmailFromTemplate(managersEmail ,currentUser, "mail/acceptCompanyInvitationEmail", "email.accepted.to.join");
     }
 }

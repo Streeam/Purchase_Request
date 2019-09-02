@@ -1,13 +1,16 @@
 package com.streeam.cims.web.rest;
 
+import com.streeam.cims.domain.Authority;
 import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.domain.enumeration.NotificationType;
+import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.MailService;
+import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.web.rest.errors.BadRequestAlertException;
 import io.github.jhipster.web.util.HeaderUtil;
@@ -30,6 +33,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +49,9 @@ public class EmployeeResource {
 
     @Autowired
     private MailService mailService;
+
+    @Autowired
+    private AuthorityRepository authorityRepository;
 
     private static final String ENTITY_NAME = "employee";
 
@@ -186,7 +193,7 @@ public class EmployeeResource {
             throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "accessrestricted");
         }
 
-        Page<EmployeeDTO> page = employeeService.findAllUnemplyedEmployees(pageable);
+        Page<EmployeeDTO> page = employeeService.findAllUnemployedEmployees(pageable);
 
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
@@ -359,7 +366,7 @@ public class EmployeeResource {
             throw new BadRequestAlertException("You have already requested to join this company less then three days ago.", ENTITY_NAME, "3daysbeforeyoucanrequestagain");
         }
 
-        Employee manager = employeeService.getCompanysManager(company).orElseThrow(() ->
+        Employee manager = employeeService.getCompanyManager(company).orElseThrow(() ->
             new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
 
         mailService.sendRequestToJoinEmail(manager.getEmail(), currentUser);
@@ -369,5 +376,116 @@ public class EmployeeResource {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * {@code POST  /employees/:employeeId/decline-request/:companyId} : Employee rejects a company's invitation
+     *
+     * @param employeeId the id of the companyDTO to to which the user wants to  join.
+     * @param companyId the id of the companyDTO to to which the user wants to  join.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
+     */
+    @PostMapping("/employees/{employeeId}/decline-request/{companyId}")
+    public ResponseEntity<Void>  declineToJoinCompany(@PathVariable Long employeeId, @PathVariable Long companyId) {
+        log.debug("REST where a employee rejects a company's invitation : {}", companyId);
+
+        if (employeeId == null) {
+            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
+        }
+        if (companyId == null) {
+            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
+        }
+
+        Company company = employeeService.findCompanyById(companyId).orElseThrow(() ->
+            new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() ->
+            new ResourceNotFoundException("No user logged in."));
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() ->
+            new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
+
+        Employee employeeDecliningInvitation = employeeService.findOneById(employeeId).orElseThrow(() ->
+            new BadRequestAlertException("Employee not found.", ENTITY_NAME, "employeenotfound"));
+
+        if (!currentEmployee.getId().equals(employeeDecliningInvitation.getId())) {
+            throw new BadRequestAlertException("Only the logged in employee can request to join a company.", ENTITY_NAME, "onlycurrentloggedincanjoincomp");
+        }
+
+        if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER) && Objects.nonNull(currentEmployee.getCompany())) {
+            throw new BadRequestAlertException("You cannot request to join a company if you are already into one.", ENTITY_NAME, "joinonlyifunemployed");
+        }
+
+        Employee manager = employeeService.getCompanyManager(company).orElseThrow(() ->
+            new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
+
+        mailService.sendEmployeeDeclineEmail(manager.getEmail(), currentUser);
+
+        employeeService.sendNotificationToEmployee(manager, employeeDecliningInvitation.getEmail(), companyId, NotificationType.REJECT_REQUEST, "A user has declined the invitation to join your company " + company.getName());
+
+        return ResponseEntity.ok().build();
+    }
+
+
+
+    /**
+     * {@code POST  /employees/{employeeId}/approve-request/{companyId} : employee accepts a company's invitation to join.
+     *
+     * @param userEmail the email of the user who wants to join the company.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
+     */
+    @PostMapping("/employees/{employeeId}/approve-request/{companyId}")
+    public ResponseEntity<CompanyDTO> acceptsToJoinCompany(@PathVariable Long employeeId, @PathVariable Long companyId ) {
+
+        if (employeeId == null) {
+            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
+        }
+        if (companyId == null) {
+            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
+        }
+
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+        if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER) && Objects.nonNull(currentEmployee.getCompany())) {
+            throw new BadRequestAlertException("You cannot request to join a company if you are already into one.", ENTITY_NAME, "joinonlyifunemployed");
+        }
+
+        Employee hiredEmployee = employeeService.findOneById(employeeId).orElseThrow(() ->
+            new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+
+        if (currentEmployee.getId().equals(employeeId) && !employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN)) {
+            throw new BadRequestAlertException("Only the current user can accept to join a company. You cannot accept an invitation in "+hiredEmployee.getFirstName()+" "
+                +hiredEmployee.getLastName()+"'s behalf.", ENTITY_NAME, "onlycurremtusercanaccept");
+        }
+
+        log.debug("REST request to accept to join a company by: {}", hiredEmployee.getLogin());
+
+
+        Company companyWhereEmployeeHasJoined = employeeService.findCompanyById(companyId).orElseThrow(() ->
+            new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
+
+
+        Set<Authority> authorities = currentUser.getAuthorities();
+        authorityRepository.findById(AuthoritiesConstants.EMPLOYEE).ifPresent(authorities::add);
+        currentUser.setAuthorities(authorities);
+        hiredEmployee.setUser(currentUser);
+        CompanyDTO companyDTO = employeeService.saveUserEmployeeAndCompany(hiredEmployee, currentUser, companyWhereEmployeeHasJoined);
+
+        Employee manager = employeeService.getCompanyManager(companyWhereEmployeeHasJoined).orElseThrow(() ->
+            new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
+
+        mailService.sendAcceptInvitationEmail(manager.getEmail(), currentUser);
+
+        employeeService.sendNotificationToEmployee(manager, currentUser.getEmail(),companyId, NotificationType.ACCEPT_REQUEST,
+            currentUser.getFirstName() +" "+ currentUser.getLastName() + " has accepted your invitation to join your company!");
+
+        employeeService.sendNotificationToAllFromCompanyExceptManager(companyWhereEmployeeHasJoined.getId(),hiredEmployee.getEmail(), NotificationType.NEW_EMPLOYEE, currentUser.getFirstName() +" "+ currentUser.getLastName() + " has joined our company!");
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))
+            .body(companyDTO);
+    }
 
 }

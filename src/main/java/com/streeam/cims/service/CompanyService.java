@@ -295,19 +295,6 @@ public class CompanyService {
 
     }
 
-    public Optional<Employee> getCurrentEmployee(User user) {
-
-        return  employeeService.findOneByLogin(user.getLogin());
-    }
-
-    public NotificationDTO saveNotification(NotificationDTO result) {
-        return notificationService.save(result);
-    }
-
-    public Optional<Employee> findEmployeeByLogin(String userEmail) {
-        return  employeeService.findOneByLogin(userEmail);
-    }
-
     public Optional<User> findUserByEmail(String userEmail) {
         return userService.findOneByEmail(userEmail);
     }
@@ -322,10 +309,6 @@ public class CompanyService {
 
     public Optional<Company> findUsersCompany(Employee currentEmployee) {
         return companyRepository.findOneByEmployees(Collections.singleton(currentEmployee));
-    }
-
-    public boolean exists(Long id) {
-        return companyRepository.existsById(id);
     }
 
     public void notifyEmployeeThatTheyHaveBeenFired(Company company, String referencedUserEmail) {

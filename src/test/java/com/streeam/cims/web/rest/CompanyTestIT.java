@@ -413,7 +413,7 @@ class CompanyTestIT {
 
         notification2 = new Notification()
             .comment(NOTIFICATION2_COMMENT)
-            .format(NotificationType.ACCEPT_INVITE)
+            .format(NotificationType.ACCEPT_REQUEST)
             .employee(employee2)
             .read(NOTIFICATION2_READ)
             .sentDate(Instant.now());

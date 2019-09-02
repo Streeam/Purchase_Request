@@ -140,10 +140,12 @@ export class NotificationUpdate extends React.Component<INotificationUpdateProps
                     <option value="NEW_EMPLOYEE">{translate('cidApp.NotificationType.NEW_EMPLOYEE')}</option>
                     <option value="FIRED">{translate('cidApp.NotificationType.FIRED')}</option>
                     <option value="ACCEPT_INVITE">{translate('cidApp.NotificationType.ACCEPT_INVITE')}</option>
-                    <option value="REJECT_INVITE">{translate('cidApp.NotificationType.REJECT_INVITE')}</option>
+                    <option value="REJECT_REQUEST">{translate('cidApp.NotificationType.REJECT_REQUEST')}</option>
                     <option value="REQUEST_TO_JOIN">{translate('cidApp.NotificationType.REQUEST_TO_JOIN')}</option>
                     <option value="LEFT_COMPANY">{translate('cidApp.NotificationType.LEFT_COMPANY')}</option>
                     <option value="COMPANY_DELETED">{translate('cidApp.NotificationType.COMPANY_DELETED')}</option>
+                    <option value="ACCEPT_REQUEST">{translate('cidApp.NotificationType.ACCEPT_REQUEST')}</option>
+                    <option value="REJECT_REQUEST">{translate('cidApp.NotificationType.REJECT_REQUEST')}</option>
                     <option value="OTHERS">{translate('cidApp.NotificationType.OTHERS')}</option>
                   </AvInput>
                 </AvGroup>

@@ -144,7 +144,7 @@ public class NotificationService {
         Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
 
         List<Notification> notificationsLessThen3Days = notificationRepository.
-        findAllByEmployeeAndFormatAndCompany(currentEmployee, NotificationType.REJECT_INVITE, companyId);
+        findAllByEmployeeAndFormatAndCompany(currentEmployee, NotificationType.REJECT_REQUEST, companyId);
 
         return notificationsLessThen3Days.stream()
             .filter(notification -> {

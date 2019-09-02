@@ -1,11 +1,15 @@
 package com.streeam.cims.service;
 
+import com.streeam.cims.domain.Authority;
 import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
 import com.streeam.cims.domain.enumeration.NotificationType;
+import com.streeam.cims.repository.AuthorityRepository;
 import com.streeam.cims.repository.EmployeeRepository;
 import com.streeam.cims.repository.search.EmployeeSearchRepository;
+import com.streeam.cims.security.AuthoritiesConstants;
+import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.dto.EmployeeDTO;
 import com.streeam.cims.service.mapper.EmployeeMapper;
 import org.slf4j.Logger;
@@ -39,6 +43,9 @@ public class EmployeeService {
 
     @Autowired
     private  UserService userService;
+
+    @Autowired
+    private AuthorityRepository authorityRepository;
 
     private final NotificationService notificationService;
 
@@ -224,7 +231,7 @@ public class EmployeeService {
         return companyService.findCompanyById(companyId);
     }
 
-    public Optional<Employee> getCompanysManager(Company company) {
+    public Optional<Employee> getCompanyManager(Company company) {
         return companyService.getCompanysManager(company);
     }
 
@@ -237,10 +244,52 @@ public class EmployeeService {
         return notificationService.userRequestedToJoinAndWasRejectedLessThen3DaysAgo(currentEmployee, companyId);
     }
 
-    public Page<EmployeeDTO> findAllUnemplyedEmployees(Pageable pageable) {
+    public Page<EmployeeDTO> findAllUnemployedEmployees(Pageable pageable) {
 
 
         return employeeRepository.findAllByHiredFalse(pageable)
             .map(employeeMapper::toDto);
+    }
+
+    public CompanyDTO saveUserEmployeeAndCompany(Employee approvedEmployee, User currentUser, Company companyWhereEmployeeHasJoined) {
+        return companyService.saveUserEmployeeAndComapany(approvedEmployee, currentUser, companyWhereEmployeeHasJoined);
+    }
+
+    public void sendNotificationToAllFromCompanyExceptManager(Long companyId,String referencedEmployeeEmail , NotificationType notificationType, String subject) {
+        // get all company's employees
+
+        Optional.of(companyService
+            .findCompanyById(companyId))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(company -> {
+                company.getEmployees().stream()
+                    .map(Employee::getEmail)
+                    .map(employeeRepository::findOneByEmail)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .forEach(employee -> {
+                        Optional.of(userService
+                            .findOneByEmail(employee.getEmail()))
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .map(user1 -> user1.getAuthorities().stream()
+                                .map(Authority::getName)
+                                .map(authorityRepository::findOneByName)
+                                .filter(Optional::isPresent)
+                                .map(Optional::get)
+                                .filter(authority ->
+                                    !AuthoritiesConstants.MANAGER.equals( authority.getName())));
+                        notificationService.saveWithEmployee(employee, referencedEmployeeEmail, companyId, notificationType, subject);
+                    });
+                return company;
+            });
+
+        // exclude the manager
+
+        // get all their emails
+
+        //saveWithEmployee(Employee authorEmployee,String referencedEmployeeEmail,Long companyId, NotificationType notificationType, String comment)
+
     }
 }

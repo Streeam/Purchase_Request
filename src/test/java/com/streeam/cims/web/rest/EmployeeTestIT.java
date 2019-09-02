@@ -447,7 +447,7 @@ class EmployeeTestIT {
 
         notification2 = new Notification()
             .comment(NOTIFICATION2_COMMENT)
-            .format(NotificationType.ACCEPT_INVITE)
+            .format(NotificationType.ACCEPT_REQUEST)
             .employee(employee2)
             .read(NOTIFICATION2_READ)
             .sentDate(Instant.now());
@@ -924,13 +924,13 @@ class EmployeeTestIT {
 
         notification1.setEmployee(employee_user2);
         notification1.sentDate(Instant.now().minus(2, ChronoUnit.DAYS));
-        notification1.setFormat(NotificationType.REJECT_INVITE);
+        notification1.setFormat(NotificationType.REJECT_REQUEST);
         notification1.setCompany(updatedCompany2.getId());
         notificationRepository.saveAndFlush(notification1);
 
         notification2.setEmployee(employee_user1);
         notification2.sentDate(Instant.now().minus(4, ChronoUnit.DAYS));
-        notification2.setFormat(NotificationType.REJECT_INVITE);
+        notification2.setFormat(NotificationType.REJECT_REQUEST);
         notification2.setCompany(updatedCompany2.getId());
         notificationRepository.saveAndFlush(notification2);
 

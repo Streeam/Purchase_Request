@@ -39,7 +39,7 @@ There are 4 roles that a user can have:
                    The users with the roles ROLE_MANAGER and ROLE_EMPLOYEE are restricted from using this endpoint.
                    Sends a email to the company's manager to request to join the company.
                    Also creates a notification and sends it to the manager.
-                   A employee cannot apply to join the same company in a period less then 3 days.
+                   If the the employee's request has been rejected he cannot apply to join the same company in a period less then 3 days.
                    The employee can request to join more then one company.
                    TODO FRONTEND
          4. api/employees/unemployed (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
@@ -54,6 +54,7 @@ There are 4 roles that a user can have:
                   If the user exists and is not ROLE_MANAGER nor ROLE_EMPLOYEE sends an invite notification and an email to the user.
                   If the user doesn't exists sends a notification to the current user(manager or admin).
                   When the users registers automatically activate the account and send an invite notification
+                  TODO An employee who has rejected an invitation cannot be invited again in less then three day from the last rejection
                   If the user was invited by multiple companies send an invite notification for each company.
                   TODO FRONTEND
          6. api/employees/{employeeId}/approve-request/{companyId}
@@ -61,7 +62,7 @@ There are 4 roles that a user can have:
                   The logged user has to be unemployed.
                   Validate employeeId and companyId.
                   An email and a notification is sent to the company's manager informing him that the employee has accepted the invitation.
-                  The user is added to the company and given the emplopyee role.
+                  TODO The user is added to the company and given the emplopyee role.
                   TODO NEEDS TESTING
                   TODO FRONTEND
          7. api/employees/{employeeId}/decline-request/{companyId}
@@ -71,12 +72,13 @@ There are 4 roles that a user can have:
                   An email and a notification is sent to the company's manager informing him that the employee has declined the invitation.
                   TODO NEEDS TESTING
                   TODO FRONTEND
-         8. api/companies/{companyId}/approve-employee/{employeeId}(Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
+         8. api/companies/{companyId}/hire-employee/{employeeId}(Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
              POST approve a request from an employee
                   The manager or the admin approves the users request. The manager can only approve employees that apply to join his company.
                   Check to see if the employee is already taken by another company.
                   The user is given the ROLE_EMPLOYEE and it is added to the company.
                   Sends a email and a notification to the user to inform him that his request has been approved.
+                  Send notification to all employees from that compnay (exept the manager) to inform them the new employee is going to be joining in.
                   TODO NEEDS TESTING
                   TODO FRONTEND
          9. api/companies/{companyId}/reject-employee/{employeeId}
@@ -115,6 +117,7 @@ There are 4 roles that a user can have:
               DELETE  (Pre-Authorize ROLE_ADMIN) when admin deletes an employee it also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee
               PUT  ADMIN can update all employees, Manager can update all employees from his company,  the rest can only update their own account.
                    TODO When employee is updated the user is updated as well (no one can updated the employee's or the user's email). The admin and managers can also update the employee roles.
+
 
 ## User Interface Wireframe
 
