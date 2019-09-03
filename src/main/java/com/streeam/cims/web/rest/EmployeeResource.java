@@ -240,7 +240,10 @@ public class EmployeeResource {
                 new BadRequestAlertException("No employee linked to this user "+ userToInvite.get().getLogin(), ENTITY_NAME, "employeenotfound"));
 
             //verify that the employee hasn't rejected an invitation to join this company in the last three days; NotificationType.REJECT_REQUEST
-            boolean test = employeeService.hasEmployeeRejectedInvitationInLastThreeDays(employeeToJoin,currentCompany.getId());
+
+            if(employeeService.hasEmployeeRejectedInvitationInLastThreeDays(employeeToJoin,currentCompany.getId())){
+                throw new BadRequestAlertException("You cannot invite a employee who has declined a previous invitation made less then three days ago.", ENTITY_NAME, "3daysbeforeyoucaninviteagain");
+            }
 
             if (employeeToJoin.getCompany() != null) {
                 throw new BadRequestAlertException("You can't invite a user who is already in a company.", ENTITY_NAME, "cantinviteuseralreadyincompany");
@@ -456,20 +459,23 @@ public class EmployeeResource {
         Employee hiredEmployee = employeeService.findOneById(employeeId).orElseThrow(() ->
             new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
-        if (currentEmployee.getId().equals(employeeId) && !employeeService.checkUserHasRoles(currentUser, ADMIN)) {
+        if (!currentEmployee.getId().equals(employeeId) && !employeeService.checkUserHasRoles(currentUser, ADMIN)) {
             throw new BadRequestAlertException("Only the current user can accept to join a company. You cannot accept an invitation in "+hiredEmployee.getFirstName()+" "
-                +hiredEmployee.getLastName()+"'s behalf.", ENTITY_NAME, "onlycurremtusercanaccept");
+                +hiredEmployee.getLastName()+"'s behalf.", ENTITY_NAME, "onlycurrentusercanaccept");
         }
+
 
         log.debug("REST request to accept to join a company by: {}", hiredEmployee.getLogin());
 
         Company companyWhereEmployeeHasJoined = employeeService.findCompanyById(companyId).orElseThrow(() ->
             new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
+     // boolean test = employeeService.companyInvitedUserToJoinLessThen14DaysAgo();
+
         Set<Authority> authorities = currentUser.getAuthorities();
         authorityRepository.findById(EMPLOYEE).ifPresent(authorities::add);
         currentUser.setAuthorities(authorities);
-        hiredEmployee.setUser(currentUser);
+
         CompanyDTO companyDTO = employeeService.saveUserEmployeeAndCompany(hiredEmployee, currentUser, companyWhereEmployeeHasJoined);
 
         Employee manager = employeeService.getCompanyManager(companyWhereEmployeeHasJoined).orElseThrow(() ->

@@ -62,6 +62,7 @@ There are 4 roles that a user can have:
                   The logged user has to be unemployed.
                   Validate employeeId and companyId.
                   Only the current user can accept to join a company. No one else can accept the invitation on his behalf.
+                  TODO Verify if the company has sent an invitation to this user in the last 14 days. If it has the user can join the company
                   The user is added to the company and given the emplopyee role.
                   An email and a notification is sent to the company's manager informing him that the employee has accepted the invitation.
                   A notification is sent to all the company's employees informing them that a new employee has joined the company.
