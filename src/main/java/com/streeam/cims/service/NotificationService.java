@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.streeam.cims.domain.enumeration.NotificationType.*;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
 /**
@@ -138,25 +139,37 @@ public class NotificationService {
                 this.delete(notification.getId());
             });
     }
-
-    public boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee, Long companyId) {
+    @Transactional(readOnly = true)
+    boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee, Long companyId) {
         Instant now = Instant.now();
         Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
 
-        List<Notification> notificationsLessThen3Days = notificationRepository.
-        findAllByEmployeeAndFormatAndCompany(currentEmployee, NotificationType.REJECT_REQUEST, companyId);
+        List<Notification> notifications= notificationRepository.
+        findAllByEmployeeAndFormatAndCompany(currentEmployee, REJECT_REQUEST, companyId);
 
-        return notificationsLessThen3Days.stream()
-            .filter(notification -> {
-                return notification.getSentDate().isAfter(threeDaysAgo);})
-            .findAny()
-            .isPresent();
+        return notifications.stream()
+            .anyMatch(notification -> {
+                return notification.getSentDate().isAfter(threeDaysAgo);});
+    }
+
+    @Transactional(readOnly = true)
+    public boolean companyInvitedEmployeeAndWasRejectedLessThen3DaysAgo(Employee currentEmployee, Long companyId) {
+        Instant now = Instant.now();
+        Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
+
+        List<Notification> notifications= notificationRepository.
+            findAllByEmployeeAndFormatAndCompany(currentEmployee, REJECT_INVITE, companyId);
+
+        return notifications.stream()
+            .anyMatch(notification -> {
+                return notification.getSentDate().isAfter(threeDaysAgo);});
     }
 
 
-    public List<Long> hasUserBeenInvited(String email,  NotificationType notificationType) {
+    @Transactional(readOnly = true)
+    List<Long> hasUserBeenInvited(String email) {
 
-        List<Notification> userInviteNotification = notificationRepository.findAllByFormat( notificationType);
+        List<Notification> userInviteNotification = notificationRepository.findAllByFormat(INVITATION);
 
         return userInviteNotification.stream()
             .filter(notification -> notification.getReferenced_user().equalsIgnoreCase(email))

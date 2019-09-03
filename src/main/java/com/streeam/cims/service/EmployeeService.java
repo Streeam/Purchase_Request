@@ -279,17 +279,15 @@ public class EmployeeService {
                                 .filter(Optional::isPresent)
                                 .map(Optional::get)
                                 .filter(authority ->
-                                    !AuthoritiesConstants.MANAGER.equals( authority.getName())));
+                                    !AuthoritiesConstants.MANAGER.equals( authority.getName()))); // send notifications to everyone in the company except the manager
                         notificationService.saveWithEmployee(employee, referencedEmployeeEmail, companyId, notificationType, subject);
                     });
                 return company;
             });
+    }
 
-        // exclude the manager
+    public boolean hasEmployeeRejectedInvitationInLastThreeDays(Employee employeeToJoin, Long companyId) {
 
-        // get all their emails
-
-        //saveWithEmployee(Employee authorEmployee,String referencedEmployeeEmail,Long companyId, NotificationType notificationType, String comment)
-
+        return notificationService.companyInvitedEmployeeAndWasRejectedLessThen3DaysAgo(employeeToJoin, companyId);
     }
 }

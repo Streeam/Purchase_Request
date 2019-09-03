@@ -114,7 +114,7 @@ public class UserService {
         newUser.setLangKey(userDTO.getLangKey());
           Set<Authority> authorities = new HashSet<>();
 
-         List<Long> companyId =  notificationService.hasUserBeenInvited(userDTO.getEmail(), NotificationType.INVITATION);
+         List<Long> companyId =  notificationService.hasUserBeenInvited(userDTO.getEmail());
          if (!companyId.isEmpty()){
              // new user is active
              newUser.setActivated(true);

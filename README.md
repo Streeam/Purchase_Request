@@ -54,15 +54,17 @@ There are 4 roles that a user can have:
                   If the user exists and is not ROLE_MANAGER nor ROLE_EMPLOYEE sends an invite notification and an email to the user.
                   If the user doesn't exists sends a notification to the current user(manager or admin).
                   When the users registers automatically activate the account and send an invite notification
-                  TODO An employee who has rejected an invitation cannot be invited again in less then three day from the last rejection
+                  An employee who has rejected an invitation cannot be invited again in less then three day from the last rejection
                   If the user was invited by multiple companies send an invite notification for each company.
                   TODO FRONTEND
          6. api/employees/{employeeId}/approve-request/{companyId}
              POST Approve a request to join a company
                   The logged user has to be unemployed.
                   Validate employeeId and companyId.
+                  Only the current user can accept to join a company. No one else can accept the invitation on his behalf.
+                  The user is added to the company and given the emplopyee role.
                   An email and a notification is sent to the company's manager informing him that the employee has accepted the invitation.
-                  TODO The user is added to the company and given the emplopyee role.
+                  A notification is sent to all the company's employees informing them that a new employee has joined the company.
                   TODO NEEDS TESTING
                   TODO FRONTEND
          7. api/employees/{employeeId}/decline-request/{companyId}
@@ -117,7 +119,6 @@ There are 4 roles that a user can have:
               DELETE  (Pre-Authorize ROLE_ADMIN) when admin deletes an employee it also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee
               PUT  ADMIN can update all employees, Manager can update all employees from his company,  the rest can only update their own account.
                    TODO When employee is updated the user is updated as well (no one can updated the employee's or the user's email). The admin and managers can also update the employee roles.
-
 
 ## User Interface Wireframe
 
