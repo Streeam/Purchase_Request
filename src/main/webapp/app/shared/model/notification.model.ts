@@ -3,6 +3,7 @@ import { Moment } from 'moment';
 export const enum NotificationType {
   INVITATION = 'INVITATION',
   NEW_EMPLOYEE = 'NEW_EMPLOYEE',
+  WELCOME = 'WELCOME',
   FIRED = 'FIRED',
   ACCEPT_INVITE = 'ACCEPT_INVITE',
   REJECT_INVITE = 'REJECT_INVITE',

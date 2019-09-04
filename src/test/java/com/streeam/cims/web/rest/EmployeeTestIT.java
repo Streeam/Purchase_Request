@@ -54,7 +54,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.streeam.cims.domain.enumeration.NotificationType.INVITATION;
+import static com.streeam.cims.domain.enumeration.NotificationType.*;
 import static com.streeam.cims.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
@@ -1269,17 +1269,17 @@ class EmployeeTestIT {
         Employee employee = employeeRepository.saveAndFlush(employee3);
         Employee manager = employeeRepository.saveAndFlush(employee4);
 
-//        notification1.setEmployee(employee_user2);
-//        notification1.sentDate(Instant.now().minus(2, ChronoUnit.DAYS));
-//        notification1.setFormat(NotificationType.REJECT_INVITE);
-//        notification1.setCompany(updatedCompany2.getId());
-//        notificationRepository.saveAndFlush(notification1);
-//
-//        notification2.setEmployee(employee_user1);
-//        notification2.sentDate(Instant.now().minus(4, ChronoUnit.DAYS));
-//        notification2.setFormat(NotificationType.REJECT_INVITE);
-//        notification2.setCompany(updatedCompany2.getId());
-//        notificationRepository.saveAndFlush(notification2);
+        notification1.setEmployee(employee_user2);
+        notification1.sentDate(Instant.now().minus(15, ChronoUnit.DAYS));
+        notification1.setFormat(INVITATION);
+        notification1.setCompany(updatedCompany.getId());
+        notificationRepository.saveAndFlush(notification1);
+
+        notification2.setEmployee(employee_user1);
+        notification2.sentDate(Instant.now().minus(13, ChronoUnit.DAYS));
+        notification2.setFormat(INVITATION);
+        notification2.setCompany(updatedCompany2.getId());
+        notificationRepository.saveAndFlush(notification2);
 
 
         /**
@@ -1300,37 +1300,45 @@ class EmployeeTestIT {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.onlycurrentusercanaccept")));
 
+
+
+        /**
+         * An invitation was sent to employee_user2 from updatedCompany but was sent after 14 days.
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user2.getId(),updatedCompany.getId())
+            .with(user(user_two.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hasinvitationlessthen14days")));
+
+
+        notification1.sentDate(Instant.now().minus(13, ChronoUnit.DAYS));
+        notificationRepository.saveAndFlush(notification1);
         /**
          * Only the manager and the admin can access this endpoint
          */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(),updatedCompany.getId())
-            .with(user(user_one.getLogin().toLowerCase()))
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user2.getId(),updatedCompany.getId())
+            .with(user(user_two.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.nomanager")));
 
-//        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(),updatedCompany2.getId())
-//            .with(user(user_one.getLogin().toLowerCase()))
-//            .accept(TestUtil.APPLICATION_JSON_UTF8))
-//            .andExpect(status().isOk());
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(),updatedCompany2.getId())
+            .with(user(user_one.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isOk());
 
-//        assertThat(employeeRepository.findOneByEmail(employee_user1.getEmail())).isPresent();
-//        Employee employeeToJoin = employeeRepository.findOneByEmail(employee_user1.getEmail()).get();
-//        assertThat(employeeToJoin.getNotifications().size()).isEqualTo(1);
-//        assertThat(employeeToJoin.getNotifications().stream().findFirst().get().getFormat()).isEqualTo(INVITATION);
+        List<Notification> allNotificationsFromCompany2 = notificationRepository.findAllByCompany(updatedCompany2.getId());
+        assertThat(allNotificationsFromCompany2.size()).isEqualTo(3);
+
+         assertThat(notificationRepository.findAllByEmployee(employee_user1).size()).isEqualTo(2);
+        assertThat(notificationRepository.findAllByEmployee(employee_user1).stream().map(notification -> notification.getFormat())).containsOnly(WELCOME, INVITATION);
+        assertThat(notificationRepository.findAllByEmployee(manager).stream().map(notification -> notification.getFormat())).containsOnly(ACCEPT_REQUEST);
 //        assertThat(employeeToJoin.getNotifications().stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
 //        assertThat(employeeToJoin.getNotifications().stream().findFirst().get().getReferenced_user()).isEqualTo(manager.getEmail());
-//        assertThat(notificationRepository.findAll().size()).isEqualTo(databaseNotificationsSizeBeforeUpdate+1);
-//
-//
-//        /**
-//         * Invite an non-existing user to join updatedCompany2.
-//         */
-//        restEmployeeMockMvc.perform(post("/api/employees/invite-to-join/{email}", "non-existing@UserEmail.com")
-//            .with(user(user_manager.getLogin().toLowerCase()))
-//            .accept(TestUtil.APPLICATION_JSON_UTF8))
-//            .andExpect(status().isOk());
-//
+//        assertThat(notificationRepository.findAll().size()).isEqualTo(initialNotificationsDatabaseSize+6);
+
+
 //        assertThat(employeeRepository.findOneByEmail("non-existing@UserEmail.com")).isNotPresent();
 //        assertThat(manager.getNotifications().size()).isEqualTo(1);
 //        assertThat(manager.getNotifications().stream().findFirst().get().getFormat()).isEqualTo(INVITATION);
@@ -1338,12 +1346,12 @@ class EmployeeTestIT {
 //        assertThat(manager.getNotifications().stream().findFirst().get().getReferenced_user()).isEqualTo("non-existing@UserEmail.com");
 //        assertThat(notificationRepository.findAll().size()).isEqualTo(databaseNotificationsSizeBeforeUpdate+2);
 //
-//        // Validate the Notification in Elasticsearch
-//        verify(mockNotificationSearchRepository, times(2)).save(any(Notification.class));
+        // Validate the Notification in Elasticsearch
+        verify(mockNotificationSearchRepository, times(3)).save(any(Notification.class));
 
-        notificationRepository.deleteInBatch(manager.getNotifications());
-        notificationRepository.deleteInBatch(employee_user1.getNotifications());
-        notificationRepository.deleteInBatch(employee_user2.getNotifications());
+        notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany.getId()));
+        notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany2.getId()));
+
         companyRepository.deleteInBatch(Arrays.asList(updatedCompany, updatedCompany2));
         employeeRepository.deleteInBatch(Arrays.asList(employee_user1, employee_user2, employee, manager));
         userRepository.deleteInBatch(Arrays.asList(user_one, user_two, user_employee, user_manager));

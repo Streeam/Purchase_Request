@@ -3,6 +3,7 @@
     "NotificationType": {
       "null": "",
       "INVITATION": "INVITATION",
+      "WELCOME": "WELCOME",
       "NEW_EMPLOYEE": "NEW_EMPLOYEE",
       "FIRED": "FIRED",
       "ACCEPT_INVITE": "ACCEPT_INVITE",

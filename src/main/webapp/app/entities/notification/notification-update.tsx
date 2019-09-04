@@ -137,6 +137,7 @@ export class NotificationUpdate extends React.Component<INotificationUpdateProps
                     value={(!isNew && notificationEntity.format) || 'INVITATION'}
                   >
                     <option value="INVITATION">{translate('cidApp.NotificationType.INVITATION')}</option>
+                    <option value="WELCOME">{translate('cidApp.NotificationType.WELCOME')}</option>
                     <option value="NEW_EMPLOYEE">{translate('cidApp.NotificationType.NEW_EMPLOYEE')}</option>
                     <option value="FIRED">{translate('cidApp.NotificationType.FIRED')}</option>
                     <option value="ACCEPT_INVITE">{translate('cidApp.NotificationType.ACCEPT_INVITE')}</option>

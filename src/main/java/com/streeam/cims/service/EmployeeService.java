@@ -1,6 +1,5 @@
 package com.streeam.cims.service;
 
-import com.streeam.cims.domain.Authority;
 import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
@@ -239,13 +238,12 @@ public class EmployeeService {
         notificationService.saveWithEmployee(authorEmployee,referencedUserEmail, companyId,requestToJoin, subject);
     }
 
-    public boolean userRequestedToJoinCompanyAndWasRejectedLessThen3DaysAgo(Employee currentEmployee, Long companyId) {
+    public boolean userRequestedToJoinCompanyAndWasRejectedLessThen3DaysAgo(Employee employeeToBeHired,NotificationType theEvent,Long companyId, int nDaysAgo) {
 
-        return notificationService.userRequestedToJoinAndWasRejectedLessThen3DaysAgo(currentEmployee, companyId);
+        return notificationService.hasEventOccurredInThePast(employeeToBeHired, theEvent, companyId, nDaysAgo);
     }
 
     public Page<EmployeeDTO> findAllUnemployedEmployees(Pageable pageable) {
-
 
         return employeeRepository.findAllByHiredFalse(pageable)
             .map(employeeMapper::toDto);
@@ -255,7 +253,7 @@ public class EmployeeService {
         return companyService.saveUserEmployeeAndComapany(approvedEmployee, currentUser, companyWhereEmployeeHasJoined);
     }
 
-    public void sendNotificationToAllFromCompanyExceptManager(Long companyId,String referencedEmployeeEmail , NotificationType notificationType, String subject) {
+    public void sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(Long companyId,Employee referencedEmployee , NotificationType notificationType, String subject) {
         // get all company's employees
 
         Optional.of(companyService
@@ -268,26 +266,23 @@ public class EmployeeService {
                     .map(employeeRepository::findOneByEmail)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
-                    .forEach(employee -> {
-                        Optional.of(userService
-                            .findOneByEmail(employee.getEmail()))
-                            .filter(Optional::isPresent)
-                            .map(Optional::get)
-                            .map(user1 -> user1.getAuthorities().stream()
-                                .map(Authority::getName)
-                                .map(authorityRepository::findOneByName)
-                                .filter(Optional::isPresent)
-                                .map(Optional::get)
-                                .filter(authority ->
-                                    !AuthoritiesConstants.MANAGER.equals( authority.getName()))); // send notifications to everyone in the company except the manager
-                        notificationService.saveWithEmployee(employee, referencedEmployeeEmail, companyId, notificationType, subject);
+                    .filter(employee1 ->!employee1.getUser().getAuthorities().contains(AuthoritiesConstants.MANAGER))
+                    .filter(employee2 ->!employee2.getId().equals(referencedEmployee.getId()) )
+                    .forEach(employee3 -> {
+                        notificationService.saveWithEmployee(employee3, referencedEmployee.getEmail(), companyId, notificationType, subject);
                     });
                 return company;
             });
     }
 
-    public boolean hasEmployeeRejectedInvitationInLastThreeDays(Employee employeeToJoin, Long companyId) {
+    public boolean hasEmployeeRejectedInvitationInLastThreeDays( Employee employeeToBeHired,NotificationType theEvent,Long companyId, int nDaysAgo) {
 
-        return notificationService.companyInvitedEmployeeAndWasRejectedLessThen3DaysAgo(employeeToJoin, companyId);
+        return notificationService.hasEventOccurredInThePast(employeeToBeHired, theEvent, companyId, nDaysAgo);
+    }
+
+    public boolean companyInvitedUserToJoinLessThen14DaysAgo( Employee employeeToBeHired,NotificationType theEvent,Long companyId, int nDaysAgo) {
+
+        return notificationService.hasEventOccurredInThePast(employeeToBeHired, theEvent, companyId, nDaysAgo);
+
     }
 }

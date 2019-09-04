@@ -139,31 +139,6 @@ public class NotificationService {
                 this.delete(notification.getId());
             });
     }
-    @Transactional(readOnly = true)
-    boolean userRequestedToJoinAndWasRejectedLessThen3DaysAgo(Employee currentEmployee, Long companyId) {
-        Instant now = Instant.now();
-        Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
-
-        List<Notification> notifications= notificationRepository.
-        findAllByEmployeeAndFormatAndCompany(currentEmployee, REJECT_REQUEST, companyId);
-
-        return notifications.stream()
-            .anyMatch(notification -> {
-                return notification.getSentDate().isAfter(threeDaysAgo);});
-    }
-
-    @Transactional(readOnly = true)
-    public boolean companyInvitedEmployeeAndWasRejectedLessThen3DaysAgo(Employee currentEmployee, Long companyId) {
-        Instant now = Instant.now();
-        Instant threeDaysAgo = now.minus(3, ChronoUnit.DAYS);
-
-        List<Notification> notifications= notificationRepository.
-            findAllByEmployeeAndFormatAndCompany(currentEmployee, REJECT_INVITE, companyId);
-
-        return notifications.stream()
-            .anyMatch(notification -> {
-                return notification.getSentDate().isAfter(threeDaysAgo);});
-    }
 
 
     @Transactional(readOnly = true)
@@ -177,4 +152,18 @@ public class NotificationService {
             .map(NotificationDTO::getCompany)
             .collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    boolean hasEventOccurredInThePast(Employee toThisEmployee ,NotificationType theEvent, Long inThisCompany, int numberOfDaysAgo) {
+        Instant now = Instant.now();
+        Instant nDaysAgo = now.minus(numberOfDaysAgo, ChronoUnit.DAYS);
+
+        List<Notification> notifications= notificationRepository.
+            findAllByEmployeeAndFormatAndCompany(toThisEmployee, theEvent, inThisCompany);
+        return notifications.stream()
+            .anyMatch(notification -> {
+                return notification.getSentDate().isAfter(nDaysAgo);});
+    }
+
+
 }
