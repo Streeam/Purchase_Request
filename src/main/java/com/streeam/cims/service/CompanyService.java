@@ -335,4 +335,8 @@ public class CompanyService {
     public void notifyEmployeeThatUserLeft(Company companyEmployeeLeavingFrom) {
        // companyEmployeeLeavingFrom.stre
     }
+
+    public boolean didUserRequestedTojoinLessThen14Days(Employee approvedEmployee, NotificationType requestToJoin, Long companyId, int i) {
+        return  notificationService.hasEventOccurredInThePast(approvedEmployee, requestToJoin, companyId , i);
+    }
 }

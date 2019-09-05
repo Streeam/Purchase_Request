@@ -34,6 +34,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
+import static com.streeam.cims.domain.enumeration.NotificationType.REQUEST_TO_JOIN;
+
 /**
  * REST controller for managing {@link com.streeam.cims.domain.Company}.
  */
@@ -287,7 +289,7 @@ public class CompanyResource {
         Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
         if (!companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER, AuthoritiesConstants.ADMIN)) {
-            throw new BadRequestAlertException("You don't have the authority to accept employee applications.", ENTITY_NAME, "companyremoveforbiden");
+            throw new BadRequestAlertException("You don't have the authority to accept employee applications.", ENTITY_NAME, "companyacceptforbiden");
         }
 
         Employee approvedEmployee = companyService.findEmployeeById(employeeId).orElseThrow(() ->
@@ -299,10 +301,12 @@ public class CompanyResource {
             new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserforthisemployee"));
 
         if (companyService.checkUserHasRoles(approvedUser, AuthoritiesConstants.EMPLOYEE, AuthoritiesConstants.MANAGER, AuthoritiesConstants.ADMIN) && approvedEmployee.isHired()) {
-            throw new BadRequestAlertException("This application cannot be accepted. This employee is already in a company.", ENTITY_NAME, "companyremoveforbiden");
+            throw new BadRequestAlertException("This application cannot be accepted. This employee is already in a company.", ENTITY_NAME, "useralreadyinacompany");
         }
         Company companyWhereEmployeeApplied = companyService.findCompanyById(companyId).orElseThrow(() ->
             new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
+
 
 // Manager can only approve employees applying to his company
         if (companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)) {
@@ -311,6 +315,12 @@ public class CompanyResource {
 
             if (!currentCompany.getId().equals(companyWhereEmployeeApplied.getId())) {
                 throw new BadRequestAlertException("The manager cannot approve a application by a employee who is applying to a different company then his.", ENTITY_NAME, "cannotapproveemployeeifheapplyestoadiffcompany");
+            }
+
+            boolean afterTwoWeeksAgo = companyService.didUserRequestedTojoinLessThen14Days(currentEmployee, REQUEST_TO_JOIN, companyId, 14);
+
+            if(!afterTwoWeeksAgo){
+                throw new BadRequestAlertException("A manager cannot hire a user if no request to join has been sent to him or one was sent but before 14 days ago.", ENTITY_NAME, "hasrequestlessthen14days");
             }
 
         }
@@ -322,7 +332,7 @@ public class CompanyResource {
         CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(approvedEmployee, approvedUser, companyWhereEmployeeApplied);
 
 
-        mailService.sendRejectionEmail(approvedEmployee.getEmail(), currentUser);
+        //mailService.sendA(approvedEmployee.getEmail(), currentUser);
         companyService.sendNotificationToEmployee(approvedEmployee, currentUser.getEmail(),companyId, NotificationType.ACCEPT_REQUEST,
             "Your application to join " + companyWhereEmployeeApplied.getName() + " has been approved!");
 

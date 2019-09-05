@@ -423,6 +423,12 @@ public class EmployeeResource {
         Employee manager = employeeService.getCompanyManager(company).orElseThrow(() ->
             new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
 
+        boolean afterTwoWeeksAgo = employeeService.companyInvitedUserToJoinLessThen14DaysAgo(employeeDecliningInvitation, INVITATION, companyId, 14);
+
+        if(!afterTwoWeeksAgo){
+            throw new BadRequestAlertException("The user cannot reject a company's invitation if no invitations was sent or they haven't been sent bet before 14 gays ago.", ENTITY_NAME, "hasinvitationlessthen14days");
+        }
+
         mailService.sendEmployeeDeclineEmail(manager.getEmail(), currentUser);
 
         employeeService.sendNotificationToEmployee(manager, employeeDecliningInvitation.getEmail(), companyId, REJECT_INVITE, "A user has declined the invitation to join your company " + company.getName());
@@ -464,7 +470,6 @@ public class EmployeeResource {
             throw new BadRequestAlertException("Only the current user can accept to join a company. You cannot accept an invitation in " + employeeToBeHired.getFirstName() + " "
                 + employeeToBeHired.getLastName() + "'s behalf.", ENTITY_NAME, "onlycurrentusercanaccept");
         }
-
 
         log.debug("REST request to accept to join a company by: {}", employeeToBeHired.getLogin());
 

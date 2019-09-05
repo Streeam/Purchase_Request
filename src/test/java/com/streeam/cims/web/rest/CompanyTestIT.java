@@ -47,11 +47,13 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.persistence.EntityManager;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.streeam.cims.domain.enumeration.NotificationType.*;
 import static com.streeam.cims.web.rest.TestUtil.createFormattingConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
@@ -1338,6 +1340,133 @@ class CompanyTestIT {
             .andExpect(status().isBadRequest());
 
     }
+
+    @Test
+    @Transactional
+    void assertThatDeclineRequestBehavesAsIntended() throws Exception {
+
+        securityAwareMockMVC();
+
+        int initialUserDatabaseSize = userRepository.findAll().size();
+        int initialEmployeeDatabaseSize = employeeRepository.findAll().size();
+        int initialCompanyDatabaseSize = companyRepository.findAll().size();
+        int initialNotificationsDatabaseSize = notificationRepository.findAll().size();
+
+        userService.allocateAuthority(AuthoritiesConstants.USER, user1);
+        User user_one = userRepository.saveAndFlush(user1);
+        userService.allocateAuthority(AuthoritiesConstants.USER, user2);
+        User user_two = userRepository.saveAndFlush(user2);
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user3);
+        User user_employee = userRepository.saveAndFlush(user3);
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user4);
+        User user_manager = userRepository.saveAndFlush(user4);
+
+        Company updatedCompany = companyRepository.saveAndFlush(company);
+        Company updatedCompany2 = companyRepository.saveAndFlush(company2);
+
+        employee1.setCompany(null);
+        employee2.setCompany(null);
+        employee1.setHired(false);
+        employee2.setHired(false);
+        employee3.setHired(true);
+        employee4.setHired(true);
+        employee3.setCompany(updatedCompany2);
+        employee4.setCompany(updatedCompany2);
+
+
+        Employee employee_user1 = employeeRepository.saveAndFlush(employee1);
+        Employee employee_user2 = employeeRepository.saveAndFlush(employee2);
+        Employee employee = employeeRepository.saveAndFlush(employee3);
+        Employee manager = employeeRepository.saveAndFlush(employee4);
+
+        // Only the manager or the admin can hire users.
+        restCompanyMockMvc.perform(post("/api/companies/{companyId}/hire-employee/{employeeId}", updatedCompany2.getId(), employee_user1.getId())
+            .with(user(user_two.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.companyacceptforbiden")));
+
+        // This application cannot be accepted. This employee is already in a company.
+        restCompanyMockMvc.perform(post("/api/companies/{companyId}/hire-employee/{employeeId}", updatedCompany2.getId(), employee.getId())
+            .with(user(user_manager.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.useralreadyinacompany")));
+
+        // The manager cannot approve a application by a employee who is applying to a different company then his.
+        restCompanyMockMvc.perform(post("/api/companies/{companyId}/hire-employee/{employeeId}", updatedCompany.getId(), employee_user2.getId())
+            .with(user(user_manager.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.cannotapproveemployeeifheapplyestoadiffcompany")));
+
+        // employee_user2 hasn't sent any request to join updatedCompany
+        restCompanyMockMvc.perform(post("/api/companies/{companyId}/hire-employee/{employeeId}", updatedCompany2.getId(), employee_user2.getId())
+            .with(user(user_manager.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hasrequestlessthen14days")));
+
+        notification1.setEmployee(manager);
+        notification1.setSentDate(Instant.now().minus(15, ChronoUnit.DAYS));
+        notification1.setFormat(REQUEST_TO_JOIN);
+        notification1.setReferenced_user(employee_user2.getEmail());
+        notification1.setCompany(updatedCompany2.getId());
+        notificationRepository.saveAndFlush(notification1);
+
+        // employee_user2 has sent a request to join updatedCompany but it happened 15 days ago.
+        restCompanyMockMvc.perform(post("/api/companies/{companyId}/hire-employee/{employeeId}", updatedCompany2.getId(), employee_user2.getId())
+            .with(user(user_manager.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hasrequestlessthen14days")));
+
+
+        notification1.setSentDate(Instant.now().minus(13, ChronoUnit.DAYS));
+        notification1.setReferenced_user(employee_user1.getEmail());
+        notificationRepository.saveAndFlush(notification2);
+
+        assertThat(employeeRepository.findOneByEmail(employee_user1.getEmail())).isPresent();
+        Employee newEmployee = employeeRepository.findOneByEmail(employee_user1.getEmail()).get();
+        assertThat(newEmployee.getUser().getAuthorities().stream().map(Authority::getName)).doesNotContain(AuthoritiesConstants.EMPLOYEE);
+
+        restCompanyMockMvc.perform(post("/api/companies/{companyId}/hire-employee/{employeeId}", updatedCompany2.getId(), employee_user1.getId()).
+            with(user(user_manager.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isOk());
+
+
+        assertThat(newEmployee.getUser().getAuthorities().stream().map(Authority::getName)).contains(AuthoritiesConstants.EMPLOYEE);
+        assertThat(newEmployee.isHired()).isTrue();
+        List<Notification> allNotificationsFromCompany2 = notificationRepository.findAllByCompany(updatedCompany2.getId());
+        assertThat(allNotificationsFromCompany2.size()).isEqualTo(1);
+        assertThat(notificationRepository.findAllByEmployee(employee_user1).size()).isEqualTo(1);
+
+        assertThat(notificationRepository.findAllByEmployee(newEmployee).stream().map(notification -> notification.getFormat())).containsOnly(WELCOME, ACCEPT_REQUEST);
+        assertThat(notificationRepository.findAllByEmployee(manager).stream().map(notification -> notification.getFormat())).containsOnly(REQUEST_TO_JOIN);
+        assertThat(notificationRepository.findAllByEmployee(employee).stream().map(notification -> notification.getFormat())).containsOnly(NEW_EMPLOYEE);
+        assertThat(notificationRepository.findAllByEmployee(newEmployee).stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
+        assertThat(newEmployee.getCompany().getId()).isEqualTo(updatedCompany2.getId());
+        assertThat(notificationRepository.findAll().size()).isEqualTo(initialNotificationsDatabaseSize+5);
+
+        // Validate the Notification in Elasticsearch
+        verify(mockNotificationSearchRepository, times(1)).save(any(Notification.class));
+
+        notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany.getId()));
+        notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany2.getId()));
+
+        companyRepository.deleteInBatch(Arrays.asList(updatedCompany, updatedCompany2));
+        employeeRepository.deleteInBatch(Arrays.asList(employee_user1, employee_user2, employee, manager));
+        userRepository.deleteInBatch(Arrays.asList(user_one, user_two, user_employee, user_manager));
+
+        assertThat(userRepository.findAll().size()).isEqualTo(initialUserDatabaseSize);
+        assertThat(employeeRepository.findAll().size()).isEqualTo(initialEmployeeDatabaseSize);
+        assertThat(companyRepository.findAll().size()).isEqualTo(initialCompanyDatabaseSize);
+        assertThat(notificationRepository.findAll().size()).isEqualTo(initialNotificationsDatabaseSize);
+
+    }
+
+
 
     private void securityAwareMockMVC() {
         // Create security-aware mockMvc

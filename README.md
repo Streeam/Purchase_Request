@@ -62,26 +62,25 @@ There are 4 roles that a user can have:
                   The logged user has to be unemployed.
                   Validate employeeId and companyId.
                   Only the current user can accept to join a company. No one else can accept the invitation on his behalf.
-                  TODO Verify if the company has sent an invitation to this user in the last 14 days. If it has the user can join the company
+                  Verify if the company has sent an invitation to this user in the last 14 days. If it has the user can join the company
                   The user is added to the company and given the emplopyee role.
                   An email and a notification is sent to the company's manager informing him that the employee has accepted the invitation.
                   A notification is sent to all the company's employees informing them that a new employee has joined the company.
-                  TODO NEEDS TESTING
                   TODO FRONTEND
          7. api/employees/{employeeId}/decline-request/{companyId}
              POST Decline a request to join a company
                   The logged user has to be an unemployed user.
                   Validate employeeId and companyId.
                   An email and a notification is sent to the company's manager informing him that the employee has declined the invitation.
-                  TODO NEEDS TESTING
                   TODO FRONTEND
          8. api/companies/{companyId}/hire-employee/{employeeId}(Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
              POST approve a request from an employee
                   The manager or the admin approves the users request. The manager can only approve employees that apply to join his company.
                   Check to see if the employee is already taken by another company.
+                  TODO Find out if user has requested to join this company in the last 14 days
                   The user is given the ROLE_EMPLOYEE and it is added to the company.
-                  Sends a email and a notification to the user to inform him that his request has been approved.
-                  Send notification to all employees from that compnay (exept the manager) to inform them the new employee is going to be joining in.
+                  TODO Sends a email and a notification to the user to inform him that his request has been approved.
+                  TODO Send notification to all employees from that compnay (exept the manager) to inform them the new employee is going to be joining in.
                   TODO NEEDS TESTING
                   TODO FRONTEND
          9. api/companies/{companyId}/reject-employee/{employeeId}

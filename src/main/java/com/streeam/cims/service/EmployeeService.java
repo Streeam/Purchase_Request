@@ -266,7 +266,7 @@ public class EmployeeService {
                     .map(employeeRepository::findOneByEmail)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
-                    .filter(employee1 ->!employee1.getUser().getAuthorities().contains(AuthoritiesConstants.MANAGER))
+                    .filter(employee1 ->!userService.checkIfUserHasRoles(employee1.getUser(),AuthoritiesConstants.MANAGER))
                     .filter(employee2 ->!employee2.getId().equals(referencedEmployee.getId()) )
                     .forEach(employee3 -> {
                         notificationService.saveWithEmployee(employee3, referencedEmployee.getEmail(), companyId, notificationType, subject);

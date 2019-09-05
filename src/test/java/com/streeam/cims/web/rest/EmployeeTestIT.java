@@ -1,10 +1,7 @@
 package com.streeam.cims.web.rest;
 
 import com.streeam.cims.CidApp;
-import com.streeam.cims.domain.Company;
-import com.streeam.cims.domain.Employee;
-import com.streeam.cims.domain.Notification;
-import com.streeam.cims.domain.User;
+import com.streeam.cims.domain.*;
 import com.streeam.cims.domain.enumeration.NotificationType;
 import com.streeam.cims.repository.*;
 import com.streeam.cims.repository.search.CompanySearchRepository;
@@ -1060,12 +1057,12 @@ class EmployeeTestIT {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.accessrestricted")));
 
-        assertThat(employeeRepository.findAll().stream().filter(empl -> !empl.isHired() )).isNotEmpty();
-        List<Employee> allUnemployeedEmployees =  employeeRepository.findAll().stream().filter(empl -> !empl.isHired()).collect(Collectors.toList());
+        assertThat(employeeRepository.findAll().stream().filter(empl -> !empl.isHired())).isNotEmpty();
+        List<Employee> allUnemployeedEmployees = employeeRepository.findAll().stream().filter(empl -> !empl.isHired()).collect(Collectors.toList());
         Employee randomUnemployedEmployee = allUnemployeedEmployees.stream().findAny().get();
 
-        assertThat(employeeRepository.findAll().stream().filter(empl -> empl.isHired() )).isNotEmpty();
-        List<Employee> allEmployeedEmployees =  employeeRepository.findAll().stream().filter(empl -> empl.isHired()).collect(Collectors.toList());
+        assertThat(employeeRepository.findAll().stream().filter(empl -> empl.isHired())).isNotEmpty();
+        List<Employee> allEmployeedEmployees = employeeRepository.findAll().stream().filter(empl -> empl.isHired()).collect(Collectors.toList());
         Employee randomEmployedEmployee = allEmployeedEmployees.stream().findAny().get();
 
         restEmployeeMockMvc.perform(get("/api/employees/unemployed?sort=id,desc")
@@ -1118,7 +1115,6 @@ class EmployeeTestIT {
         employee4.setHired(true);
         employee3.setCompany(updatedCompany2);
         employee4.setCompany(updatedCompany2);
-
 
 
         Employee employee_user1 = employeeRepository.saveAndFlush(employee1);
@@ -1201,7 +1197,7 @@ class EmployeeTestIT {
         assertThat(employeeToJoin.getNotifications().stream().findFirst().get().getFormat()).isEqualTo(INVITATION);
         assertThat(employeeToJoin.getNotifications().stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
         assertThat(employeeToJoin.getNotifications().stream().findFirst().get().getReferenced_user()).isEqualTo(manager.getEmail());
-        assertThat(notificationRepository.findAll().size()).isEqualTo(databaseNotificationsSizeBeforeUpdate+1);
+        assertThat(notificationRepository.findAll().size()).isEqualTo(databaseNotificationsSizeBeforeUpdate + 1);
 
 
         /**
@@ -1217,7 +1213,7 @@ class EmployeeTestIT {
         assertThat(manager.getNotifications().stream().findFirst().get().getFormat()).isEqualTo(INVITATION);
         assertThat(manager.getNotifications().stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
         assertThat(manager.getNotifications().stream().findFirst().get().getReferenced_user()).isEqualTo("non-existing@UserEmail.com");
-        assertThat(notificationRepository.findAll().size()).isEqualTo(databaseNotificationsSizeBeforeUpdate+2);
+        assertThat(notificationRepository.findAll().size()).isEqualTo(databaseNotificationsSizeBeforeUpdate + 2);
 
         // Validate the Notification in Elasticsearch
         verify(mockNotificationSearchRepository, times(2)).save(any(Notification.class));
@@ -1263,11 +1259,40 @@ class EmployeeTestIT {
         employee4.setCompany(updatedCompany2);
 
 
-
         Employee employee_user1 = employeeRepository.saveAndFlush(employee1);
         Employee employee_user2 = employeeRepository.saveAndFlush(employee2);
         Employee employee = employeeRepository.saveAndFlush(employee3);
         Employee manager = employeeRepository.saveAndFlush(employee4);
+
+
+
+        /**
+         * The logged user has to be unemployed.
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(), updatedCompany.getId())
+            .with(user(user_employee.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.joinonlyifunemployed")));
+
+        /**
+         * Only the current user can accept to join a company. No one else can accept the invitation on his behalf.
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(), updatedCompany.getId())
+            .with(user(user_two.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.onlycurrentusercanaccept")));
+
+        /**
+         * No invitation sent to this employee_user2 by updatedCompany.
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user2.getId(), updatedCompany.getId())
+            .with(user(user_two.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hasinvitationlessthen14days")));
+
 
         notification1.setEmployee(employee_user2);
         notification1.sentDate(Instant.now().minus(15, ChronoUnit.DAYS));
@@ -1281,31 +1306,8 @@ class EmployeeTestIT {
         notification2.setCompany(updatedCompany2.getId());
         notificationRepository.saveAndFlush(notification2);
 
-
-        /**
-         * Only the current user can accept to join a company. No one else can accept the invitation on his behalf.
-         */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(),updatedCompany.getId())
-            .with(user(user_employee.getLogin().toLowerCase()))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.joinonlyifunemployed")));
-
-        /**
-         * The logged user has to be unemployed.
-         */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(),updatedCompany.getId())
-            .with(user(user_two.getLogin().toLowerCase()))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.onlycurrentusercanaccept")));
-
-
-
-        /**
-         * An invitation was sent to employee_user2 from updatedCompany but was sent after 14 days.
-         */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user2.getId(),updatedCompany.getId())
+         //An invitation was sent to employee_user2 from updatedCompany but was sent after 14 days.
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user2.getId(), updatedCompany.getId())
             .with(user(user_two.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isBadRequest())
@@ -1314,38 +1316,39 @@ class EmployeeTestIT {
 
         notification1.sentDate(Instant.now().minus(13, ChronoUnit.DAYS));
         notificationRepository.saveAndFlush(notification1);
-        /**
-         * Only the manager and the admin can access this endpoint
-         */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user2.getId(),updatedCompany.getId())
+
+        // Only the manager and the admin can access this endpoint
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user2.getId(), updatedCompany.getId())
             .with(user(user_two.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.nomanager")));
 
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(),updatedCompany2.getId())
+        assertThat(employeeRepository.findOneByEmail(employee_user1.getEmail()).get().getUser().getAuthorities().stream().map(Authority::getName)).doesNotContain(AuthoritiesConstants.EMPLOYEE);
+
+        /**
+         * The user joins the company and he is given the Employee role
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(), updatedCompany2.getId())
             .with(user(user_one.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
+        assertThat(employeeRepository.findOneByEmail(employee_user1.getEmail())).isPresent();
+        Employee newEmployee = employeeRepository.findOneByEmail(employee_user1.getEmail()).get();
+        assertThat(newEmployee.getUser().getAuthorities().stream().map(Authority::getName)).contains(AuthoritiesConstants.EMPLOYEE);
+        assertThat(newEmployee.isHired()).isTrue();
         List<Notification> allNotificationsFromCompany2 = notificationRepository.findAllByCompany(updatedCompany2.getId());
-        assertThat(allNotificationsFromCompany2.size()).isEqualTo(3);
+        assertThat(allNotificationsFromCompany2.size()).isEqualTo(4);
 
-         assertThat(notificationRepository.findAllByEmployee(employee_user1).size()).isEqualTo(2);
+        assertThat(notificationRepository.findAllByEmployee(employee_user1).size()).isEqualTo(2);
         assertThat(notificationRepository.findAllByEmployee(employee_user1).stream().map(notification -> notification.getFormat())).containsOnly(WELCOME, INVITATION);
         assertThat(notificationRepository.findAllByEmployee(manager).stream().map(notification -> notification.getFormat())).containsOnly(ACCEPT_REQUEST);
-//        assertThat(employeeToJoin.getNotifications().stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
-//        assertThat(employeeToJoin.getNotifications().stream().findFirst().get().getReferenced_user()).isEqualTo(manager.getEmail());
-//        assertThat(notificationRepository.findAll().size()).isEqualTo(initialNotificationsDatabaseSize+6);
+        assertThat(notificationRepository.findAllByEmployee(employee).stream().map(notification -> notification.getFormat())).containsOnly(NEW_EMPLOYEE);
+        assertThat(notificationRepository.findAllByEmployee(employee_user1).stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
+        assertThat(newEmployee.getCompany().getId()).isEqualTo(updatedCompany2.getId());
+        assertThat(notificationRepository.findAll().size()).isEqualTo(initialNotificationsDatabaseSize+5);
 
-
-//        assertThat(employeeRepository.findOneByEmail("non-existing@UserEmail.com")).isNotPresent();
-//        assertThat(manager.getNotifications().size()).isEqualTo(1);
-//        assertThat(manager.getNotifications().stream().findFirst().get().getFormat()).isEqualTo(INVITATION);
-//        assertThat(manager.getNotifications().stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
-//        assertThat(manager.getNotifications().stream().findFirst().get().getReferenced_user()).isEqualTo("non-existing@UserEmail.com");
-//        assertThat(notificationRepository.findAll().size()).isEqualTo(databaseNotificationsSizeBeforeUpdate+2);
-//
         // Validate the Notification in Elasticsearch
         verify(mockNotificationSearchRepository, times(3)).save(any(Notification.class));
 
@@ -1364,6 +1367,134 @@ class EmployeeTestIT {
     }
 
 
+
+    @Test
+    @Transactional
+    void assertThatDeclineRequestBehavesAsIntended() throws Exception {
+
+        securityAwareMockMVC();
+
+        int initialUserDatabaseSize = userRepository.findAll().size();
+        int initialEmployeeDatabaseSize = employeeRepository.findAll().size();
+        int initialCompanyDatabaseSize = companyRepository.findAll().size();
+        int initialNotificationsDatabaseSize = notificationRepository.findAll().size();
+
+        userService.allocateAuthority(AuthoritiesConstants.USER, user1);
+        User user_one = userRepository.saveAndFlush(user1);
+        userService.allocateAuthority(AuthoritiesConstants.USER, user2);
+        User user_two = userRepository.saveAndFlush(user2);
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user3);
+        User user_employee = userRepository.saveAndFlush(user3);
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user4);
+        User user_manager = userRepository.saveAndFlush(user4);
+
+        Company updatedCompany = companyRepository.saveAndFlush(company);
+        Company updatedCompany2 = companyRepository.saveAndFlush(company2);
+
+        employee1.setCompany(null);
+        employee2.setCompany(null);
+        employee1.setHired(false);
+        employee2.setHired(false);
+        employee3.setHired(true);
+        employee4.setHired(true);
+        employee3.setCompany(updatedCompany2);
+        employee4.setCompany(updatedCompany2);
+
+
+        Employee employee_user1 = employeeRepository.saveAndFlush(employee1);
+        Employee employee_user2 = employeeRepository.saveAndFlush(employee2);
+        Employee employee = employeeRepository.saveAndFlush(employee3);
+        Employee manager = employeeRepository.saveAndFlush(employee4);
+
+        /**
+         * Only the current user can decline to join a company. No one else can decline the invitation on his behalf.
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/decline-request/{companyId}", employee_user1.getId(), updatedCompany2.getId())
+            .with(user(user_two.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.onlycurrentloggedincandeclinetojoincomp")));
+
+        /**
+         * The logged user has to be unemployed.
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/decline-request/{companyId}", employee.getId(), updatedCompany.getId())
+            .with(user(user_employee.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.joinonlyifunemployed")));
+        /**
+         * The company must have a manager
+         */
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/decline-request/{companyId}", employee_user2.getId(), updatedCompany.getId())
+            .with(user(user_two.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.nomanager")));
+
+        // No invitation sent to this employee_user2 by updatedCompany.
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/decline-request/{companyId}", employee_user2.getId(), updatedCompany2.getId())
+            .with(user(user_two.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hasinvitationlessthen14days")));
+
+
+        notification1.setEmployee(employee_user2);
+        notification1.sentDate(Instant.now().minus(15, ChronoUnit.DAYS));
+        notification1.setFormat(INVITATION);
+        notification1.setCompany(updatedCompany.getId());
+        notificationRepository.saveAndFlush(notification1);
+
+        //No invitation sent to this employee_user2 by updatedCompany.
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/decline-request/{companyId}", employee_user2.getId(), updatedCompany2.getId())
+            .with(user(user_two.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hasinvitationlessthen14days")));
+
+        notification2.setEmployee(employee_user1);
+        notification2.sentDate(Instant.now().minus(13, ChronoUnit.DAYS));
+        notification2.setFormat(INVITATION);
+        notification2.setCompany(updatedCompany2.getId());
+        notificationRepository.saveAndFlush(notification2);
+
+        // employee_user1 declines the updatedCompany2's invitation
+        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/decline-request/{companyId}", employee_user1.getId(), updatedCompany2.getId())
+            .with(user(user_one.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isOk());
+
+
+        assertThat(employeeRepository.findOneByEmail(employee_user1.getEmail())).isPresent();
+        Employee newEmployee = employeeRepository.findOneByEmail(employee_user1.getEmail()).get();
+        assertThat(newEmployee.getUser().getAuthorities().stream().map(Authority::getName)).doesNotContain(AuthoritiesConstants.EMPLOYEE);
+        assertThat(newEmployee.isHired()).isFalse();
+        List<Notification> allNotificationsFromCompany2 = notificationRepository.findAllByCompany(updatedCompany2.getId());
+        assertThat(allNotificationsFromCompany2.size()).isEqualTo(2);
+        assertThat(notificationRepository.findAllByEmployee(employee_user1).size()).isEqualTo(1);
+        assertThat(notificationRepository.findAllByEmployee(employee_user1).stream().map(notification -> notification.getFormat())).containsOnly(INVITATION);
+        assertThat(notificationRepository.findAllByEmployee(manager).stream().map(notification -> notification.getFormat())).containsOnly(REJECT_INVITE);
+        assertThat(notificationRepository.findAllByEmployee(employee_user1).stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
+        assertThat(newEmployee.getCompany()).isNull();
+        assertThat(notificationRepository.findAll().size()).isEqualTo(initialNotificationsDatabaseSize+3);
+
+        // Validate the Notification in Elasticsearch
+        verify(mockNotificationSearchRepository, times(1)).save(any(Notification.class));
+
+        notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany.getId()));
+        notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany2.getId()));
+
+        companyRepository.deleteInBatch(Arrays.asList(updatedCompany, updatedCompany2));
+        employeeRepository.deleteInBatch(Arrays.asList(employee_user1, employee_user2, employee, manager));
+        userRepository.deleteInBatch(Arrays.asList(user_one, user_two, user_employee, user_manager));
+
+        assertThat(userRepository.findAll().size()).isEqualTo(initialUserDatabaseSize);
+        assertThat(employeeRepository.findAll().size()).isEqualTo(initialEmployeeDatabaseSize);
+        assertThat(companyRepository.findAll().size()).isEqualTo(initialCompanyDatabaseSize);
+        assertThat(notificationRepository.findAll().size()).isEqualTo(initialNotificationsDatabaseSize);
+
+    }
 
     private void securityAwareMockMVC() {
         // Create security-aware mockMvc

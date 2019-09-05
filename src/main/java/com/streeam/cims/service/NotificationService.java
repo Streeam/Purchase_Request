@@ -161,8 +161,7 @@ public class NotificationService {
         List<Notification> notifications= notificationRepository.
             findAllByEmployeeAndFormatAndCompany(toThisEmployee, theEvent, inThisCompany);
         return notifications.stream()
-            .anyMatch(notification -> {
-                return notification.getSentDate().isAfter(nDaysAgo);});
+            .anyMatch(notification -> notification.getSentDate().isAfter(nDaysAgo));
     }
 
 
