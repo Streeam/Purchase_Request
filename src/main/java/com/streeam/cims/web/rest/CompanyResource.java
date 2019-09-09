@@ -34,6 +34,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
+import static com.streeam.cims.domain.enumeration.NotificationType.NEW_EMPLOYEE;
 import static com.streeam.cims.domain.enumeration.NotificationType.REQUEST_TO_JOIN;
 
 /**
@@ -336,6 +337,16 @@ public class CompanyResource {
         companyService.sendNotificationToEmployee(approvedEmployee, currentUser.getEmail(),companyId, NotificationType.ACCEPT_REQUEST,
             "Your application to join " + companyWhereEmployeeApplied.getName() + " has been approved!");
 
+        // Send notification to the user to welcome him to the company
+        companyService.sendNotificationToEmployee(approvedEmployee, currentEmployee.getEmail(), companyId, NotificationType.WELCOME,
+            "Welcome to " + companyWhereEmployeeApplied.getName() +"!");
+
+        // Send notification to all (except the manager and the current user) company's employees to inform them of a new employee joining the company.
+        companyService.sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(
+            companyWhereEmployeeApplied.getId(),
+            approvedEmployee,
+            NEW_EMPLOYEE,
+            currentUser.getFirstName() + " " + currentUser.getLastName() + " has joined our company!");
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))

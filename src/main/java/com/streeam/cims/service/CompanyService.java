@@ -339,4 +339,8 @@ public class CompanyService {
     public boolean didUserRequestedTojoinLessThen14Days(Employee approvedEmployee, NotificationType requestToJoin, Long companyId, int i) {
         return  notificationService.hasEventOccurredInThePast(approvedEmployee, requestToJoin, companyId , i);
     }
+
+    public void sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(Long companyId, Employee approvedEmployee, NotificationType notificationType, String subject) {
+        employeeService.sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(companyId, approvedEmployee, notificationType, subject);
+    }
 }

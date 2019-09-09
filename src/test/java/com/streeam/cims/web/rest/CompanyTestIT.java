@@ -1424,7 +1424,7 @@ class CompanyTestIT {
 
         notification1.setSentDate(Instant.now().minus(13, ChronoUnit.DAYS));
         notification1.setReferenced_user(employee_user1.getEmail());
-        notificationRepository.saveAndFlush(notification2);
+        notificationRepository.saveAndFlush(notification1);
 
         assertThat(employeeRepository.findOneByEmail(employee_user1.getEmail())).isPresent();
         Employee newEmployee = employeeRepository.findOneByEmail(employee_user1.getEmail()).get();
@@ -1439,21 +1439,23 @@ class CompanyTestIT {
         assertThat(newEmployee.getUser().getAuthorities().stream().map(Authority::getName)).contains(AuthoritiesConstants.EMPLOYEE);
         assertThat(newEmployee.isHired()).isTrue();
         List<Notification> allNotificationsFromCompany2 = notificationRepository.findAllByCompany(updatedCompany2.getId());
-        assertThat(allNotificationsFromCompany2.size()).isEqualTo(1);
-        assertThat(notificationRepository.findAllByEmployee(employee_user1).size()).isEqualTo(1);
+        assertThat(allNotificationsFromCompany2.size()).isEqualTo(4);
+        assertThat(notificationRepository.findAllByEmployee(employee_user1).size()).isEqualTo(2);
 
         assertThat(notificationRepository.findAllByEmployee(newEmployee).stream().map(notification -> notification.getFormat())).containsOnly(WELCOME, ACCEPT_REQUEST);
         assertThat(notificationRepository.findAllByEmployee(manager).stream().map(notification -> notification.getFormat())).containsOnly(REQUEST_TO_JOIN);
         assertThat(notificationRepository.findAllByEmployee(employee).stream().map(notification -> notification.getFormat())).containsOnly(NEW_EMPLOYEE);
         assertThat(notificationRepository.findAllByEmployee(newEmployee).stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
         assertThat(newEmployee.getCompany().getId()).isEqualTo(updatedCompany2.getId());
-        assertThat(notificationRepository.findAll().size()).isEqualTo(initialNotificationsDatabaseSize+5);
+        List<Notification> allNot = notificationRepository.findAll();
+        assertThat(allNot.size()).isEqualTo(initialNotificationsDatabaseSize+4);
 
         // Validate the Notification in Elasticsearch
-        verify(mockNotificationSearchRepository, times(1)).save(any(Notification.class));
+        verify(mockNotificationSearchRepository, times(3)).save(any(Notification.class));
 
         notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany.getId()));
         notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany2.getId()));
+        notificationRepository.deleteInBatch(notificationRepository.findAllByEmployee(newEmployee));
 
         companyRepository.deleteInBatch(Arrays.asList(updatedCompany, updatedCompany2));
         employeeRepository.deleteInBatch(Arrays.asList(employee_user1, employee_user2, employee, manager));

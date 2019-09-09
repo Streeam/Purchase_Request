@@ -77,11 +77,10 @@ There are 4 roles that a user can have:
              POST approve a request from an employee
                   The manager or the admin approves the users request. The manager can only approve employees that apply to join his company.
                   Check to see if the employee is already taken by another company.
-                  TODO Find out if user has requested to join this company in the last 14 days
+                  Find out if user has requested to join this company in the last 14 days
                   The user is given the ROLE_EMPLOYEE and it is added to the company.
-                  TODO Sends a email and a notification to the user to inform him that his request has been approved.
-                  TODO Send notification to all employees from that compnay (exept the manager) to inform them the new employee is going to be joining in.
-                  TODO NEEDS TESTING
+                  Sends a email and a notification to the user to inform him that his request has been approved.
+                  Send notification to all employees from that compnay (exept the manager) to inform them the new employee is going to be joining in.
                   TODO FRONTEND
          9. api/companies/{companyId}/reject-employee/{employeeId}
              POST reject a request from an employee
