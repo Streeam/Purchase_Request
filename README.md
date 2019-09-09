@@ -77,17 +77,17 @@ There are 4 roles that a user can have:
              POST approve a request from an employee
                   The manager or the admin approves the users request. The manager can only approve employees that apply to join his company.
                   Check to see if the employee is already taken by another company.
-                  Find out if user has requested to join this company in the last 14 days
+                  The user can be hired if he has requested to join this company in the last 14 days
                   The user is given the ROLE_EMPLOYEE and it is added to the company.
                   Sends a email and a notification to the user to inform him that his request has been approved.
                   Send notification to all employees from that compnay (exept the manager) to inform them the new employee is going to be joining in.
                   TODO FRONTEND
-         9. api/companies/{companyId}/reject-employee/{employeeId}
+         9. api/companies/{companyId}/reject-employee/{employeeId} (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
              POST reject a request from an employee
                   Only the manager or the admin rejects the users request. The manager can only reject employees that apply to join his company.
                   The user must not have the role of manager nor employee and he must not be part of a company.
+                  The user's application can be rejected if he has requested to join this company in the last 14 days
                   Sends an email and a notification to the user to inform him that his request has been rejected
-                  TODO NEEDS TESTING
                   TODO FRONTEND
          10. api/companies/{companyId}/fire/{employeeId}  (Pre-Authorize ROLE_MANAGER or ROLE_ADMIN)
              POST Fire a employee from a specific company
@@ -95,6 +95,7 @@ There are 4 roles that a user can have:
                   A manager cannot fire himself, but he can quit. If he quits, the company is dissolved (see ../companies/delete/{companyId})
                   Removes all the employee's roles except the default ROLE_USER.
                   Send a notification and a email to the user informing him that he got fired.
+                  Send notifications to all company's employees informing them that the employee has been fired
                   TODO NEEDS TESTING
                   TODO FRONTEND
          11. api/companies/{companyId}/leave-company (Pre-Authorize ROLE_EMPLOYEE)

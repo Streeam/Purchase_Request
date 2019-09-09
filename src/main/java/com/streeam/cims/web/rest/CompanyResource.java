@@ -276,12 +276,7 @@ public class CompanyResource {
     @PostMapping("/companies/{companyId}/hire-employee/{employeeId}")
     public ResponseEntity<CompanyDTO> hireEmployee(@PathVariable Long companyId, @PathVariable Long employeeId) {
 
-        if (employeeId == null) {
-            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
-        }
-        if (companyId == null) {
-            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
-        }
+        idNotNull(companyId, employeeId);
 
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
@@ -360,7 +355,7 @@ public class CompanyResource {
      * @param userEmail the email of the user who wants to join the company.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
-    @PostMapping(" /companies/{companyId}/reject-employee/{employeeId} ")
+    @PostMapping("/companies/{companyId}/reject-employee/{employeeId}")
     public void rejectEmployee(@PathVariable Long companyId, @PathVariable Long employeeId) {
         log.debug("REST to reject a user's request to join a company.");
 
@@ -391,6 +386,13 @@ public class CompanyResource {
             if (!currentCompany.getId().equals(companyWhereEmployeeApplied.getId())) {
                 throw new BadRequestAlertException("The manager cannot reject a application by a employee who is applying to a different company then his.", ENTITY_NAME, "cannotrejectemployeeifheapplyestoadiffcompany");
             }
+
+            boolean afterTwoWeeksAgo = companyService.didUserRequestedTojoinLessThen14Days(currentEmployee, REQUEST_TO_JOIN, companyId, 14);
+
+            if(!afterTwoWeeksAgo){
+                throw new BadRequestAlertException("A manager cannot hire a user if no request to join has been sent to him or one was sent but before 14 days ago.", ENTITY_NAME, "hasrequestlessthen14days");
+            }
+
             mailService.sendRejectionEmail(rejectedEmployee.getEmail(), currentUser);
             companyService.sendNotificationToEmployee(rejectedEmployee, currentUser.getEmail(), companyId, NotificationType.REJECT_REQUEST,
                 "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
@@ -402,25 +404,17 @@ public class CompanyResource {
             companyService.sendNotificationToEmployee(rejectedEmployee, currentUser.getEmail(), companyId, NotificationType.REJECT_REQUEST,
                 "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
         }
-
     }
 
-
     /**
-     * {@code POST  /companies/{companyId}/fire/{employeeId} : fire a employee      *
-     *
+     * {@code POST  /companies/{companyId}/fire/{employeeId} : fire a employee
      * @param The companyId of the current company. EmployeeId of the employee to be fired
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the company, or with status {@code 404 (Not Found)}.
      */
     @PostMapping("/companies/{companyId}/fire/{employeeId}")
     public ResponseEntity<CompanyDTO> fireEmployee(@PathVariable Long companyId, @PathVariable Long employeeId) {
 
-        if (employeeId == null) {
-            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
-        }
-        if (companyId == null) {
-            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
-        }
+        idNotNull(companyId, employeeId);
 
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
