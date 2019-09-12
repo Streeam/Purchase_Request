@@ -96,7 +96,6 @@ There are 4 roles that a user can have:
                   Removes all the employee's roles except the default ROLE_USER.
                   Send a notification and a email to the user informing him that he got fired.
                   Send notifications to all company's employees informing them that the employee has been fired
-                  TODO NEEDS TESTING
                   TODO FRONTEND
          11. api/companies/{companyId}/leave-company (Pre-Authorize ROLE_EMPLOYEE)
              POST Employee resigns from his company

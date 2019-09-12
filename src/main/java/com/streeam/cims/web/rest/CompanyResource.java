@@ -34,8 +34,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 
-import static com.streeam.cims.domain.enumeration.NotificationType.NEW_EMPLOYEE;
-import static com.streeam.cims.domain.enumeration.NotificationType.REQUEST_TO_JOIN;
+import static com.streeam.cims.domain.enumeration.NotificationType.*;
 
 /**
  * REST controller for managing {@link com.streeam.cims.domain.Company}.
@@ -440,7 +439,7 @@ public class CompanyResource {
             new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
         if (currentUser.getId().equals(userToFire.getId())) {
-            new BadRequestAlertException("You cannot fire yourself.", ENTITY_NAME, "fireingyourselfisforbiden");
+            throw new BadRequestAlertException("You cannot fire yourself.", ENTITY_NAME, "fireingyourselfisforbiden");
         }
 
         // Manager can only fire employees within his company
@@ -448,24 +447,24 @@ public class CompanyResource {
             Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(() ->
                 new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
 
-
             if (!currentCompany.getId().equals(companyThatEmployeeWasFiredFrom.getId())) {
                 throw new BadRequestAlertException("The manager cannot fire an employee who isn't from his company.", ENTITY_NAME, "cannotfirefromothercompany");
             }
 
         }
         // Admin can reject anyone's application
-        Set<Authority> authorities = new HashSet<>();
-        authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
-        userToFire.setAuthorities(authorities);
-        employeeToFire.setUser(userToFire);
-        companyThatEmployeeWasFiredFrom.getEmployees().remove(employeeToFire);
 
-        CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(employeeToFire, userToFire, companyThatEmployeeWasFiredFrom);
+        CompanyDTO companyDTO = companyService.removeEmployeeFromCompany(employeeToFire, userToFire, companyThatEmployeeWasFiredFrom);
 
         mailService.sendFiredEmail(employeeToFire.getEmail(), currentUser);
         companyService.sendNotificationToEmployee(employeeToFire, currentEmployee.getEmail(),companyId, NotificationType.FIRED, "You have been fired from " + companyThatEmployeeWasFiredFrom.getName() + ".");
 
+        // Send notification to all (except the manager and the current user) company's employees to inform them of a new employee joining the company.
+        companyService.sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(
+            companyThatEmployeeWasFiredFrom.getId(),
+            employeeToFire,
+            LEFT_COMPANY,
+            currentUser.getFirstName() + " " + currentUser.getLastName() + " has been fired from our company!");
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))

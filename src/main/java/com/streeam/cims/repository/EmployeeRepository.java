@@ -26,4 +26,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> findAllByCompany(Company company);
 
     Page<Employee> findAllByHiredFalse(Pageable pageable);
+
+    Optional<Employee> findOneByEmailIgnoreCase(String email);
 }

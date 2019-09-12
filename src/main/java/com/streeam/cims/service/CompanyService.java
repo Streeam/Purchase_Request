@@ -307,6 +307,27 @@ public class CompanyService {
         return  companyDTO;
     }
 
+    public CompanyDTO removeEmployeeFromCompany(Employee employee, User user, Company company) {
+        Set<Authority> authorities = new HashSet<>();
+        authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
+        user.setAuthorities(authorities);
+
+        userService.save(user);
+        employee.setHired(false);
+        employee.setUser(user);
+        company.getEmployees().remove(employee);
+
+        Company updatedCompany = companyRepository.save(company);
+        EmployeeDTO employeeDTO = employeeService.saveWithCompany(employee, updatedCompany);
+
+        log.debug("Request to save Company with employee: {}", employeeDTO);
+
+        CompanyDTO result = companyMapper.toDto(updatedCompany);
+        companySearchRepository.save(updatedCompany);
+        log.debug("Request to save Company : {}", result);
+        return result;
+    }
+
     public Optional<Company> findUsersCompany(Employee currentEmployee) {
         return companyRepository.findOneByEmployees(Collections.singleton(currentEmployee));
     }
