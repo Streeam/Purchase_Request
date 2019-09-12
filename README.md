@@ -1,15 +1,23 @@
 # Company Information Database
 
-This is a monolithic application where a user can choose to either create his own company or join an existing one. This application can easily be turned into
-a gateway microservice.
+This is an end-to-end full stack monolithic application. The backend server is build using Java and Spring Boot. For authorization and authentication, I used Spring Security along with JWT authentication. For storage I used PostgreSQL a relational database management system.
+The front-end application will be built using ReactJS (with TypeScript).  Loag term goal is to turn this application into a gateway microservice and attach several microservices to it. 
+
+When a user first logs in, he is presented with two options. He can create his own company and become the manager of that company or he can request to join an existing company.
+If he creates his own company, he can invite existing users to join his company. He can also send emails to invite people who haven't yet registered to the application to sign up. When a user accepts an invitation, he becomes part of that company and is given the employee role. The manager can assign roles, he can hire or fire employee, he can send invitation and he can even dissolve the company.
+If the user decides to join a company, he can search through all companies and their internal structure. A user can request to join multiple companies, but he can only join one. Once the manager approves his request a notification is sent to him informing him that his request has been approved. Notifications are also sent to all the company's employees informing them that a new employee has join the company.
 
 There are 4 roles that a user can have:
 
-1. ROLE_USER - Every user after registration is given the this role. This role can never be replaced. All other roles will be added on top of this role.
-2. ROLE_ADMIN - Only one user can be in this role. This user can create, see, update and delete almost anything.
+1. ROLE_USER - After registration every user is given this role. It can never be replaced. All other roles will be added on top of this role.
+2. ROLE_ADMIN - Only one user can be in this role. This user can create, see, update and delete almost any entity.
 3. ROLE_MANAGER - A user is given this role when he creates his own company.
-4. ROLE_EMPLOYEE - A user is given this role when he joins a company. A user cannot have the ROLE_EMPLOYEE
-   and ROLE_MANAGER at the same time.
+4. ROLE_EMPLOYEE - A user is given this role when he joins a company. A user cannot have both employee role 
+   and manager role at the same time.
+
+## User Interface Wireframe
+
+![Image](./src/main/webapp/content/images/ui.jpg?raw=true 'Title')
 
 ## Endpoints
 
@@ -118,10 +126,6 @@ There are 4 roles that a user can have:
               DELETE  (Pre-Authorize ROLE_ADMIN) when admin deletes an employee it also deletes the linked user and updates the company if he is in one. Also delete all notification related to this employee
               PUT  ADMIN can update all employees, Manager can update all employees from his company,  the rest can only update their own account.
                    TODO When employee is updated the user is updated as well (no one can updated the employee's or the user's email). The admin and managers can also update the employee roles.
-
-## User Interface Wireframe
-
-![Image](./src/main/webapp/content/images/ui.jpg?raw=true 'Title')
 
 ## Development
 
