@@ -484,9 +484,11 @@ public class CompanyResource {
         }
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
-        User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+        User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(() ->
+            new ResourceNotFoundException("No user logged in."));
 
-        Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
+        Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() ->
+            new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
 
         Company companyEmployeeLeavingFrom = companyService.findCompanyById(companyId).orElseThrow(() ->
             new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
@@ -495,22 +497,26 @@ public class CompanyResource {
             throw new BadRequestAlertException("A manager cannot leave his own company.", ENTITY_NAME, "managercannotleavecompany");
         }
 
-        Set<Authority> authorities = new HashSet<>();
-        authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
-        currentUser.setAuthorities(authorities);
-        currentEmployee.setUser(currentUser);
-        companyEmployeeLeavingFrom.getEmployees().remove(currentEmployee);
-
-        CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(currentEmployee, currentUser, companyEmployeeLeavingFrom);
+        CompanyDTO companyDTO = companyService.removeEmployeeFromCompany(currentEmployee, currentUser, companyEmployeeLeavingFrom);
 
         Employee manager = companyService.getCompanysManager(companyEmployeeLeavingFrom).orElseThrow(()->
             new BadRequestAlertException("A company must have a manager", ENTITY_NAME, "nomanagerincompanyforbiden") );
         // Send email to the company's manager
-
         mailService.sendLeaveEmail(manager.getEmail(), currentUser);
+        // Send a notification to the manager
+        companyService.sendNotificationToEmployee(
+            manager,
+            currentEmployee.getEmail(),
+            companyId,
+            LEFT_COMPANY,
+            currentEmployee.getFirstName() +" " + currentEmployee.getLastName() + " ");
 
-        // Send notifications to all employees from the company
-        companyService.notifyEmployeeThatUserLeft(companyEmployeeLeavingFrom);
+        // Send notification to all (except the manager and the current user) company's employees to inform them that an employee has left the company.
+        companyService.sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(
+            companyId,
+            currentEmployee,
+            LEFT_COMPANY,
+            currentUser.getFirstName() + " " + currentUser.getLastName() + " has been fired from our company!");
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))

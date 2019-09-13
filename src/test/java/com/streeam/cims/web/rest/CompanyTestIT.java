@@ -1633,6 +1633,94 @@ class CompanyTestIT {
     }
 
     @Test
+    @Transactional
+    void assertThatLeaveCompanyBehavesAsIntended() throws Exception {
+
+        securityAwareMockMVC();
+
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user1);
+        User user_one = userRepository.saveAndFlush(user1);
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user2);
+        User user_two = userRepository.saveAndFlush(user2);
+        userService.allocateAuthority(AuthoritiesConstants.EMPLOYEE, user3);
+        User user_employee = userRepository.saveAndFlush(user3);
+        userService.allocateAuthority(AuthoritiesConstants.MANAGER, user4);
+        User user_manager = userRepository.saveAndFlush(user4);
+
+        company.getEmployees().remove(employee1);
+        company.getEmployees().remove(employee2);
+        company2.getEmployees().add(employee1);
+        company2.getEmployees().add(employee2);
+        Company updatedCompany = companyRepository.saveAndFlush(company);
+        Company updatedCompany2 = companyRepository.saveAndFlush(company2);
+
+
+        employee1.setHired(true);
+        employee2.setHired(true);
+        employee3.setHired(true);
+        employee4.setHired(true);
+        employee1.setCompany(updatedCompany);
+        employee2.setCompany(updatedCompany2);
+        employee3.setCompany(updatedCompany2);
+        employee4.setCompany(updatedCompany2);
+
+        Employee employee_user1 = employeeRepository.saveAndFlush(employee1);
+        Employee employee_user2 = employeeRepository.saveAndFlush(employee2);
+        Employee employee = employeeRepository.saveAndFlush(employee3);
+        Employee manager = employeeRepository.saveAndFlush(employee4);
+
+        // A manager cannot leave his own company.
+        restCompanyMockMvc.perform(post("/api/companies/{companyId}/leave-company", updatedCompany2.getId())
+            .with(user(user_manager.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.managercannotleavecompany")));
+
+        // A company must have a manager.
+        restCompanyMockMvc.perform(post("/api/companies/{companyId}/leave-company", updatedCompany.getId())
+            .with(user(user_one.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message", Matchers.equalTo("error.nomanagerincompanyforbiden")));
+
+        assertThat(employeeRepository.findOneByEmailIgnoreCase(employee.getEmail())).isPresent();
+        Employee firedEmployee = employeeRepository.findOneByEmailIgnoreCase(employee.getEmail()).get();
+        assertThat(firedEmployee.getUser().getAuthorities().stream().map(Authority::getName)).contains(AuthoritiesConstants.EMPLOYEE);
+
+        // An employee is leaving the company
+        restCompanyMockMvc.perform(post("/api/companies/{companyId}/leave-company", updatedCompany2.getId())
+            .with(user(user_employee.getLogin().toLowerCase()))
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isOk());
+
+        // Validate the Notification in Elasticsearch
+        verify(mockNotificationSearchRepository, times(3)).save(any(Notification.class));
+
+        firedEmployee = employeeRepository.findOneByEmailIgnoreCase(employee.getEmail()).get();
+        assertThat(firedEmployee.getUser().getAuthorities().stream().map(Authority::getName)).doesNotContain(AuthoritiesConstants.EMPLOYEE);
+        assertThat(firedEmployee.isHired()).isFalse();
+        List<Notification> allNotificationsFromCompany2 = notificationRepository.findAllByCompany(updatedCompany2.getId());
+        assertThat(allNotificationsFromCompany2.size()).isEqualTo(3);
+        assertThat(notificationRepository.findAllByEmployee(firedEmployee).size()).isEqualTo(0);
+
+        assertThat(notificationRepository.findAllByEmployee(manager).stream().map(notification -> notification.getFormat())).containsOnly(LEFT_COMPANY);
+        assertThat(notificationRepository.findAllByEmployee(employee_user1).stream().map(notification -> notification.getFormat())).containsOnly(LEFT_COMPANY);
+        assertThat(notificationRepository.findAllByEmployee(employee_user2).stream().map(notification -> notification.getFormat())).containsOnly(LEFT_COMPANY);
+        assertThat(notificationRepository.findAllByEmployee(firedEmployee).stream().findFirst()).isNotPresent();
+        assertThat(firedEmployee.getCompany().getId()).isEqualTo(updatedCompany2.getId());
+        List<Notification> allNot = notificationRepository.findAll();
+        assertThat(allNot.size()).isEqualTo(initialNotificationsDatabaseSize+3);
+
+        notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany.getId()));
+        notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany2.getId()));
+
+        companyRepository.deleteInBatch(Arrays.asList(updatedCompany, updatedCompany2));
+        employeeRepository.deleteInBatch(Arrays.asList(employee_user1, employee_user2, employee, manager));
+        userRepository.deleteInBatch(Arrays.asList(user_one, user_two, user_employee, user_manager));
+
+    }
+
+    @Test
     @BeforeEach
     private void assertThatDatabaseRemainIntact() {
         int userDatabaseAfter = userRepository.findAll().size();
