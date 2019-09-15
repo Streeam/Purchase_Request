@@ -6,6 +6,7 @@
 body {
   margin: 0;
   background-color: white;
+  color: black;
 }
 
 a {
@@ -324,7 +325,7 @@ http://stackoverflow.com/questions/23436430/bootstrap-3-input-group-100-width */
 /* jhipster-needle-scss-add-main JHipster will add new css style */
 
 .Button {
-  background-color: antiquewhite;
+  background-color: #a2a5a9;
   font: inherit;
   color: black;
   border: transparent;
@@ -337,4 +338,16 @@ http://stackoverflow.com/questions/23436430/bootstrap-3-input-group-100-width */
 .Button:hover {
   background-color: #9e9d9d;
   border: transparent;
+}
+
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+  color: #ebebeb;
+  background-color: #a2a5a9;
+  border-color: #a2a5a9;
+}
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: #000000;
 }

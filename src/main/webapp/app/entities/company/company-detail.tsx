@@ -12,12 +12,11 @@ import { ICompany } from 'app/shared/model/company.model';
 // tslint:disable-next-line:no-unused-variable
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import '../../app.scss';
+import TabBar from 'app/entities/company/company-tabpane';
 
 export interface ICompanyDetailProps extends StateProps, DispatchProps, RouteComponentProps<{ id: string }> {}
-export interface ITabKey {
-  key: string;
-}
-export class CompanyDetail extends React.Component<ICompanyDetailProps, ITabKey> {
+
+export class CompanyDetail extends React.Component<ICompanyDetailProps> {
   componentDidMount() {
     this.props.getEntity(this.props.match.params.id);
   }
@@ -121,7 +120,7 @@ export class CompanyDetail extends React.Component<ICompanyDetailProps, ITabKey>
             </div>
           </Col>
         </Row>
-        <div />
+        <TabBar {...this.props} />
       </div>
     );
   }
