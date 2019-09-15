@@ -14,7 +14,7 @@
       },
       "account": {
         "main": "Account",
-        "settings": "Settings",
+        "settings": "Profile",
         "password": "Password",
         "sessions": "Sessions",
         "login": "Sign in",
@@ -135,6 +135,5 @@
     "idexists": "A new {{ entityName }} cannot already have an ID",
     "wrongroleforcreatingcompany": "You can't create a company if you manage a company or are employed by one.",
     "idnull": "Invalid ID"
-  },
-  "footer": "This is your footer"
+  }
 }

@@ -81,7 +81,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
         <Row className="justify-content-center">
           <Col md="8">
             <h2 id="cidApp.company.home.createOrEditLabel">
-              <Translate contentKey="cidApp.company.home.createOrEditLabel">Create or edit a Company</Translate>
+              <Translate contentKey="cidApp.company.home.editLabel">Create or edit a Company</Translate>
             </h2>
           </Col>
         </Row>
@@ -211,7 +211,10 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
                     {companyLogo ? (
                       <div>
                         <a onClick={openFile(companyLogoContentType, companyLogo)}>
-                          <img src={`data:${companyLogoContentType};base64,${companyLogo}`} style={{ maxHeight: '100px' }} />
+                          <img
+                            src={`data:${companyLogoContentType};base64,${companyLogo}`}
+                            style={{ maxHeight: '50px', borderRadius: '50%' }}
+                          />
                         </a>
                         <br />
                         <Row>

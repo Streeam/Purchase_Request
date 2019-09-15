@@ -7,9 +7,11 @@ import { Col, Row } from 'reactstrap';
 const Footer = props => (
   <div className="footer page-content">
     <Row>
-      <Col md="12">
+      <Col md="8">
         <p>
-          <Translate contentKey="footer">Your footer</Translate>
+          <a href="https://github.com/Streeam/Purchase_Request" target="_blank" rel="noopener noreferrer">
+            https://github.com/Streeam/Purchase_Request
+          </a>
         </p>
       </Col>
     </Row>

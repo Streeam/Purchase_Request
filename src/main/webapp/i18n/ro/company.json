@@ -4,7 +4,8 @@
       "home": {
         "title": "Companies",
         "createLabel": "Creeare o nouă entitate Company",
-        "createOrEditLabel": "Creeare sau editare Company",
+        "newLabel": "Create a new Company",
+        "editLabel": "Modificare",
         "search": "Căutare după Company",
         "notFound": "No Companies found"
       },

@@ -4,7 +4,8 @@
       "home": {
         "title": "Companies",
         "createLabel": "Create a new Company",
-        "createOrEditLabel": "Create or edit a Company",
+        "newLabel": "Create a new Company",
+        "editLabel": "Edit Company",
         "search": "Search for Company",
         "notFound": "No Companies found"
       },

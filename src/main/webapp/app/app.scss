@@ -5,10 +5,11 @@
 @import '~bootswatch/dist/superhero/bootswatch';
 body {
   margin: 0;
+  background-color: white;
 }
 
 a {
-  color: #533f03;
+  color: #000000;
   font-weight: bold;
 }
 
@@ -32,6 +33,11 @@ a {
     padding: 1rem;
     .card {
       padding: 1rem;
+      margin: 16px auto;
+      border: 1px solid #eee;
+      box-shadow: 0 2px 3px #ccc;
+      padding: 10px;
+      background-color: #eee;
     }
     .view-routes {
       height: 100%;
@@ -316,3 +322,19 @@ http://stackoverflow.com/questions/23436430/bootstrap-3-input-group-100-width */
 }
 
 /* jhipster-needle-scss-add-main JHipster will add new css style */
+
+.Button {
+  background-color: antiquewhite;
+  font: inherit;
+  color: black;
+  border: transparent;
+  padding: 8px;
+  box-shadow: 0 2px 3px #b3b3b3;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.Button:hover {
+  background-color: #9e9d9d;
+  border: transparent;
+}

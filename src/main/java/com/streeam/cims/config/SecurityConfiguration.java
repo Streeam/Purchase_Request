@@ -1,10 +1,8 @@
 package com.streeam.cims.config;
 
-import com.streeam.cims.security.*;
-import com.streeam.cims.security.jwt.*;
-
-import org.springframework.beans.factory.BeanInitializationException;
-import org.springframework.beans.factory.InitializingBean;
+import com.streeam.cims.security.AuthoritiesConstants;
+import com.streeam.cims.security.jwt.JWTConfigurer;
+import com.streeam.cims.security.jwt.TokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;

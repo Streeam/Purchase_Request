@@ -19,7 +19,6 @@ export const Brand = props => (
     <span className="brand-title">
       <Translate contentKey="global.title">CID</Translate>
     </span>
-    <span className="navbar-version">{appConfig.VERSION}</span>
   </NavbarBrand>
 );
 
