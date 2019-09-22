@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router-dom';
-import { TabContent, TabPane, Nav, NavItem, NavLink, Card, Button, CardTitle, CardText, Row, Col } from 'reactstrap';
+import { TabContent, TabPane, Nav, NavItem, NavLink, Card, Button, CardTitle, Table, Row, Col } from 'reactstrap';
 // tslint:disable-next-line:no-unused-variable
 import { Translate, ICrudGetAction, openFile, byteSize } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -120,7 +120,38 @@ export class CompanyDetail extends React.Component<ICompanyDetailProps> {
             </div>
           </Col>
         </Row>
-        <TabBar {...this.props} />
+        <TabBar>
+          <Table>
+            <thead>
+              <tr>
+                <th />
+                <th>Name</th>
+                <th>Username</th>
+                <th>Manager</th>
+                <th>Employee</th>
+              </tr>
+            </thead>
+            <tbody>
+              {companyEntity.employees.map((employee, i) => (
+                <tr key={`entity-${i}`}>
+                  <td>
+                    {employee.image ? (
+                      <div>
+                        <img src={`data:${employee.imageContentType};base64,${employee.image}`} style={{ maxHeight: '30px' }} />
+                      </div>
+                    ) : (
+                      <div>
+                        <img src={`content/images/default_profile_icon.png`} style={{ maxHeight: '30px' }} />
+                      </div>
+                    )}
+                  </td>
+                  <td>{`${employee.firstName}` + ` ${employee.lastName}`}</td>
+                  <td>{employee.login}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </TabBar>
       </div>
     );
   }
