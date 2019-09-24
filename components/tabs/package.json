@@ -1,0 +1,31 @@
+{
+  "name": "@bit/react-bootstrap.react-bootstrap.tabs",
+  "version": "1.0.0",
+  "homepage": "https://bit.dev/react-bootstrap/react-bootstrap/tabs",
+  "main": "dist/src/Tabs.js",
+  "dependencies": {
+    "prop-types-extra": "^1.1.0",
+    "prop-types": "^15.6.2",
+    "uncontrollable": "^6.0.0",
+    "@bit/react-bootstrap.react-bootstrap.nav": "1.0.0",
+    "@bit/react-bootstrap.react-bootstrap.nav-item": "1.0.0",
+    "@bit/react-bootstrap.react-bootstrap.nav-link": "1.0.0",
+    "@bit/react-bootstrap.react-bootstrap.tab-container": "1.0.0",
+    "@bit/react-bootstrap.react-bootstrap.tab-content": "1.0.0",
+    "@bit/react-bootstrap.react-bootstrap.tab-pane": "1.0.0",
+    "@bit/react-bootstrap.react-bootstrap.element-children": "1.0.0"
+  },
+  "devDependencies": {
+    "enzyme": "^3.8.0",
+    "@bit/react-bootstrap.react-bootstrap.tab": "1.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.3.0"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "bit": {
+    "env": {
+      "compiler": "bit.envs/compilers/react@1.0.0"
+    }
+  }
+}

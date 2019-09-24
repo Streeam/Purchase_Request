@@ -8,13 +8,13 @@ import { Row, Col, Button } from 'reactstrap';
 export const Home = () => (
   <Row>
     <Col style={{ padding: '15% 0 0 0' }} sm="12" md={{ size: 6, offset: 3 }}>
-      <Button tag={Link} to="/entity/company/new" className="Button" size="lg" block>
+      <Button className="Button" size="lg" block>
         JOIN COMPANY
       </Button>
     </Col>
 
     <Col style={{ padding: '10px 0 15% 0' }} sm="12" md={{ size: 6, offset: 3 }}>
-      <Button className="Button" size="lg" block>
+      <Button tag={Link} to="/entity/company/new" className="Button" size="lg" block>
         CREATE COMPANY
       </Button>
     </Col>

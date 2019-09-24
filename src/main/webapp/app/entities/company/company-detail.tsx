@@ -25,6 +25,26 @@ export class CompanyDetail extends React.Component<ICompanyDetailProps> {
     const { companyEntity } = this.props;
     const lableStyle = { color: 'black' };
     const fieldStyle = { color: '#666666' };
+    const employees = companyEntity.employees
+      ? companyEntity.employees.map((employee, i) => (
+          <tr key={`entity-${i}`}>
+            <td>
+              {employee.image ? (
+                <div>
+                  <img src={`data:${employee.imageContentType};base64,${employee.image}`} style={{ maxHeight: '30px' }} />
+                </div>
+              ) : (
+                <div>
+                  <img src={`content/images/default_profile_icon.png`} style={{ maxHeight: '30px' }} />
+                </div>
+              )}
+            </td>
+            <td>{`${employee.firstName}` + ` ${employee.lastName}`}</td>
+            <td>{employee.login}</td>
+          </tr>
+        ))
+      : null;
+
     return (
       <div>
         <Row>
@@ -131,25 +151,7 @@ export class CompanyDetail extends React.Component<ICompanyDetailProps> {
                 <th>Employee</th>
               </tr>
             </thead>
-            <tbody>
-              {companyEntity.employees.map((employee, i) => (
-                <tr key={`entity-${i}`}>
-                  <td>
-                    {employee.image ? (
-                      <div>
-                        <img src={`data:${employee.imageContentType};base64,${employee.image}`} style={{ maxHeight: '30px' }} />
-                      </div>
-                    ) : (
-                      <div>
-                        <img src={`content/images/default_profile_icon.png`} style={{ maxHeight: '30px' }} />
-                      </div>
-                    )}
-                  </td>
-                  <td>{`${employee.firstName}` + ` ${employee.lastName}`}</td>
-                  <td>{employee.login}</td>
-                </tr>
-              ))}
-            </tbody>
+            <tbody>{employees}</tbody>
           </Table>
         </TabBar>
       </div>

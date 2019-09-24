@@ -232,7 +232,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
                       </div>
                     ) : null}
                     <input id="file_companyLogo" type="file" onChange={this.onBlobChange(true, 'companyLogo')} accept="image/*" />
-                    <AvInput type="hidden" name="companyLogo" value={companyLogo} />
+                    <AvInput type="hidden" name="companyLogo" value={companyLogo ? companyLogo : ''} />
                   </AvGroup>
                 </AvGroup>
                 <Button tag={Link} id="cancel-save" to="/entity/company" replace color="info">
