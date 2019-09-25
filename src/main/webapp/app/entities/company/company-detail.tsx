@@ -25,30 +25,10 @@ export class CompanyDetail extends React.Component<ICompanyDetailProps> {
     const { companyEntity } = this.props;
     const lableStyle = { color: 'black' };
     const fieldStyle = { color: '#666666' };
-    const employees = companyEntity.employees
-      ? companyEntity.employees.map((employee, i) => (
-          <tr key={`entity-${i}`}>
-            <td>
-              {employee.image ? (
-                <div>
-                  <img src={`data:${employee.imageContentType};base64,${employee.image}`} style={{ maxHeight: '30px' }} />
-                </div>
-              ) : (
-                <div>
-                  <img src={`content/images/default_profile_icon.png`} style={{ maxHeight: '30px' }} />
-                </div>
-              )}
-            </td>
-            <td>{`${employee.firstName}` + ` ${employee.lastName}`}</td>
-            <td>{employee.login}</td>
-          </tr>
-        ))
-      : null;
-
     return (
       <div>
         <Row>
-          <Col sm="1">
+          <Col sm="4">
             {companyEntity.companyLogo ? (
               <div>
                 <a onClick={openFile(companyEntity.companyLogoContentType, companyEntity.companyLogo)}>
@@ -61,7 +41,11 @@ export class CompanyDetail extends React.Component<ICompanyDetailProps> {
                   />
                 </a>
               </div>
-            ) : null}
+            ) : (
+              <div>
+                <img src={`content/images/company-logo.png`} style={{ maxHeight: '50px' }} />
+              </div>
+            )}
           </Col>
           <Col md="8">
             <h1 style={lableStyle}>{companyEntity.name}</h1>
@@ -124,13 +108,6 @@ export class CompanyDetail extends React.Component<ICompanyDetailProps> {
         <Row>
           <Col>
             <div className="float-right">
-              <Button className="Button" tag={Link} to="/entity/company" replace color="info">
-                <FontAwesomeIcon icon="arrow-left" />{' '}
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.back">Back</Translate>
-                </span>
-              </Button>
-              &nbsp;
               <Button className="Button" tag={Link} to={`/entity/company/${companyEntity.id}/edit`} replace color="primary">
                 <FontAwesomeIcon icon="pencil-alt" />{' '}
                 <span className="d-none d-md-inline">
@@ -140,20 +117,14 @@ export class CompanyDetail extends React.Component<ICompanyDetailProps> {
             </div>
           </Col>
         </Row>
-        <TabBar>
-          <Table>
-            <thead>
-              <tr>
-                <th />
-                <th>Name</th>
-                <th>Username</th>
-                <th>Manager</th>
-                <th>Employee</th>
-              </tr>
-            </thead>
-            <tbody>{employees}</tbody>
-          </Table>
-        </TabBar>
+        <TabBar {...companyEntity} />
+        <Button className="Button" tag={Link} to="/entity/company" replace color="info">
+          <FontAwesomeIcon icon="arrow-left" />{' '}
+          <span className="d-none d-md-inline">
+            <Translate contentKey="entity.action.back">Back</Translate>
+          </span>
+        </Button>
+        &nbsp;
       </div>
     );
   }
