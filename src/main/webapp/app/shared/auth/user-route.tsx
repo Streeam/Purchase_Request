@@ -8,27 +8,25 @@ import { AUTHORITIES } from 'app/config/constants';
 
 export interface IPrivateRouteProps extends RouteProps, StateProps {}
 
-export const PrivateRouteComponent = ({
+export const UserPrivateRoute = ({
   component: Component,
   isAuthenticated,
   sessionHasBeenFetched,
   isAuthorized,
+  account: account,
   ...rest
 }: IPrivateRouteProps) => {
-  const checkAuthorities = props =>
-    isAuthorized ? (
-      <ErrorBoundary>
-        <Component {...props} />
-      </ErrorBoundary>
-    ) : (
-      <div />
-    );
+  const checkAuthorities = props => (
+    <ErrorBoundary>
+      <Component account={account} isUserOnly={isAuthorized} {...props} />
+    </ErrorBoundary>
+  );
 
   const renderRedirect = props => {
     if (!sessionHasBeenFetched) {
       return <div />;
     } else {
-      return isAuthenticated ? checkAuthorities(props) : <div />;
+      return isAuthenticated ? checkAuthorities(props) : <div>Home unauthorize</div>;
     }
   };
 
@@ -47,7 +45,8 @@ export const hasOnlyUserRole = (authorities: string[]) => {
 const mapStateToProps = ({ authentication: { isAuthenticated, account, sessionHasBeenFetched } }: IRootState) => ({
   isAuthenticated,
   isAuthorized: hasOnlyUserRole(account.authorities),
-  sessionHasBeenFetched
+  sessionHasBeenFetched,
+  account
 });
 
 type StateProps = ReturnType<typeof mapStateToProps>;
@@ -57,11 +56,11 @@ type StateProps = ReturnType<typeof mapStateToProps>;
  * Accepts same props as React router Route.
  * The route also checks for authorization if hasAnyAuthorities is specified.
  */
-export const PrivateRoute = connect<StateProps, undefined>(
+export const UserRoute = connect<StateProps, undefined>(
   mapStateToProps,
   null,
   null,
   { pure: false }
-)(PrivateRouteComponent);
+)(UserPrivateRoute);
 
-export default PrivateRoute;
+export default UserRoute;

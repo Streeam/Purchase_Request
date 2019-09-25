@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { getEntity } from './company.reducer';
 import { Translate, Storage } from 'react-jhipster';
@@ -12,11 +12,11 @@ import LoadingBar from 'react-redux-loading-bar';
 import { AUTHORITIES } from '../../config/constants';
 import { hasAnyAuthority } from '../../shared/auth/private-route';
 import { IRootState } from '../../shared/reducers';
+import CompanyEmployeeTab from './company-employee-tab';
 
 const TabBar = props => {
   const [tabPane, setMenuOpen] = useState('1');
   const toggleTab = (tab: any): void => setMenuOpen(tab);
-
   const firstTab = () => toggleTab('1');
   const secondTab = () => toggleTab('2');
 
@@ -37,7 +37,9 @@ const TabBar = props => {
           </NavItem>
         </Nav>
         <TabContent activeTab={tabPane}>
-          <TabPane tabId="1">{props.children}</TabPane>
+          <TabPane tabId="1">
+            <CompanyEmployeeTab {...props} />
+          </TabPane>
           <TabPane tabId="2" />
         </TabContent>
       </div>

@@ -11,7 +11,7 @@ import Logout from 'app/modules/login/logout';
 import Home from 'app/modules/home/home';
 import Entities from 'app/entities';
 import PrivateRoute from 'app/shared/auth/private-route';
-import UserOnlyRoute from 'app/shared/auth/user-route';
+import HomeRoute from 'app/shared/auth/user-route';
 import ErrorBoundaryRoute from 'app/shared/error/error-boundary-route';
 import PageNotFound from 'app/shared/error/page-not-found';
 import { AUTHORITIES } from 'app/config/constants';
@@ -40,7 +40,7 @@ const Routes = () => (
       <PrivateRoute path="/admin" component={Admin} hasAnyAuthorities={[AUTHORITIES.ADMIN]} />
       <PrivateRoute path="/account" component={Account} hasAnyAuthorities={[AUTHORITIES.ADMIN, AUTHORITIES.USER]} />
       <PrivateRoute path="/entity" component={Entities} hasAnyAuthorities={[AUTHORITIES.USER]} />
-      <UserOnlyRoute path="/" exact component={Home} />
+      <HomeRoute path="/" exact component={Home} />
       <ErrorBoundaryRoute component={PageNotFound} />
     </Switch>
   </div>

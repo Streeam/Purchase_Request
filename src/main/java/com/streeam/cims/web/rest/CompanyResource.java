@@ -524,6 +524,24 @@ public class CompanyResource {
 
     }
 
+    /**
+     * {@code GET  /companies/current-company} : get the user's company.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the companyDTO, or with status {@code 404 (Not Found)}.
+     */
+    @GetMapping("/companies/current-company")
+    public ResponseEntity<CompanyDTO> getUsersCompany() {
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+
+        User currentUser = companyService.findCurrentUser(currentUserLogin).orElseThrow(() ->
+            new ResourceNotFoundException("No user logged in."));
+
+        log.debug("REST request to get Company of the user with the following email: {}", currentUser.getEmail());
+        Company company = companyService.findCompanyWithCurrentUserNonPage(currentUser).orElseThrow(()->
+            new BadRequestAlertException("This user does not have a company", ENTITY_NAME, "nocompanywiththisuser") );
+        CompanyDTO companyDTO = companyMapper.toDto(company);
+        return ResponseEntity.ok(companyDTO);
+    }
+
     private void idNotNull(@PathVariable Long companyId, @PathVariable Long employeeId) {
         if (employeeId == null) {
             throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");

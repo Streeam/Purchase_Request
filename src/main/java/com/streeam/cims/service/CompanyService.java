@@ -270,6 +270,12 @@ public class CompanyService {
         return new PageImpl<>(Arrays.asList(companyDTO));
     }
 
+    public Optional<Company> findCompanyWithCurrentUserNonPage(User user) {
+        Optional<Employee> employee = employeeService.findOneByLogin(user.getLogin());
+        Optional<Company> company = companyRepository.findOneByEmployees(Collections.singleton(employee.get()));
+        return company;
+    }
+
     public Optional<Employee> getCompanysManager(Company company) {
 
         return company.getEmployees().stream()
