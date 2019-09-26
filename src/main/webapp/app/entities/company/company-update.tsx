@@ -91,14 +91,6 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
               <p>Loading...</p>
             ) : (
               <AvForm model={isNew ? {} : companyEntity} onSubmit={this.saveEntity}>
-                {!isNew ? (
-                  <AvGroup>
-                    <Label for="company-id">
-                      <Translate contentKey="global.field.id">ID</Translate>
-                    </Label>
-                    <AvInput id="company-id" type="text" className="form-control" name="id" required readOnly />
-                  </AvGroup>
-                ) : null}
                 <AvGroup>
                   <Label id="nameLabel" for="company-name">
                     <Translate contentKey="cidApp.company.name">Name</Translate>
@@ -224,7 +216,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
                             </span>
                           </Col>
                           <Col md="1">
-                            <Button color="danger" onClick={this.clearBlob('companyLogo')}>
+                            <Button onClick={this.clearBlob('companyLogo')}>
                               <FontAwesomeIcon icon="times-circle" />
                             </Button>
                           </Col>
@@ -235,7 +227,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
                     <AvInput type="hidden" name="companyLogo" value={companyLogo ? companyLogo : ''} />
                   </AvGroup>
                 </AvGroup>
-                <Button tag={Link} id="cancel-save" to="/entity/company" replace color="info">
+                <Button tag={Link} id="cancel-save" to="/entity/company" replace>
                   <FontAwesomeIcon icon="arrow-left" />
                   &nbsp;
                   <span className="d-none d-md-inline">
@@ -243,7 +235,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
                   </span>
                 </Button>
                 &nbsp;
-                <Button color="primary" id="save-entity" type="submit" disabled={updating}>
+                <Button id="save-entity" type="submit" disabled={updating}>
                   <FontAwesomeIcon icon="save" />
                   &nbsp;
                   <Translate contentKey="entity.action.save">Save</Translate>

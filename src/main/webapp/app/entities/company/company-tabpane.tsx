@@ -19,7 +19,6 @@ const TabBar = props => {
   const toggleTab = (tab: any): void => setMenuOpen(tab);
   const firstTab = () => toggleTab('1');
   const secondTab = () => toggleTab('2');
-
   return (
     <div id="app-header">
       <LoadingBar className="loading-bar" />
@@ -27,7 +26,7 @@ const TabBar = props => {
         <Nav tabs>
           <NavItem>
             <NavLink className={classnames({ active: tabPane === '1' })} onClick={firstTab}>
-              Company Structure
+              Company's Employees
             </NavLink>
           </NavItem>
           <NavItem>

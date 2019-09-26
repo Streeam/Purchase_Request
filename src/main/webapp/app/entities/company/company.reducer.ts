@@ -10,6 +10,7 @@ export const ACTION_TYPES = {
   SEARCH_COMPANIES: 'company/SEARCH_COMPANIES',
   FETCH_COMPANY_LIST: 'company/FETCH_COMPANY_LIST',
   FETCH_COMPANY: 'company/FETCH_COMPANY',
+  FETCH_EMPLOYEE_COMPANY: 'company/FETCH_EMPLOYEE_COMPANY',
   CREATE_COMPANY: 'company/CREATE_COMPANY',
   UPDATE_COMPANY: 'company/UPDATE_COMPANY',
   DELETE_COMPANY: 'company/DELETE_COMPANY',
@@ -22,6 +23,7 @@ const initialState = {
   errorMessage: null,
   entities: [] as ReadonlyArray<ICompany>,
   entity: defaultValue,
+  employeeEntity: defaultValue,
   updating: false,
   totalItems: 0,
   updateSuccess: false
@@ -36,6 +38,7 @@ export default (state: CompanyState = initialState, action): CompanyState => {
     case REQUEST(ACTION_TYPES.SEARCH_COMPANIES):
     case REQUEST(ACTION_TYPES.FETCH_COMPANY_LIST):
     case REQUEST(ACTION_TYPES.FETCH_COMPANY):
+    case REQUEST(ACTION_TYPES.FETCH_EMPLOYEE_COMPANY):
       return {
         ...state,
         errorMessage: null,
@@ -54,6 +57,7 @@ export default (state: CompanyState = initialState, action): CompanyState => {
     case FAILURE(ACTION_TYPES.SEARCH_COMPANIES):
     case FAILURE(ACTION_TYPES.FETCH_COMPANY_LIST):
     case FAILURE(ACTION_TYPES.FETCH_COMPANY):
+    case FAILURE(ACTION_TYPES.FETCH_EMPLOYEE_COMPANY):
     case FAILURE(ACTION_TYPES.CREATE_COMPANY):
     case FAILURE(ACTION_TYPES.UPDATE_COMPANY):
     case FAILURE(ACTION_TYPES.DELETE_COMPANY):
@@ -77,6 +81,12 @@ export default (state: CompanyState = initialState, action): CompanyState => {
         ...state,
         loading: false,
         entity: action.payload.data
+      };
+    case SUCCESS(ACTION_TYPES.FETCH_EMPLOYEE_COMPANY):
+      return {
+        ...state,
+        loading: false,
+        employeeEntity: action.payload.data
       };
     case SUCCESS(ACTION_TYPES.CREATE_COMPANY):
     case SUCCESS(ACTION_TYPES.UPDATE_COMPANY):
@@ -134,6 +144,14 @@ export const getEntity: ICrudGetAction<ICompany> = id => {
   const requestUrl = `${apiUrl}/${id}`;
   return {
     type: ACTION_TYPES.FETCH_COMPANY,
+    payload: axios.get<ICompany>(requestUrl)
+  };
+};
+
+export const getCurrentUserEntity: ICrudGetAction<ICompany> = () => {
+  const requestUrl = `${apiUrl}/current-company`;
+  return {
+    type: ACTION_TYPES.FETCH_EMPLOYEE_COMPANY,
     payload: axios.get<ICompany>(requestUrl)
   };
 };

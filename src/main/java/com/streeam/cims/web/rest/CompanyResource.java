@@ -550,8 +550,4 @@ public class CompanyResource {
             throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
         }
     }
-
-
-
-
 }

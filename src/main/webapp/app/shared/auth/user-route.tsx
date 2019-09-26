@@ -13,12 +13,11 @@ export const UserPrivateRoute = ({
   isAuthenticated,
   sessionHasBeenFetched,
   isAuthorized,
-  account: account,
   ...rest
 }: IPrivateRouteProps) => {
   const checkAuthorities = props => (
     <ErrorBoundary>
-      <Component account={account} isUserOnly={isAuthorized} {...props} />
+      <Component isUserOnly={isAuthorized} {...props} />
     </ErrorBoundary>
   );
 
@@ -45,8 +44,7 @@ export const hasOnlyUserRole = (authorities: string[]) => {
 const mapStateToProps = ({ authentication: { isAuthenticated, account, sessionHasBeenFetched } }: IRootState) => ({
   isAuthenticated,
   isAuthorized: hasOnlyUserRole(account.authorities),
-  sessionHasBeenFetched,
-  account
+  sessionHasBeenFetched
 });
 
 type StateProps = ReturnType<typeof mapStateToProps>;

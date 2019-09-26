@@ -4,6 +4,8 @@ import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Label, Alert, Row, 
 import { AvForm, AvField, AvGroup, AvInput } from 'availity-reactstrap-validation';
 import { Link } from 'react-router-dom';
 
+import '../../app.scss';
+
 export interface ILoginModalProps {
   showModal: boolean;
   loginError: boolean;
@@ -62,12 +64,12 @@ class LoginModal extends React.Component<ILoginModalProps> {
               </Col>
             </Row>
             <div className="mt-1">&nbsp;</div>
-            <Alert color="warning">
+            <Alert color="light">
               <Link to="/reset/request">
                 <Translate contentKey="login.password.forgot">Did you forget your password?</Translate>
               </Link>
             </Alert>
-            <Alert color="warning">
+            <Alert color="light">
               <span>
                 <Translate contentKey="global.messages.info.register.noaccount">You don't have an account yet?</Translate>
               </span>{' '}
@@ -77,10 +79,10 @@ class LoginModal extends React.Component<ILoginModalProps> {
             </Alert>
           </ModalBody>
           <ModalFooter>
-            <Button color="secondary" onClick={handleClose} tabIndex="1">
+            <Button onClick={handleClose} tabIndex="1">
               <Translate contentKey="entity.action.cancel">Cancel</Translate>
             </Button>{' '}
-            <Button color="primary" type="submit">
+            <Button type="submit">
               <Translate contentKey="login.form.button">Sign in</Translate>
             </Button>
           </ModalFooter>
