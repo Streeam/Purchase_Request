@@ -10,6 +10,7 @@ import reducer, {
   createEntity,
   deleteEntity,
   getEntities,
+  getCurrentUserEntity,
   getSearchEntities,
   getEntity,
   updateEntity,
@@ -33,6 +34,7 @@ describe('Entities reducer tests', () => {
     errorMessage: null,
     entities: [] as ReadonlyArray<ICompany>,
     entity: defaultValue,
+    employeeEntity: defaultValue,
     totalItems: 0,
     updating: false,
     updateSuccess: false
