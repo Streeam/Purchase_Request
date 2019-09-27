@@ -1,0 +1,58 @@
+{
+    "fluentMethods": true,
+    "clientRootFolder": "",
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "employee",
+            "otherEntityRelationshipName": "notification",
+            "relationshipValidateRules": "required",
+            "relationshipName": "employee",
+            "otherEntityField": "id"
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "comment",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "sentDate",
+            "fieldType": "Instant",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "read",
+            "fieldType": "Boolean",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "format",
+            "fieldType": "NotificationType",
+            "fieldValues": "INVITATION,WELCOME,NEW_EMPLOYEE,FIRED,ACCEPT_INVITE,REJECT_REQUEST,REQUEST_TO_JOIN,LEFT_COMPANY,COMPANY_DELETED,ACCEPT_REQUEST, REJECT_REQUEST,OTHERS",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "company",
+            "fieldType": "Long"
+        },
+        {
+            "fieldName": "referenced_user",
+            "fieldType": "String"
+        }
+    ],
+    "changelogDate": "20190807193904",
+    "dto": "mapstruct",
+    "searchEngine": "elasticsearch",
+    "service": "serviceClass",
+    "entityTableName": "notification",
+    "databaseType": "sql",
+    "jpaMetamodelFiltering": false,
+    "pagination": "pagination"
+}

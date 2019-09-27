@@ -1,0 +1,32 @@
+{
+  "cidApp": {
+    "employee": {
+      "home": {
+        "title": "Employees",
+        "createLabel": "Creeare o nouă entitate Employee",
+        "createOrEditLabel": "Creeare sau editare Employee",
+        "search": "Căutare după Employee",
+        "notFound": "No Employees found"
+      },
+      "created": "A fost creată o nouă entitate Employee cu identificatorul {{ param }}",
+      "updated": "Employee cu identificatorul {{ param }} a fost actualizată",
+      "deleted": "Employee cu identificatorul {{ param }} a fost ștearsă",
+      "delete": {
+        "question": "Sunteți sigur că doriți să ștergeți Employee {{ id }}?"
+      },
+      "detail": {
+        "title": "Employee"
+      },
+      "login": "Login",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "hired": "Hired",
+      "language": "Language",
+      "image": "Image",
+      "user": "User",
+      "notification": "Notification",
+      "company": "Company"
+    }
+  }
+}

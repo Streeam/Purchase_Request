@@ -1,0 +1,91 @@
+{
+    "name": "Employee",
+    "fields": [
+        {
+            "fieldName": "login",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required",
+                "maxlength"
+            ],
+            "fieldValidateRulesMaxlength": 50
+        },
+        {
+            "fieldName": "firstName",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "maxlength"
+            ],
+            "fieldValidateRulesMaxlength": 50
+        },
+        {
+            "fieldName": "lastName",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "maxlength"
+            ],
+            "fieldValidateRulesMaxlength": 50
+        },
+        {
+            "fieldName": "email",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required",
+                "minlength",
+                "maxlength",
+                "pattern"
+            ],
+            "fieldValidateRulesMinlength": 5,
+            "fieldValidateRulesMaxlength": 254,
+            "fieldValidateRulesPattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+        },
+        {
+            "fieldName": "hired",
+            "fieldType": "Boolean",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "language",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "image",
+            "fieldType": "byte[]",
+            "fieldTypeBlobContent": "image"
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "one-to-one",
+            "otherEntityName": "user",
+            "otherEntityRelationshipName": "employee",
+            "relationshipName": "user",
+            "otherEntityField": "login",
+            "ownerSide": true
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "notification",
+            "otherEntityRelationshipName": "employee",
+            "relationshipName": "notification"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "company",
+            "otherEntityRelationshipName": "employees",
+            "relationshipName": "company",
+            "otherEntityField": "name"
+        }
+    ],
+    "changelogDate": "20190807193905",
+    "entityTableName": "employee",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "clientRootFolder": "",
+    "applications": "*"
+}

@@ -1,0 +1,88 @@
+{
+    "name": "Company",
+    "fields": [
+        {
+            "fieldName": "name",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required",
+                "unique"
+            ]
+        },
+        {
+            "fieldName": "email",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required",
+                "unique",
+                "minlength",
+                "maxlength",
+                "pattern"
+            ],
+            "fieldValidateRulesMinlength": 5,
+            "fieldValidateRulesMaxlength": 254,
+            "fieldValidateRulesPattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+        },
+        {
+            "fieldName": "phone",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "addressLine1",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "addressLine2",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "city",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "country",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "postcode",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "companyLogo",
+            "fieldType": "byte[]",
+            "fieldTypeBlobContent": "image"
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "employee",
+            "otherEntityRelationshipName": "company",
+            "relationshipName": "employees"
+        }
+    ],
+    "changelogDate": "20190807193903",
+    "entityTableName": "company",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "clientRootFolder": "",
+    "applications": "*"
+}

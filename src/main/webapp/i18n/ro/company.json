@@ -1,0 +1,32 @@
+{
+  "cidApp": {
+    "company": {
+      "home": {
+        "title": "Companies",
+        "createLabel": "Creeare o nouă entitate Company",
+        "createOrEditLabel": "Creeare sau editare Company",
+        "search": "Căutare după Company",
+        "notFound": "No Companies found"
+      },
+      "created": "A fost creată o nouă entitate Company cu identificatorul {{ param }}",
+      "updated": "Company cu identificatorul {{ param }} a fost actualizată",
+      "deleted": "Company cu identificatorul {{ param }} a fost ștearsă",
+      "delete": {
+        "question": "Sunteți sigur că doriți să ștergeți Company {{ id }}?"
+      },
+      "detail": {
+        "title": "Company"
+      },
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "addressLine1": "Address Line 1",
+      "addressLine2": "Address Line 2",
+      "city": "City",
+      "country": "Country",
+      "postcode": "Postcode",
+      "companyLogo": "Company Logo",
+      "employees": "Employees"
+    }
+  }
+}
