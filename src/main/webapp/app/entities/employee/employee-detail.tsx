@@ -90,7 +90,7 @@ export class EmployeeDetail extends React.Component<IEmployeeDetailProps> {
             </dt>
             <dd>{employeeEntity.companyName ? employeeEntity.companyName : ''}</dd>
           </dl>
-          <Button tag={Link} to="/entity/employee" replace color="info">
+          <Button tag={Link} to="/" replace color="info">
             <FontAwesomeIcon icon="arrow-left" />{' '}
             <span className="d-none d-md-inline">
               <Translate contentKey="entity.action.back">Back</Translate>

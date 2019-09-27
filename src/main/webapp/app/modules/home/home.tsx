@@ -15,7 +15,7 @@ export const Home = props => {
   return props.isUserOnly ? (
     <Row>
       <Col style={{ padding: '15% 0 0 0' }} sm="12" md={{ size: 6, offset: 3 }}>
-        <Button className="Button" size="lg" block>
+        <Button tag={Link} to="/entity/company/join-company" className="Button" size="lg" block>
           JOIN COMPANY
         </Button>
       </Col>

@@ -7,7 +7,8 @@
         "newLabel": "Create a new Company",
         "editLabel": "Modificare",
         "search": "Căutare după Company",
-        "notFound": "No Companies found"
+        "notFound": "No Companies found",
+        "join": "Inscrie-te intr-o Companie"
       },
       "created": "A fost creată o nouă entitate Company cu identificatorul {{ param }}",
       "updated": "Company cu identificatorul {{ param }} a fost actualizată",

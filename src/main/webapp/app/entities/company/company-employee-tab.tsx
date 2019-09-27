@@ -45,7 +45,7 @@ const companyEmployeeTab = props => {
                   <Translate contentKey="entity.action.view">View</Translate>
                 </span>
               </Button>
-              <Button tag={Link} to={`${props.match.url}/${employee.id}/delete`} color="danger" size="sm">
+              <Button tag={Link} to={``} color="danger" size="sm">
                 <FontAwesomeIcon icon="trash" />{' '}
                 <span className="d-none d-md-inline">
                   <Translate contentKey="entity.action.fire">Fire(TODO)</Translate>

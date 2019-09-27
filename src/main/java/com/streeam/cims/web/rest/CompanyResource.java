@@ -536,9 +536,11 @@ public class CompanyResource {
             new ResourceNotFoundException("No user logged in."));
 
         log.debug("REST request to get Company of the user with the following email: {}", currentUser.getEmail());
-        Company company = companyService.findCompanyWithCurrentUserNonPage(currentUser).orElseThrow(()->
-            new BadRequestAlertException("This user does not have a company", ENTITY_NAME, "nocompanywiththisuser") );
-        CompanyDTO companyDTO = companyMapper.toDto(company);
+        Optional<Company> company = companyService.findCompanyWithCurrentUserNonPage(currentUser);
+        CompanyDTO companyDTO = new CompanyDTO();
+        if(company.isPresent()){
+            companyDTO = companyMapper.toDto(company.get());
+        }
         return ResponseEntity.ok(companyDTO);
     }
 

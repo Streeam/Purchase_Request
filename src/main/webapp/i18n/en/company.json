@@ -7,7 +7,8 @@
         "newLabel": "Create a new Company",
         "editLabel": "Edit Company",
         "search": "Search for Company",
-        "notFound": "No Companies found"
+        "notFound": "No Companies found",
+        "join": "Join a Company"
       },
       "created": "A new Company is created with identifier {{ param }}",
       "updated": "A Company is updated with identifier {{ param }}",

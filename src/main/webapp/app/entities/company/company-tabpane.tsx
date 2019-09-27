@@ -5,13 +5,8 @@ import { Translate, Storage } from 'react-jhipster';
 import { TabContent, TabPane, Nav, NavItem, NavLink, Card, Button, Table, CardText, Row, Col } from 'reactstrap';
 import classnames from 'classnames';
 import '../../app.scss';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Link, RouteComponentProps } from 'react-router-dom';
 import LoadingBar from 'react-redux-loading-bar';
 
-import { AUTHORITIES } from '../../config/constants';
-import { hasAnyAuthority } from '../../shared/auth/private-route';
-import { IRootState } from '../../shared/reducers';
 import CompanyEmployeeTab from './company-employee-tab';
 
 const TabBar = props => {
