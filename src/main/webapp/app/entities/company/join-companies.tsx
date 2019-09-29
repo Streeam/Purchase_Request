@@ -10,11 +10,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
 import { getSearchEntities, getEntities } from './company.reducer';
-import { ICompany } from 'app/shared/model/company.model';
+import { getCurrentEmployeeEntity } from '../employee/employee.reducer';
+import { NOTIFICATIONS } from '../../../app/config/constants';
 // tslint:disable-next-line:no-unused-variable
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { ITEMS_PER_PAGE } from 'app/shared/util/pagination.constants';
 import '../../../content/css/grid.css';
+import { getEntities as getNotifications } from '../notification/notification.reducer';
 
 export interface ICompanyProps extends StateProps, DispatchProps, RouteComponentProps<{ url: string }> {}
 
@@ -27,8 +29,11 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
     search: '',
     ...getSortState(this.props.location, ITEMS_PER_PAGE)
   };
+
   componentDidMount() {
     this.getEntities();
+    this.props.getNotifications();
+    // this.props.getCurrentEmployeeEntity();
   }
 
   search = () => {
@@ -75,9 +80,53 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
   };
 
   render() {
-    const { companyList, match, totalItems } = this.props;
+    const { companyList, match, totalItems, currentEmployee, notifications } = this.props;
+
+    const requestToJoinPending = (companyId: Number): JSX.Element => {
+      const employeeNotifications = notifications.filter(
+        (value, index) => value.company === companyId && value.employeeId === currentEmployee.id
+      );
+      const rejectedNotification = employeeNotifications.filter(
+        (value, index) => value.company === companyId && NOTIFICATIONS.REJECT_REQUEST === value.format
+      );
+      const pendingRequestNotification = employeeNotifications.filter(
+        (value, index) => value.company === companyId && NOTIFICATIONS.REQUEST_TO_JOIN === value.format
+      );
+
+      if (rejectedNotification && rejectedNotification.length > 0) {
+        return (
+          <Button color="danger" size="sm">
+            <FontAwesomeIcon icon="ban" />{' '}
+            <span className="d-none d-md-inline">
+              <Translate contentKey="entity.action.rejected">Application Rejected</Translate>
+            </span>
+          </Button>
+        );
+      }
+
+      if (pendingRequestNotification && pendingRequestNotification.length > 0) {
+        return (
+          <Button color="primary" size="sm" disabled>
+            <FontAwesomeIcon icon="file-signature" />{' '}
+            <span className="d-none d-md-inline">
+              <Translate contentKey="entity.action.submitted">Application Submitted</Translate>
+            </span>
+          </Button>
+        );
+      }
+
+      return (
+        <Button tag={Link} to={`${this.props.match.url}/${companyId}/join`} color="primary" size="sm">
+          <FontAwesomeIcon icon="file-signature" />{' '}
+          <span className="d-none d-md-inline">
+            <Translate contentKey="entity.action.join">Join</Translate>
+          </span>
+        </Button>
+      );
+    };
+
     return (
-      <div>
+      /*<div>
         <GridComponent
           dataSource={companyList && companyList.length > 0 ? companyList : []}
           allowSorting
@@ -85,6 +134,11 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
           pageSettings={{ pageCount: 5 }}
         >
           <ColumnsDirective>
+            <ColumnDirective
+              headerText="Photo"
+              width="100" //src={`data:${company.companyLogoContentType};base64,${company.companyLogo}`}
+              template="<img src= 'data:{{:companyLogoContentType}};base64,{{:companyLogo}}'/>"
+            />
             <ColumnDirective field="name" headerText="Name" width="220" />
             <ColumnDirective field="email" headerText="Email" width="220" />
             <ColumnDirective field="city" headerText="City" width="220" />
@@ -92,8 +146,8 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
           </ColumnsDirective>
           <Inject services={[Sort, Page]} />
         </GridComponent>
-      </div>
-      /*  <div>
+      </div>*/
+      <div>
         <h2 id="company-heading">
           <Translate contentKey="cidApp.company.home.join">Join a Company</Translate>
         </h2>
@@ -125,7 +179,7 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
             <Table responsive>
               <thead>
                 <tr>
-                  <th/>
+                  <th />
                   <th className="hand" onClick={this.sort('name')}>
                     <Translate contentKey="cidApp.company.name">Name</Translate> <FontAwesomeIcon icon="sort" />
                   </th>
@@ -166,8 +220,8 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
                         </div>
                       ) : (
                         <div>
-                        <img src={`content/images/company-logo.png`} style={{ maxHeight: '20px' }} />
-                      </div>
+                          <img src={`content/images/company-logo.png`} style={{ maxHeight: '20px' }} />
+                        </div>
                       )}
                     </td>
                     <td>{company.name}</td>
@@ -185,18 +239,7 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
                             <Translate contentKey="entity.action.view">View</Translate>
                           </span>
                         </Button>
-                        <Button tag={Link} to={`${match.url}/${company.id}/edit`} color="primary" size="sm">
-                          <FontAwesomeIcon icon="pencil-alt" />{' '}
-                          <span className="d-none d-md-inline">
-                            <Translate contentKey="entity.action.edit">Edit</Translate>
-                          </span>
-                        </Button>
-                        <Button tag={Link} to={`${match.url}/${company.id}/delete`} color="danger" size="sm">
-                          <FontAwesomeIcon icon="trash" />{' '}
-                          <span className="d-none d-md-inline">
-                            <Translate contentKey="entity.action.delete">Delete</Translate>
-                          </span>
-                        </Button>
+                        {requestToJoinPending(company.id)}
                       </div>
                     </td>
                   </tr>
@@ -223,19 +266,23 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
             />
           </Row>
         </div>
-      </div> */
+      </div>
     );
   }
 }
 
-const mapStateToProps = ({ company }: IRootState) => ({
+const mapStateToProps = ({ company, employee, notification }: IRootState) => ({
   companyList: company.entities,
-  totalItems: company.totalItems
+  totalItems: company.totalItems,
+  currentEmployee: employee.currentEmployeeEntity,
+  notifications: notification.entities
 });
 
 const mapDispatchToProps = {
   getSearchEntities,
-  getEntities
+  getEntities,
+  getCurrentEmployeeEntity,
+  getNotifications
 };
 
 type StateProps = ReturnType<typeof mapStateToProps>;

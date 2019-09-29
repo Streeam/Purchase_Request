@@ -1,21 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Button, Row, Col, Table } from 'reactstrap';
 // tslint:disable-next-line:no-unused-variable
 import { Translate, openFile } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import { IRootState } from 'app/shared/reducers';
+import { getCurrentUsersCompanyAsync } from './company.reducer';
 import '../../app.scss';
-import TabBar from 'app/entities/company/company-tabpane';
+import TabBar from './company-tabpane';
 
 export const companyDetail = props => {
   const lableStyle = { color: 'black' };
   const { companyEntity } = props;
+
+  useEffect(() => {
+    props.getCurrentUsersCompanyAsync();
+  }, []);
+
   return (
     <div>
       <Row>
         <Col sm="2">
-          {companyEntity.companyLogo ? (
+          {companyEntity && companyEntity.companyLogo ? (
             <div>
               <a onClick={openFile(companyEntity.companyLogoContentType, companyEntity.companyLogo)}>
                 <img
@@ -34,7 +41,14 @@ export const companyDetail = props => {
           )}
         </Col>
         <Col md="8">
-          <h1 style={lableStyle}>{companyEntity.name}</h1>
+          <div style={{ display: 'inline-block' }}>
+            <h1 style={lableStyle}>{companyEntity.name}</h1>
+          </div>
+          <div style={{ display: 'inline-block' }}>
+            <Button tag={Link} to={`/entity/company/${companyEntity.id}/edit`} replace color="link" title="Edit Company">
+              <FontAwesomeIcon icon="pencil-alt" />{' '}
+            </Button>
+          </div>
         </Col>
       </Row>
       <br />
@@ -59,7 +73,6 @@ export const companyDetail = props => {
             <th>
               <Translate contentKey="cidApp.company.postcode">Postcode</Translate>
             </th>
-            <th />
           </tr>
         </thead>
         <tbody>
@@ -70,14 +83,6 @@ export const companyDetail = props => {
             <td>{companyEntity.city}</td>
             <td>{companyEntity.country}</td>
             <td>{companyEntity.postcode}</td>
-            <td>
-              <Button className="Button" tag={Link} to={`/entity/company/${companyEntity.id}/edit`} replace color="primary">
-                <FontAwesomeIcon icon="pencil-alt" />{' '}
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.edit">Edit</Translate>
-                </span>
-              </Button>
-            </td>
           </tr>
         </tbody>
       </Table>
@@ -85,15 +90,17 @@ export const companyDetail = props => {
       <br />
       <TabBar {...props} />
       <br />
-      <Button className="Button" tag={Link} to="/entity/company" replace color="info">
-        <FontAwesomeIcon icon="arrow-left" />{' '}
-        <span className="d-none d-md-inline">
-          <Translate contentKey="entity.action.back">Back</Translate>
-        </span>
-      </Button>
-      &nbsp;
     </div>
   );
 };
 
-export default companyDetail;
+const mapStateToProps = ({ company }: IRootState) => ({
+  companyEntity: company.employeeEntity
+});
+
+const mapDispatchToProps = { getCurrentUsersCompanyAsync };
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(companyDetail);

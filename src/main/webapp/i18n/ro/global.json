@@ -111,7 +111,12 @@
       "open": "Deschidere",
       "save": "Salvare",
       "view": "Vizualizare",
-      "concediere": "Concediere"
+      "fire": "Concediere",
+      "join": "Alătura",
+      "submitted": "Aplicație Trimisă",
+      "rejected": "Aplicație Respinsă",
+      "reject": "Respins",
+      "accept": "Accept"
     },
     "detail": {
       "field": "Câmp",
@@ -119,6 +124,12 @@
     },
     "delete": {
       "title": "Confirmați operația de ștergere"
+    },
+    "join": {
+      "title": "Confirmați operația de alaturare"
+    },
+    "fire": {
+      "title": "Confirmați operația de concediere"
     },
     "validation": {
       "required": "Acest câmp este necesar.",

@@ -1,12 +1,20 @@
 package com.streeam.cims.service.dto;
-import javax.validation.constraints.*;
+
+import com.streeam.cims.domain.Notification;
+import lombok.Data;
+
+import javax.persistence.Lob;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.Objects;
-import javax.persistence.Lob;
+import java.util.Set;
 
 /**
  * A DTO for the {@link com.streeam.cims.domain.Employee} entity.
  */
+@Data
 public class EmployeeDTO implements Serializable {
 
     private Long id;
@@ -44,109 +52,9 @@ public class EmployeeDTO implements Serializable {
 
     private String companyName;
 
-    public Long getId() {
-        return id;
-    }
+    private Set<Notification> notifications;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
-    public String getLogin() {
-        return login;
-    }
-
-    public void setLogin(String login) {
-        this.login = login;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public Boolean isHired() {
-        return hired;
-    }
-
-    public void setHired(Boolean hired) {
-        this.hired = hired;
-    }
-
-    public String getLanguage() {
-        return language;
-    }
-
-    public void setLanguage(String language) {
-        this.language = language;
-    }
-
-    public byte[] getImage() {
-        return image;
-    }
-
-    public void setImage(byte[] image) {
-        this.image = image;
-    }
-
-    public String getImageContentType() {
-        return imageContentType;
-    }
-
-    public void setImageContentType(String imageContentType) {
-        this.imageContentType = imageContentType;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getUserLogin() {
-        return userLogin;
-    }
-
-    public void setUserLogin(String userLogin) {
-        this.userLogin = userLogin;
-    }
-
-    public Long getCompanyId() {
-        return companyId;
-    }
-
-    public void setCompanyId(Long companyId) {
-        this.companyId = companyId;
-    }
-
-    public String getCompanyName() {
-        return companyName;
-    }
-
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -177,7 +85,7 @@ public class EmployeeDTO implements Serializable {
             ", firstName='" + getFirstName() + "'" +
             ", lastName='" + getLastName() + "'" +
             ", email='" + getEmail() + "'" +
-            ", hired='" + isHired() + "'" +
+            ", hired='" + getHired() + "'" +
             ", language='" + getLanguage() + "'" +
             ", image='" + getImage() + "'" +
             ", user=" + getUserId() +
