@@ -106,7 +106,7 @@ public class EmployeeResource {
 
         User linkedUser = employeeService.findUserByEmail(employeeToModify.getEmail()).orElseThrow(() -> new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserlinkedtoemployee"));
 
-        if (!employeeToModify.isHired().equals(employeeDTO.isHired())) {
+        if (!employeeToModify.isHired().equals(employeeDTO.getHired())) {
             throw new BadRequestAlertException("You cannot update the hire value.", ENTITY_NAME, "hirecannotbemodified");
         }
 
@@ -152,28 +152,34 @@ public class EmployeeResource {
     @GetMapping("/employees")
     public ResponseEntity<List<EmployeeDTO>> getAllEmployees(Pageable pageable) {
         log.debug("REST request to get a page of Employees");
+        Page<EmployeeDTO> page = employeeService.findAll(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * {@code GET  /employees/company-employees} : get all the employees. If the user is admin he can see all employees, otherwise only see employees from your company
+     *
+     * @param pageable the pagination information.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of employees in body.
+     */
+    @GetMapping("/company-employees")
+    public ResponseEntity<List<EmployeeDTO>> getAllCompanyEmployees(Pageable pageable) {
+        log.debug("REST request to get a page of Employees");
 
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 
         User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
         Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() -> new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
 
-        Page<EmployeeDTO> page;
-
-        if (employeeService.checkUserHasRoles(currentUser, ADMIN)) {
-            page = employeeService.findAll(pageable);
-        } else if (employeeService.checkUserHasRoles(currentUser, MANAGER, EMPLOYEE)) {
-            Company currentCompany = employeeService.findEmployeesCompany(currentEmployee)
+        Company currentCompany = employeeService.findEmployeesCompany(currentEmployee)
                 .orElseThrow(() -> new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
-            page = employeeService.findCompanysEmployees(pageable, currentCompany.getId());
-        } else {
-            throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "accessrestricted");
-        }
+        Page<EmployeeDTO>  page = employeeService.findCompanysEmployees(pageable, currentCompany.getId());
+
 
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }
-
 
     /**
      * {@code GET  /companies} : get all the unemployed Employees.
@@ -282,6 +288,19 @@ public class EmployeeResource {
     }
 
     /**
+     * {@code GET  /employees/current-employee} : get the current employee.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
+     */
+    @GetMapping("/employees/current-employee")
+    public ResponseEntity<EmployeeDTO> getCurrentEmployee() {
+        log.debug("REST request to get the current employee");
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() -> new ResourceNotFoundException("No user logged in."));
+        Optional<EmployeeDTO> employeeDTO = employeeService.findOne(currentUser.getEmail());
+        return ResponseUtil.wrapOrNotFound(employeeDTO);
+    }
+
+    /**
      * {@code DELETE  /employees/:id} : delete the "id" employee.
      *
      * @param id the id of the employeeDTO to delete.
@@ -337,13 +356,10 @@ public class EmployeeResource {
      * @param companyId the id of the companyDTO to to which the user wants to  join.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the employeeDTO, or with status {@code 404 (Not Found)}.
      */
-    @PostMapping("/employees/{employeeId}/request-to-join/{companyId}")
-    public ResponseEntity<Void> requestToJoinCompany(@PathVariable Long employeeId, @PathVariable Long companyId) {
+    @PostMapping("/employees/request-to-join/{companyId}")
+    public ResponseEntity<Void> requestToJoinCompany(@PathVariable Long companyId) {
         log.debug("REST request to join the company : {}", companyId);
 
-        if (employeeId == null) {
-            throw new BadRequestAlertException("Invalid employee id", ENTITY_NAME, "idemployeenull");
-        }
         if (companyId == null) {
             throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
         }
@@ -356,13 +372,6 @@ public class EmployeeResource {
             new ResourceNotFoundException("No user logged in."));
         Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() ->
             new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
-
-        Employee employeeRequestingToJoin = employeeService.findOneById(employeeId).orElseThrow(() ->
-            new BadRequestAlertException("Employee not found.", ENTITY_NAME, "employeenotfound"));
-
-        if (!currentEmployee.getId().equals(employeeRequestingToJoin.getId())) {
-            throw new BadRequestAlertException("Only the logged in employee can request to join a company.", ENTITY_NAME, "onlycurrentloggedincanjoincomp");
-        }
 
         if (employeeService.checkUserHasRoles(currentUser, EMPLOYEE, MANAGER) && Objects.nonNull(currentEmployee.getCompany())) {
             throw new BadRequestAlertException("You cannot request to join a company if you are already into one.", ENTITY_NAME, "joinonlyifunemployed");
@@ -377,7 +386,8 @@ public class EmployeeResource {
 
         mailService.sendRequestToJoinEmail(manager.getEmail(), currentUser);
 
-        employeeService.sendNotificationToEmployee(manager, employeeRequestingToJoin.getEmail(), companyId, REQUEST_TO_JOIN, "A user submitted a request to join your company " + company.getName());
+        employeeService.sendNotificationToEmployee(currentEmployee, manager.getEmail(), companyId, REQUEST_TO_JOIN, "You have just submitted an request to join the company " + company.getName());
+        employeeService.sendNotificationToEmployee(manager, currentEmployee.getEmail(), companyId, REQUEST_TO_JOIN, "A user submitted a request to join your company " + company.getName());
 
         return ResponseEntity.ok().build();
     }

@@ -943,18 +943,9 @@ class EmployeeTestIT {
         assertThat(manager.getNotifications()).isEmpty();
 
         /**
-         * Only the logged in employee can request to join a company.
-         */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/request-to-join/{companyId}", employee_user1.getId(), updatedCompany2.getId())
-            .with(user(user_two.getLogin().toLowerCase()))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.onlycurrentloggedincanjoincomp")));
-
-        /**
          * You cannot request to join a company if you are already into one.
          */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/request-to-join/{companyId}", manager.getId(), updatedCompany2.getId())
+        restEmployeeMockMvc.perform(post("/api/employees/request-to-join/{companyId}", updatedCompany2.getId())
             .with(user(user_manager.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isBadRequest())
@@ -964,7 +955,7 @@ class EmployeeTestIT {
          *  employee_user2 who is requesting to join updatedCompany2 has had a application rejected 2 days ago by the same company.
          *  He cannot apply to join a company if that company has rejected a request of his sent less then 3 days ago.
          */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/request-to-join/{companyId}", employee_user2.getId(), updatedCompany2.getId())
+        restEmployeeMockMvc.perform(post("/api/employees/request-to-join/{companyId}", updatedCompany2.getId())
             .with(user(user_two.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isBadRequest())
@@ -974,7 +965,7 @@ class EmployeeTestIT {
          *  employee_user1 who is requesting to join updatedCompany2 has had a application rejected 4 days ago by the same company.
          *  This time the request is valid.
          */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/request-to-join/{companyId}", employee_user1.getId(), updatedCompany2.getId())
+        restEmployeeMockMvc.perform(post("/api/employees/request-to-join/{companyId}", updatedCompany2.getId())
             .with(user(user_one.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());

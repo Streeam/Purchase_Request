@@ -35,6 +35,9 @@ public class NotificationService {
     @Autowired
     private EmployeeSearchRepository employeeSearchRepository;
 
+    @Autowired
+    private EmployeeSearchRepository employeeRepository;
+
     private final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationRepository notificationRepository;
@@ -126,7 +129,9 @@ public class NotificationService {
         notificationDTO.setComment(comment);
         notificationDTO.setReferenced_user(referencedEmployeeEmail);
         notificationDTO.setCompany(companyId);
+        notificationRepository.save(notificationMapper.toEntity(notificationDTO));
         authorEmployee.getNotifications().add(notificationMapper.toEntity(notificationDTO));
+        employeeRepository.save(authorEmployee);
         employeeSearchRepository.save(authorEmployee);
         notificationSearchRepository.save(notificationMapper.toEntity(notificationDTO));
         return notificationDTO;}
@@ -163,6 +168,5 @@ public class NotificationService {
         return notifications.stream()
             .anyMatch(notification -> notification.getSentDate().isAfter(nDaysAgo));
     }
-
 
 }

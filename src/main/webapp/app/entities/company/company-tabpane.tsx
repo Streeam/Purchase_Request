@@ -8,6 +8,7 @@ import '../../app.scss';
 import LoadingBar from 'react-redux-loading-bar';
 
 import CompanyEmployeeTab from './company-employee-tab';
+import CompanyApplicantsTab from './company-applicants-tab';
 
 const TabBar = props => {
   const [tabPane, setMenuOpen] = useState('1');
@@ -34,7 +35,9 @@ const TabBar = props => {
           <TabPane tabId="1">
             <CompanyEmployeeTab {...props} />
           </TabPane>
-          <TabPane tabId="2" />
+          <TabPane tabId="2">
+            <CompanyApplicantsTab {...props} />
+          </TabPane>
         </TabContent>
       </div>
     </div>

@@ -16,6 +16,12 @@
       "delete": {
         "question": "Are you sure you want to delete Company {{ id }}?"
       },
+      "join": {
+        "question": "Are you sure you want to join Company {{ name }}?"
+      },
+      "fire": {
+        "question": "Are you sure you want to fire employee: {{ name }}?"
+      },
       "detail": {
         "title": "Company"
       },

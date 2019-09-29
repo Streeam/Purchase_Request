@@ -33,6 +33,7 @@ describe('Entities reducer tests', () => {
     errorMessage: null,
     entities: [] as ReadonlyArray<IEmployee>,
     entity: defaultValue,
+    currentEmployeeEntity: defaultValue,
     totalItems: 0,
     updating: false,
     updateSuccess: false

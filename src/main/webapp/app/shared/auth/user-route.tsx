@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import { Route, Redirect, RouteProps } from 'react-router-dom';
 import { Translate } from 'react-jhipster';
@@ -35,8 +35,8 @@ export const UserPrivateRoute = ({
 };
 
 export const hasOnlyUserRole = (authorities: string[]) => {
-  if (authorities && authorities.length !== 0) {
-    return authorities.length === 1 && authorities.includes(AUTHORITIES.USER);
+  if (authorities && authorities.length === 1) {
+    return authorities.includes(AUTHORITIES.USER);
   }
   return false;
 };

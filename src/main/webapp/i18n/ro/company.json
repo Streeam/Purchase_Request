@@ -3,21 +3,27 @@
     "company": {
       "home": {
         "title": "Companies",
-        "createLabel": "Creeare o nouă entitate Company",
-        "newLabel": "Create a new Company",
+        "createLabel": "Creeare o nouă entitate Companie",
+        "newLabel": "Create a new Companie",
         "editLabel": "Modificare",
-        "search": "Căutare după Company",
+        "search": "Căutare după Companie",
         "notFound": "No Companies found",
         "join": "Inscrie-te intr-o Companie"
       },
-      "created": "A fost creată o nouă entitate Company cu identificatorul {{ param }}",
-      "updated": "Company cu identificatorul {{ param }} a fost actualizată",
-      "deleted": "Company cu identificatorul {{ param }} a fost ștearsă",
+      "created": "A fost creată o nouă entitate Companie cu identificatorul {{ param }}",
+      "updated": "Companie cu identificatorul {{ param }} a fost actualizată",
+      "deleted": "Companie cu identificatorul {{ param }} a fost ștearsă",
       "delete": {
-        "question": "Sunteți sigur că doriți să ștergeți Company {{ id }}?"
+        "question": "Sunteți sigur că doriți să ștergeți Companie {{ id }}?"
+      },
+      "join": {
+        "question": "Sunteți sigur că doriți să va alaturați Companie {{ name }}?"
+      },
+      "fire": {
+        "question": "Sunteți sigur că doriți să concediati pe angajatul: {{ name }}?"
       },
       "detail": {
-        "title": "Company"
+        "title": "Companie"
       },
       "name": "Name",
       "email": "Email",
@@ -27,7 +33,7 @@
       "city": "City",
       "country": "Country",
       "postcode": "Postcode",
-      "companyLogo": "Company Logo",
+      "companyLogo": "Logo-ul Companiei",
       "employees": "Employees"
     }
   }

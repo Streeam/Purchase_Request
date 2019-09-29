@@ -1,17 +1,24 @@
 import '../../app.scss';
-import { getCurrentUserEntity } from '../../entities/company/company.reducer';
+import { getCurrentUsersCompanyAsync as getCurrentUserEntity } from '../../entities/company/company.reducer';
 import React, { useState, useEffect } from 'react';
 import { IRootState } from 'app/shared/reducers';
 import { NavLink as Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { Row, Col, Button } from 'reactstrap';
-import CompanyStatus from '../../entities/company/company-detail';
+import CompanyStatus from '../../entities/company/current-company-status';
+import { getCurrentEmployeeEntity } from '../../entities/employee/employee.reducer';
+import { getSession } from 'app/shared/reducers/authentication';
+import { getProfile } from 'app/shared/reducers/application-profile';
+import { getEntities as getNotifications } from '../../entities/notification/notification.reducer';
 
 export const Home = props => {
   useEffect(() => {
-    props.getCurrentUserEntity(props.email);
+    props.getCurrentUserEntity();
+    props.getCurrentEmployeeEntity();
+    props.getSession();
+    props.getProfile();
+    props.getNotifications();
   }, []);
-
   return props.isUserOnly ? (
     <Row>
       <Col style={{ padding: '15% 0 0 0' }} sm="12" md={{ size: 6, offset: 3 }}>
@@ -31,12 +38,17 @@ export const Home = props => {
   );
 };
 
-const mapStateToProps = (storeState: IRootState) => ({
-  companyEntity: storeState.company.employeeEntity
+const mapStateToProps = ({ company, employee }: IRootState) => ({
+  companyEntity: company.employeeEntity,
+  currentEmployee: employee.currentEmployeeEntity
 });
 
 const mapDispatchToProps = {
-  getCurrentUserEntity
+  getCurrentUserEntity,
+  getCurrentEmployeeEntity,
+  getSession,
+  getProfile,
+  getNotifications
 };
 
 export default connect(

@@ -12,7 +12,7 @@
     "@bit/react-bootstrap.react-bootstrap.tab": "^1.0.0",
     "@bit/react-bootstrap.react-bootstrap.tabs": "file:./components/tabs",
     "@fortawesome/fontawesome-svg-core": "1.2.17",
-    "@fortawesome/free-solid-svg-icons": "5.8.1",
+    "@fortawesome/free-solid-svg-icons": "^5.8.1",
     "@fortawesome/react-fontawesome": "0.1.4",
     "@syncfusion/ej2-react-grids": "^17.2.51",
     "availity-reactstrap-validation": "2.5.1",

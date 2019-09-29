@@ -3,18 +3,21 @@ import { ICrudSearchAction, ICrudGetAction, ICrudGetAllAction, ICrudPutAction, I
 
 import { cleanEntity } from 'app/shared/util/entity-utils';
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
-
 import { ICompany, defaultValue } from 'app/shared/model/company.model';
+import { getAsyncEntities as getEmployees } from '../employee/employee.reducer';
 
 export const ACTION_TYPES = {
   SEARCH_COMPANIES: 'company/SEARCH_COMPANIES',
   FETCH_COMPANY_LIST: 'company/FETCH_COMPANY_LIST',
   FETCH_COMPANY: 'company/FETCH_COMPANY',
-  FETCH_EMPLOYEE_COMPANY: 'company/FETCH_EMPLOYEE_COMPANY',
+  FETCH_CURRENT_COMPANY: 'company/FETCH_CURRENT_COMPANY',
   CREATE_COMPANY: 'company/CREATE_COMPANY',
   UPDATE_COMPANY: 'company/UPDATE_COMPANY',
   DELETE_COMPANY: 'company/DELETE_COMPANY',
   SET_BLOB: 'company/SET_BLOB',
+  HIRE_EMPLOYEE: 'company/HIRE_EMPLOYEE',
+  REJECT_EMPLOYEE: 'company/REJECT_EMPLOYEE',
+  FIRE_EMPLOYEE: 'company/FIRE_EMPLOYEE',
   RESET: 'company/RESET'
 };
 
@@ -38,7 +41,7 @@ export default (state: CompanyState = initialState, action): CompanyState => {
     case REQUEST(ACTION_TYPES.SEARCH_COMPANIES):
     case REQUEST(ACTION_TYPES.FETCH_COMPANY_LIST):
     case REQUEST(ACTION_TYPES.FETCH_COMPANY):
-    case REQUEST(ACTION_TYPES.FETCH_EMPLOYEE_COMPANY):
+    case REQUEST(ACTION_TYPES.FETCH_CURRENT_COMPANY):
       return {
         ...state,
         errorMessage: null,
@@ -48,6 +51,9 @@ export default (state: CompanyState = initialState, action): CompanyState => {
     case REQUEST(ACTION_TYPES.CREATE_COMPANY):
     case REQUEST(ACTION_TYPES.UPDATE_COMPANY):
     case REQUEST(ACTION_TYPES.DELETE_COMPANY):
+    case REQUEST(ACTION_TYPES.HIRE_EMPLOYEE):
+    case REQUEST(ACTION_TYPES.REJECT_EMPLOYEE):
+    case REQUEST(ACTION_TYPES.FIRE_EMPLOYEE):
       return {
         ...state,
         errorMessage: null,
@@ -57,10 +63,13 @@ export default (state: CompanyState = initialState, action): CompanyState => {
     case FAILURE(ACTION_TYPES.SEARCH_COMPANIES):
     case FAILURE(ACTION_TYPES.FETCH_COMPANY_LIST):
     case FAILURE(ACTION_TYPES.FETCH_COMPANY):
-    case FAILURE(ACTION_TYPES.FETCH_EMPLOYEE_COMPANY):
+    case FAILURE(ACTION_TYPES.FETCH_CURRENT_COMPANY):
     case FAILURE(ACTION_TYPES.CREATE_COMPANY):
     case FAILURE(ACTION_TYPES.UPDATE_COMPANY):
     case FAILURE(ACTION_TYPES.DELETE_COMPANY):
+    case FAILURE(ACTION_TYPES.HIRE_EMPLOYEE):
+    case FAILURE(ACTION_TYPES.REJECT_EMPLOYEE):
+    case FAILURE(ACTION_TYPES.FIRE_EMPLOYEE):
       return {
         ...state,
         loading: false,
@@ -82,7 +91,7 @@ export default (state: CompanyState = initialState, action): CompanyState => {
         loading: false,
         entity: action.payload.data
       };
-    case SUCCESS(ACTION_TYPES.FETCH_EMPLOYEE_COMPANY):
+    case SUCCESS(ACTION_TYPES.FETCH_CURRENT_COMPANY):
       return {
         ...state,
         loading: false,
@@ -90,6 +99,9 @@ export default (state: CompanyState = initialState, action): CompanyState => {
       };
     case SUCCESS(ACTION_TYPES.CREATE_COMPANY):
     case SUCCESS(ACTION_TYPES.UPDATE_COMPANY):
+    case SUCCESS(ACTION_TYPES.HIRE_EMPLOYEE):
+    case SUCCESS(ACTION_TYPES.REJECT_EMPLOYEE):
+    case SUCCESS(ACTION_TYPES.FIRE_EMPLOYEE):
       return {
         ...state,
         updating: false,
@@ -148,12 +160,45 @@ export const getEntity: ICrudGetAction<ICompany> = id => {
   };
 };
 
-export const getCurrentUserEntity: ICrudGetAction<ICompany> = () => {
+export const getCurrentUserEntity = () => {
   const requestUrl = `${apiUrl}/current-company`;
   return {
-    type: ACTION_TYPES.FETCH_EMPLOYEE_COMPANY,
+    type: ACTION_TYPES.FETCH_CURRENT_COMPANY,
     payload: axios.get<ICompany>(requestUrl)
   };
+};
+
+export const getCurrentUsersCompanyAsync = () => dispatch => dispatch(getCurrentUserEntity());
+
+export const hireEmployee = (companyId: Number, employeeId: Number) => async dispatch => {
+  const requestUrl = `${apiUrl}/${companyId}/hire-employee/${employeeId}`;
+  const result = await dispatch({
+    type: ACTION_TYPES.HIRE_EMPLOYEE,
+    payload: axios.post(requestUrl)
+  });
+  await dispatch(getEntities());
+  return result;
+};
+
+export const rejectEmployee = (companyId: Number, employeeId: Number) => async dispatch => {
+  const requestUrl = `${apiUrl}/${companyId}/reject-employee/${employeeId}`;
+  const result = await dispatch({
+    type: ACTION_TYPES.REJECT_EMPLOYEE,
+    payload: axios.post(requestUrl)
+  });
+  await dispatch(getEntities());
+  await dispatch(getEmployees());
+  return result;
+};
+
+export const fireEmployee = (companyId: Number, employeeId: Number) => async dispatch => {
+  const requestUrl = `${apiUrl}/${companyId}/fire/${employeeId}`;
+  const result = await dispatch({
+    type: ACTION_TYPES.FIRE_EMPLOYEE,
+    payload: axios.post(requestUrl)
+  });
+  dispatch(getEntities());
+  return result;
 };
 
 export const createEntity: ICrudPutAction<ICompany> = entity => async dispatch => {

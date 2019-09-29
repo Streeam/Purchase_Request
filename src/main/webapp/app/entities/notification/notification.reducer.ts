@@ -127,6 +127,8 @@ export const getEntity: ICrudGetAction<INotification> = id => {
   };
 };
 
+export const getAsyncEntities = () => dispatch => dispatch(getEntities());
+
 export const createEntity: ICrudPutAction<INotification> = entity => async dispatch => {
   const result = await dispatch({
     type: ACTION_TYPES.CREATE_NOTIFICATION,

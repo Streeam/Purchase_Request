@@ -108,6 +108,18 @@ public class EmployeeService {
             .map(employeeMapper::toDto);
     }
 
+    /**
+     * Get one employee by email.
+     *
+     * @param email the email of the entity.
+     * @return the entity.
+     */
+    @Transactional(readOnly = true)
+    public Optional<EmployeeDTO> findOne(String email) {
+        log.debug("Request to get Employee : {}", email);
+        return employeeRepository.findOneByEmail(email)
+            .map(employeeMapper::toDto);
+    }
 
     /**
      * Get one employee by id.

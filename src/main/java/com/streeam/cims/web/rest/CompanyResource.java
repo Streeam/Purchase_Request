@@ -138,11 +138,6 @@ public class CompanyResource {
 
         Employee currentEmployee = companyService.findEmployeeFromUser(currentUser).orElseThrow(() -> new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
         Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(() -> new BadRequestAlertException("No company found with the employee.", ENTITY_NAME, "nocompanylinkedtoemployee"));
-
-        if (companyDTO.getEmployees() != null) {
-            throw new BadRequestAlertException("Editing the employees from this endpoint is forbidden. Leave the employee list empty and try again.", ENTITY_NAME, "cantmodifyemployees");
-        }
-
         if (!companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.ADMIN, AuthoritiesConstants.MANAGER)) {
             throw new BadRequestAlertException("You don't have the authority to modify the details of the company", ENTITY_NAME, "noauthoritytochangecomp");
         }
@@ -324,10 +319,7 @@ public class CompanyResource {
         authorityRepository.findById(AuthoritiesConstants.EMPLOYEE).ifPresent(authorities::add);
         approvedUser.setAuthorities(authorities);
         approvedEmployee.setUser(approvedUser);
-        CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(approvedEmployee, approvedUser, companyWhereEmployeeApplied);
 
-
-        //mailService.sendA(approvedEmployee.getEmail(), currentUser);
         companyService.sendNotificationToEmployee(approvedEmployee, currentUser.getEmail(),companyId, NotificationType.ACCEPT_REQUEST,
             "Your application to join " + companyWhereEmployeeApplied.getName() + " has been approved!");
 
@@ -341,6 +333,8 @@ public class CompanyResource {
             approvedEmployee,
             NEW_EMPLOYEE,
             currentUser.getFirstName() + " " + currentUser.getLastName() + " has joined our company!");
+
+        CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(approvedEmployee, approvedUser, companyWhereEmployeeApplied);
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))
@@ -364,9 +358,6 @@ public class CompanyResource {
 
         Employee rejectedEmployee = companyService.findEmployeeById(employeeId).orElseThrow(() ->
             new BadRequestAlertException("No employee linked to this user", ENTITY_NAME, "userwithnoemployee"));
-
-        User userToReject = companyService.findUserByEmail(rejectedEmployee.getEmail()).orElseThrow(() ->
-            new BadRequestAlertException("No user linked to this employee", ENTITY_NAME, "nouserforthisemployee"));
 
         String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
 

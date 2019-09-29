@@ -5,16 +5,19 @@ import { cleanEntity } from 'app/shared/util/entity-utils';
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 
 import { IEmployee, defaultValue } from 'app/shared/model/employee.model';
+import { getEntities as getNotifications } from '../notification/notification.reducer';
 
 export const ACTION_TYPES = {
   SEARCH_EMPLOYEES: 'employee/SEARCH_EMPLOYEES',
   FETCH_EMPLOYEE_LIST: 'employee/FETCH_EMPLOYEE_LIST',
   FETCH_EMPLOYEE: 'employee/FETCH_EMPLOYEE',
+  FETCH_CURRENT_EMPLOYEE: 'employee/FETCH_CURRENT_EMPLOYEE',
   CREATE_EMPLOYEE: 'employee/CREATE_EMPLOYEE',
   UPDATE_EMPLOYEE: 'employee/UPDATE_EMPLOYEE',
   DELETE_EMPLOYEE: 'employee/DELETE_EMPLOYEE',
   SET_BLOB: 'employee/SET_BLOB',
-  RESET: 'employee/RESET'
+  RESET: 'employee/RESET',
+  JOIN: 'employee/JOIN_COMPANY'
 };
 
 const initialState = {
@@ -22,6 +25,7 @@ const initialState = {
   errorMessage: null,
   entities: [] as ReadonlyArray<IEmployee>,
   entity: defaultValue,
+  currentEmployeeEntity: defaultValue,
   updating: false,
   totalItems: 0,
   updateSuccess: false
@@ -36,6 +40,7 @@ export default (state: EmployeeState = initialState, action): EmployeeState => {
     case REQUEST(ACTION_TYPES.SEARCH_EMPLOYEES):
     case REQUEST(ACTION_TYPES.FETCH_EMPLOYEE_LIST):
     case REQUEST(ACTION_TYPES.FETCH_EMPLOYEE):
+    case REQUEST(ACTION_TYPES.FETCH_CURRENT_EMPLOYEE):
       return {
         ...state,
         errorMessage: null,
@@ -45,6 +50,7 @@ export default (state: EmployeeState = initialState, action): EmployeeState => {
     case REQUEST(ACTION_TYPES.CREATE_EMPLOYEE):
     case REQUEST(ACTION_TYPES.UPDATE_EMPLOYEE):
     case REQUEST(ACTION_TYPES.DELETE_EMPLOYEE):
+    case REQUEST(ACTION_TYPES.JOIN):
       return {
         ...state,
         errorMessage: null,
@@ -54,9 +60,11 @@ export default (state: EmployeeState = initialState, action): EmployeeState => {
     case FAILURE(ACTION_TYPES.SEARCH_EMPLOYEES):
     case FAILURE(ACTION_TYPES.FETCH_EMPLOYEE_LIST):
     case FAILURE(ACTION_TYPES.FETCH_EMPLOYEE):
+    case FAILURE(ACTION_TYPES.FETCH_CURRENT_EMPLOYEE):
     case FAILURE(ACTION_TYPES.CREATE_EMPLOYEE):
     case FAILURE(ACTION_TYPES.UPDATE_EMPLOYEE):
     case FAILURE(ACTION_TYPES.DELETE_EMPLOYEE):
+    case FAILURE(ACTION_TYPES.JOIN):
       return {
         ...state,
         loading: false,
@@ -78,8 +86,15 @@ export default (state: EmployeeState = initialState, action): EmployeeState => {
         loading: false,
         entity: action.payload.data
       };
+    case SUCCESS(ACTION_TYPES.FETCH_CURRENT_EMPLOYEE):
+      return {
+        ...state,
+        loading: false,
+        currentEmployeeEntity: action.payload.data
+      };
     case SUCCESS(ACTION_TYPES.CREATE_EMPLOYEE):
     case SUCCESS(ACTION_TYPES.UPDATE_EMPLOYEE):
+    case SUCCESS(ACTION_TYPES.JOIN):
       return {
         ...state,
         updating: false,
@@ -138,6 +153,16 @@ export const getEntity: ICrudGetAction<IEmployee> = id => {
   };
 };
 
+export const getCurrentEmployeeEntity = () => {
+  const requestUrl = `${apiUrl}/current-employee`;
+  return {
+    type: ACTION_TYPES.FETCH_CURRENT_EMPLOYEE,
+    payload: axios.get<IEmployee>(requestUrl)
+  };
+};
+
+export const getCurrentEmployeeAsync = () => dispatch => dispatch(getCurrentEmployeeEntity());
+
 export const createEntity: ICrudPutAction<IEmployee> = entity => async dispatch => {
   const result = await dispatch({
     type: ACTION_TYPES.CREATE_EMPLOYEE,
@@ -146,6 +171,8 @@ export const createEntity: ICrudPutAction<IEmployee> = entity => async dispatch 
   dispatch(getEntities());
   return result;
 };
+
+export const getAsyncEntities = () => async dispatch => dispatch(getEntities());
 
 export const updateEntity: ICrudPutAction<IEmployee> = entity => async dispatch => {
   const result = await dispatch({
@@ -163,6 +190,16 @@ export const deleteEntity: ICrudDeleteAction<IEmployee> = id => async dispatch =
     payload: axios.delete(requestUrl)
   });
   dispatch(getEntities());
+  return result;
+};
+
+export const joinCompany = companyId => async dispatch => {
+  const requestUrl = `${apiUrl}/request-to-join/${companyId}`;
+  const result = await dispatch({
+    type: ACTION_TYPES.JOIN,
+    payload: axios.post(requestUrl)
+  });
+  dispatch(getNotifications());
   return result;
 };
 

@@ -10,6 +10,7 @@ import com.streeam.cims.repository.CompanyRepository;
 import com.streeam.cims.repository.EmployeeRepository;
 import com.streeam.cims.repository.UserRepository;
 import com.streeam.cims.repository.search.CompanySearchRepository;
+import com.streeam.cims.repository.search.EmployeeSearchRepository;
 import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.dto.CompanyDTO;
@@ -45,6 +46,9 @@ public class CompanyService {
     private final CompanyMapper companyMapper;
 
     private final CompanySearchRepository companySearchRepository;
+
+    @Autowired
+    private EmployeeSearchRepository employeeSearchRepository;
 
     @Autowired
     private  UserService userService;
@@ -321,17 +325,20 @@ public class CompanyService {
         userService.save(user);
         employee.setHired(false);
         employee.setUser(user);
-        company.getEmployees().remove(employee);
+        Set remainingEmployees = company.getEmployees();
+        remainingEmployees.remove(employee);
+        company.setEmployees(remainingEmployees);
 
-        Company updatedCompany = companyRepository.save(company);
-        EmployeeDTO employeeDTO = employeeService.saveWithCompany(employee, updatedCompany);
+        CompanyDTO updatedCompany = save(companyMapper.toDto(company));
 
-        log.debug("Request to save Company with employee: {}", employeeDTO);
+        employee.setCompany(null);
+        Employee updatedEmployee = employeeRepository.save(employee);
+        employeeSearchRepository.save(updatedEmployee);
+        log.debug("Request to save Company with employee: {}", updatedEmployee);
 
-        CompanyDTO result = companyMapper.toDto(updatedCompany);
-        companySearchRepository.save(updatedCompany);
-        log.debug("Request to save Company : {}", result);
-        return result;
+        companySearchRepository.save(company);
+        log.debug("Request to save Company : {}", updatedCompany);
+        return updatedCompany;
     }
 
     public Optional<Company> findUsersCompany(Employee currentEmployee) {
