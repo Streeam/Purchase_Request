@@ -15,13 +15,13 @@ export interface ICompanyDeleteDialogProps extends StateProps, DispatchProps, Ro
 
 export class CompanyDeleteDialog extends React.Component<ICompanyDeleteDialogProps> {
   componentDidMount() {
-    this.props.getEntity(this.props.match.params.id);
+    // this.props.getEntity(this.props.match.params.id);
   }
 
   confirmJoin = event => {
     this.props.joinCompany(this.props.companyEntity.id);
-    this.props.getEntity(this.props.match.params.id);
-    this.props.getNotifications();
+    // this.props.getEntity(this.props.match.params.id);
+    // this.props.getNotifications();
     this.handleClose(event);
   };
 

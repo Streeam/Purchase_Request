@@ -6,19 +6,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
 import { fireEmployee, getCurrentUsersCompanyAsync } from './company.reducer';
-import { getCurrentEmployeeAsync as getCurrentEmployeeEntity } from '../employee/employee.reducer';
 
 export const employeeFireDialog = props => {
   const { companyEntity } = props;
 
-  useEffect(() => {
-    props.getCurrentEmployeeEntity();
+  /*   useEffect(() => {
     props.getCurrentUsersCompanyAsync();
-  }, []);
+  }, []); */
 
   const confirmFire = event => {
+    // console.log(companyEntity);
     props.fireEmployee(companyEntity.id, props.match.params.id);
-    props.getCurrentUsersCompanyAsync();
+    // console.log(companyEntity);
     handleClose(event);
   };
 

@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button, Table } from 'reactstrap';
+import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
 import { Translate } from 'react-jhipster';
 
 import { AUTHORITIES } from '../../../app/config/constants';
 import { hasAnyAuthority } from '../../shared/auth/private-route';
+import { IRootState } from 'app/shared/reducers';
+import { getCurrentUsersCompanyAsync } from './company.reducer';
 
 const companyEmployeeTab = props => {
   const { companyEntity } = props;
+
+  useEffect(() => {
+    props.getCurrentUsersCompanyAsync();
+  }, []);
 
   const isManager = authorities => {
     const auth = authorities.map(authority => authority.name);
@@ -53,7 +60,7 @@ const companyEmployeeTab = props => {
               </Button>
               <Button
                 tag={Link}
-                to={`entity/company/fire/${employee.id}`}
+                to={`/entity/company/fire/${employee.id}`}
                 color="danger"
                 size="sm"
                 disabled={isManager(employee.user.authorities)}
@@ -86,4 +93,15 @@ const companyEmployeeTab = props => {
   );
 };
 
-export default companyEmployeeTab;
+const mapStateToProps = ({ company }: IRootState) => ({
+  companyEntity: company.employeeEntity
+});
+
+const mapDispatchToProps = {
+  getCurrentUsersCompanyAsync
+};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(companyEmployeeTab);

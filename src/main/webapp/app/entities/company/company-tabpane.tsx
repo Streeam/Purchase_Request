@@ -33,7 +33,7 @@ const TabBar = props => {
         </Nav>
         <TabContent activeTab={tabPane}>
           <TabPane tabId="1">
-            <CompanyEmployeeTab {...props} />
+            <CompanyEmployeeTab />
           </TabPane>
           <TabPane tabId="2">
             <CompanyApplicantsTab {...props} />

@@ -168,7 +168,7 @@ export const getCurrentUserEntity = () => {
   };
 };
 
-export const getCurrentUsersCompanyAsync = () => dispatch => dispatch(getCurrentUserEntity());
+export const getCurrentUsersCompanyAsync = () => async dispatch => dispatch(getCurrentUserEntity());
 
 export const hireEmployee = (companyId: Number, employeeId: Number) => async dispatch => {
   const requestUrl = `${apiUrl}/${companyId}/hire-employee/${employeeId}`;
@@ -197,7 +197,7 @@ export const fireEmployee = (companyId: Number, employeeId: Number) => async dis
     type: ACTION_TYPES.FIRE_EMPLOYEE,
     payload: axios.post(requestUrl)
   });
-  dispatch(getEntities());
+  await dispatch(getCurrentUserEntity());
   return result;
 };
 
