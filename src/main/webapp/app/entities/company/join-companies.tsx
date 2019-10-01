@@ -16,7 +16,9 @@ import { NOTIFICATIONS } from '../../../app/config/constants';
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { ITEMS_PER_PAGE } from 'app/shared/util/pagination.constants';
 import '../../../content/css/grid.css';
-import { getAsyncEntities as getNotifications } from '../notification/notification.reducer';
+import { getAsyncCurentEntities as getNotifications } from '../notification/notification.reducer';
+import { INotification } from 'app/shared/model/notification.model';
+import moment from 'moment';
 
 export interface ICompanyProps extends StateProps, DispatchProps, RouteComponentProps<{ url: string }> {}
 
@@ -33,9 +35,7 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
   componentDidMount() {
     this.getEntities();
     this.props.getNotifications();
-    this.props.getCurrentEmployeeEntity();
   }
-
   search = () => {
     if (this.state.search) {
       this.setState({ activePage: 1 }, () => {
@@ -80,52 +80,51 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
   };
 
   render() {
-    const { companyList, match, totalItems, currentEmployee, notifications } = this.props;
-
+    const { companyList, match, totalItems, notifications } = this.props;
     const requestToJoinPending = (companyId: Number): JSX.Element => {
       if (notifications) {
-        const employeeNotifications = notifications.filter(
-          (value, index) => value.company === companyId && value.employeeId === currentEmployee.id
-        );
+        const employeeNotifications = notifications.filter(value => value.company === companyId);
         // extract from the server only the current employee's notifications
         // extract the latest reject and pending request from the employee's notifications. The state is equals to the latest of them two.
-        const rejectedNotification = employeeNotifications.filter(
-          (value, index) => value.company === companyId && NOTIFICATIONS.REJECT_REQUEST === value.format
-        );
-        const pendingRequestNotification = employeeNotifications.filter(
-          (value, index) => value.company === companyId && NOTIFICATIONS.REQUEST_TO_JOIN === value.format
+        const requestedAndRejectedNotification = employeeNotifications.filter(
+          value => NOTIFICATIONS.REJECT_REQUEST === value.format || NOTIFICATIONS.REQUEST_TO_JOIN === value.format
         );
 
-        if (rejectedNotification && pendingRequestNotification && rejectedNotification.length > 0) {
+        if (requestedAndRejectedNotification && requestedAndRejectedNotification.length === 0) {
           return (
-            <Button color="danger" size="sm" disabled>
-              <FontAwesomeIcon icon="ban" />{' '}
-              <span className="d-none d-md-inline">
-                <Translate contentKey="entity.action.rejected">Application Rejected</Translate>
-              </span>
-            </Button>
-          );
-        }
-
-        if (pendingRequestNotification && rejectedNotification && pendingRequestNotification.length > rejectedNotification.length) {
-          return (
-            <Button color="primary" size="sm" disabled>
+            <Button tag={Link} to={`${this.props.match.url}/${companyId}/join`} color="primary" size="sm">
               <FontAwesomeIcon icon="file-signature" />{' '}
               <span className="d-none d-md-inline">
-                <Translate contentKey="entity.action.submitted">Application Submitted</Translate>
+                <Translate contentKey="entity.action.join">Join</Translate>
               </span>
             </Button>
           );
+        } else {
+          let firstNotification: INotification = requestedAndRejectedNotification[0];
+          requestedAndRejectedNotification.forEach(nextNotification => {
+            const previousDate: Date = moment(firstNotification.sentDate).toDate();
+            const nextDate: Date = moment(nextNotification.sentDate).toDate();
+            if (nextDate > previousDate) {
+              firstNotification = nextNotification;
+            }
+            // console.log(firstNotification);
+            return firstNotification.format === NOTIFICATIONS.REJECT_REQUEST ? (
+              <Button color="danger" size="sm" disabled>
+                <FontAwesomeIcon icon="ban" />{' '}
+                <span className="d-none d-md-inline">
+                  <Translate contentKey="entity.action.rejected">Application Rejected</Translate>
+                </span>
+              </Button>
+            ) : (
+              <Button color="primary" size="sm" disabled>
+                <FontAwesomeIcon icon="file-signature" />{' '}
+                <span className="d-none d-md-inline">
+                  <Translate contentKey="entity.action.submitted">Application Submitted</Translate>
+                </span>
+              </Button>
+            );
+          });
         }
-
-        return (
-          <Button tag={Link} to={`${this.props.match.url}/${companyId}/join`} color="primary" size="sm">
-            <FontAwesomeIcon icon="file-signature" />{' '}
-            <span className="d-none d-md-inline">
-              <Translate contentKey="entity.action.join">Join</Translate>
-            </span>
-          </Button>
-        );
       } else {
         return <div>Loading...</div>;
       }
@@ -280,14 +279,12 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
 const mapStateToProps = ({ company, employee, notification }: IRootState) => ({
   companyList: company.entities,
   totalItems: company.totalItems,
-  currentEmployee: employee.currentEmployeeEntity,
-  notifications: notification.entities
+  notifications: notification.currentEntities
 });
 
 const mapDispatchToProps = {
   getSearchEntities,
   getEntities,
-  getCurrentEmployeeEntity,
   getNotifications
 };
 

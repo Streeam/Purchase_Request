@@ -1,15 +1,8 @@
 import '../../app.scss';
-import { getCurrentUsersCompanyAsync as getCurrentUserEntity } from '../../entities/company/company.reducer';
-import React, { useState, useEffect } from 'react';
-import { IRootState } from 'app/shared/reducers';
+import React from 'react';
 import { NavLink as Link } from 'react-router-dom';
-import { connect } from 'react-redux';
 import { Row, Col, Button } from 'reactstrap';
 import CompanyStatus from '../../entities/company/current-company-status';
-import { getCurrentEmployeeEntity } from '../../entities/employee/employee.reducer';
-import { getSession } from 'app/shared/reducers/authentication';
-import { getProfile } from 'app/shared/reducers/application-profile';
-import { getEntities as getNotifications } from '../../entities/notification/notification.reducer';
 
 export const home = props =>
   props.isUserOnly ? (

@@ -80,6 +80,20 @@ public class NotificationService {
             .map(notificationMapper::toDto);
     }
 
+    /**
+     * Get all the employee's notifications.
+     *
+     * @param employee .
+     * @return the list of entities.
+     */
+    @Transactional(readOnly = true)
+    public List<NotificationDTO> findAllByEmployee(Employee employee) {
+        log.debug("Request to get all employee's Notifications");
+        return notificationRepository.findAllByEmployee(employee).
+            stream().
+            map(notification -> notificationMapper.toDto(notification)).
+            collect(Collectors.toList());
+    }
 
     /**
      * Get one notification by id.

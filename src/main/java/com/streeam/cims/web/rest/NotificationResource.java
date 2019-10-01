@@ -1,5 +1,8 @@
 package com.streeam.cims.web.rest;
 
+import com.streeam.cims.domain.Employee;
+import com.streeam.cims.domain.User;
+import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.NotificationService;
 import com.streeam.cims.service.dto.NotificationDTO;
@@ -7,6 +10,7 @@ import com.streeam.cims.web.rest.errors.BadRequestAlertException;
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
+import org.elasticsearch.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,6 +105,23 @@ public class NotificationResource {
         Page<NotificationDTO> page = notificationService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * {@code GET  /notifications/current} : get all the employee notifications.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of notifications in body.
+     */
+    @GetMapping("/notifications/current")
+    public ResponseEntity<List<NotificationDTO>> getCurrentNotifications() {
+        log.debug("REST request to get all employee notifications");
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() ->
+            new ResourceNotFoundException("No user logged in."));
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() ->
+            new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
+
+        List<NotificationDTO> notifications = notificationService.findAllByEmployee(currentEmployee);
+        return ResponseEntity.ok().body(notifications);
     }
 
     /**
