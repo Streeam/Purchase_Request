@@ -19,7 +19,7 @@ const companyApplicantsTab = props => {
   const handleAccept = (employeeId: Number) => {
     if (employeeId && companyEntity.id) {
       props.hireEmployee(companyEntity.id, employeeId);
-      props.getCurrentUserEntity();
+      // props.getCurrentUserEntity();
     }
   };
 

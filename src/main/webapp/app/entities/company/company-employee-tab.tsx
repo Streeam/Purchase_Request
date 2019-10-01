@@ -14,7 +14,7 @@ const companyEmployeeTab = props => {
   const { companyEntity } = props;
 
   useEffect(() => {
-    props.getCurrentUsersCompanyAsync();
+    // props.getCurrentUsersCompanyAsync();
   }, []);
 
   const isManager = authorities => {
