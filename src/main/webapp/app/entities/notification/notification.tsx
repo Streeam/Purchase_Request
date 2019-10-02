@@ -3,6 +3,9 @@ import { connect } from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import { Button, InputGroup, Col, Row, Table } from 'reactstrap';
 import { AvForm, AvGroup, AvInput } from 'availity-reactstrap-validation';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 // tslint:disable-next-line:no-unused-variable
 import {
   Translate,
@@ -34,6 +37,40 @@ export class Notification extends React.Component<INotificationProps, INotificat
   state: INotificationState = {
     search: '',
     ...getSortState(this.props.location, ITEMS_PER_PAGE)
+  };
+
+  data = {
+    columnDefs: [
+      {
+        headerName: 'Make',
+        field: 'make'
+      },
+      {
+        headerName: 'Model',
+        field: 'model'
+      },
+      {
+        headerName: 'Price',
+        field: 'price'
+      }
+    ],
+    rowData: [
+      {
+        make: 'Toyota',
+        model: 'Celica',
+        price: 35000
+      },
+      {
+        make: 'Ford',
+        model: 'Mondeo',
+        price: 32000
+      },
+      {
+        make: 'Porsche',
+        model: 'Boxter',
+        price: 72000
+      }
+    ]
   };
 
   componentDidMount() {
@@ -86,6 +123,17 @@ export class Notification extends React.Component<INotificationProps, INotificat
   render() {
     const { notificationList, match, totalItems } = this.props;
     return (
+      /*       <div 
+      className="ag-theme-balham"
+      style={{ 
+      height: '90%', 
+      width: '90%' }} 
+    >
+      <AgGridReact
+        columnDefs={this.data.columnDefs}
+        rowData={this.data.rowData}>
+      </AgGridReact>
+    </div>*/
       <div>
         <h2 id="notification-heading">
           <Translate contentKey="cidApp.notification.home.title">Notifications</Translate>

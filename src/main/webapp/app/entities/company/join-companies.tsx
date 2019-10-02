@@ -19,6 +19,7 @@ import '../../../content/css/grid.css';
 import { getAsyncCurentEntities as getNotifications } from '../notification/notification.reducer';
 import { INotification } from 'app/shared/model/notification.model';
 import moment from 'moment';
+import notification from '../notification/notification';
 
 export interface ICompanyProps extends StateProps, DispatchProps, RouteComponentProps<{ url: string }> {}
 
@@ -81,49 +82,73 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
 
   render() {
     const { companyList, match, totalItems, notifications } = this.props;
+
+    const joinButton = companyId => (
+      <Button tag={Link} to={`${this.props.match.url}/${companyId}/join`} color="primary" size="sm">
+        <FontAwesomeIcon icon="file-signature" />{' '}
+        <span className="d-none d-md-inline">
+          <Translate contentKey="entity.action.join">Join</Translate>
+        </span>
+      </Button>
+    );
+
+    const submittedButton = () => (
+      <Button color="primary" size="sm" disabled>
+        <FontAwesomeIcon icon="file-signature" />{' '}
+        <span className="d-none d-md-inline">
+          <Translate contentKey="entity.action.submitted">Application Submitted</Translate>
+        </span>
+      </Button>
+    );
+
+    const rejectedButton = () => (
+      <Button color="danger" size="sm" disabled>
+        <FontAwesomeIcon icon="ban" />{' '}
+        <span className="d-none d-md-inline">
+          <Translate contentKey="entity.action.rejected">Application Rejected</Translate>
+        </span>
+      </Button>
+    );
+
     const requestToJoinPending = (companyId: Number): JSX.Element => {
       if (notifications) {
         const employeeNotifications = notifications.filter(value => value.company === companyId);
-        // extract from the server only the current employee's notifications
-        // extract the latest reject and pending request from the employee's notifications. The state is equals to the latest of them two.
-        const requestedAndRejectedNotification = employeeNotifications.filter(
-          value => NOTIFICATIONS.REJECT_REQUEST === value.format || NOTIFICATIONS.REQUEST_TO_JOIN === value.format
-        );
+        const requestedNotifications = employeeNotifications.filter(value => NOTIFICATIONS.REQUEST_TO_JOIN === value.format);
+        const rejectedNotifications = employeeNotifications.filter(value => NOTIFICATIONS.REJECT_REQUEST === value.format);
+        var date = new Date();
+        var nextDate = date.getDate() - 2;
+        date.setDate(nextDate);
+        var newDate = date.toLocaleString();
+        console.log(newDate);
 
-        if (requestedAndRejectedNotification && requestedAndRejectedNotification.length === 0) {
-          return (
-            <Button tag={Link} to={`${this.props.match.url}/${companyId}/join`} color="primary" size="sm">
-              <FontAwesomeIcon icon="file-signature" />{' '}
-              <span className="d-none d-md-inline">
-                <Translate contentKey="entity.action.join">Join</Translate>
-              </span>
-            </Button>
-          );
-        } else {
-          let firstNotification: INotification = requestedAndRejectedNotification[0];
-          requestedAndRejectedNotification.forEach(nextNotification => {
+        if (requestedNotifications.length === 0) {
+          return rejectedButton();
+        }
+        if (rejectedNotifications.length === 0 && requestedNotifications.length === 0) {
+          return joinButton(companyId);
+        }
+        if (requestedNotifications.length > rejectedNotifications.length) {
+          return submittedButton();
+        }
+        if (requestedNotifications.length < rejectedNotifications.length) {
+          return rejectedButton();
+        }
+        if (requestedNotifications.length === rejectedNotifications.length) {
+          const requestAndRejectNotifications = [...rejectedNotifications, ...requestedNotifications];
+          let firstNotification: INotification = requestAndRejectNotifications[0];
+
+          requestAndRejectNotifications.forEach(nextNotification => {
             const previousDate: Date = moment(firstNotification.sentDate).toDate();
             const nextDate: Date = moment(nextNotification.sentDate).toDate();
             if (nextDate > previousDate) {
               firstNotification = nextNotification;
             }
-            // console.log(firstNotification);
-            return firstNotification.format === NOTIFICATIONS.REJECT_REQUEST ? (
-              <Button color="danger" size="sm" disabled>
-                <FontAwesomeIcon icon="ban" />{' '}
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.rejected">Application Rejected</Translate>
-                </span>
-              </Button>
-            ) : (
-              <Button color="primary" size="sm" disabled>
-                <FontAwesomeIcon icon="file-signature" />{' '}
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.submitted">Application Submitted</Translate>
-                </span>
-              </Button>
-            );
           });
+
+          if (firstNotification.format === NOTIFICATIONS.REJECT_REQUEST) {
+            return rejectedButton();
+          } else {
+          }
         }
       } else {
         return <div>Loading...</div>;
@@ -131,27 +156,6 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
     };
 
     return (
-      /*<div>
-        <GridComponent
-          dataSource={companyList && companyList.length > 0 ? companyList : []}
-          allowSorting
-          allowPaging
-          pageSettings={{ pageCount: 5 }}
-        >
-          <ColumnsDirective>
-            <ColumnDirective
-              headerText="Photo"
-              width="100" //src={`data:${company.companyLogoContentType};base64,${company.companyLogo}`}
-              template="<img src= 'data:{{:companyLogoContentType}};base64,{{:companyLogo}}'/>"
-            />
-            <ColumnDirective field="name" headerText="Name" width="220" />
-            <ColumnDirective field="email" headerText="Email" width="220" />
-            <ColumnDirective field="city" headerText="City" width="220" />
-            <ColumnDirective field="country" headerText="Country" width="220" />
-          </ColumnsDirective>
-          <Inject services={[Sort, Page]} />
-        </GridComponent>
-      </div>*/
       <div>
         <h2 id="company-heading">
           <Translate contentKey="cidApp.company.home.join">Join a Company</Translate>

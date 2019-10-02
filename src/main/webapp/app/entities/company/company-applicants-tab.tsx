@@ -19,7 +19,6 @@ const companyApplicantsTab = props => {
   const handleAccept = (employeeId: Number) => {
     if (employeeId && companyEntity.id) {
       props.hireEmployee(companyEntity.id, employeeId);
-      // props.getCurrentUserEntity();
     }
   };
 
@@ -28,6 +27,7 @@ const companyApplicantsTab = props => {
       props.rejectEmployee(companyEntity.id, employeeId);
     }
   };
+  console.log(employeeList);
   const applicants = employeeList
     ? employeeList
         .filter(employee => employee.companyId !== companyEntity.id)

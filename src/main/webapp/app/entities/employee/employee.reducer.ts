@@ -5,7 +5,7 @@ import { cleanEntity } from 'app/shared/util/entity-utils';
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 
 import { IEmployee, defaultValue } from 'app/shared/model/employee.model';
-import { getEntities as getNotifications } from '../notification/notification.reducer';
+import { getAsyncEntities as getNotifications } from '../notification/notification.reducer';
 
 export const ACTION_TYPES = {
   SEARCH_EMPLOYEES: 'employee/SEARCH_EMPLOYEES',
@@ -199,7 +199,7 @@ export const joinCompany = companyId => async dispatch => {
     type: ACTION_TYPES.JOIN,
     payload: axios.post(requestUrl)
   });
-  dispatch(getNotifications());
+  await dispatch(getNotifications());
   return result;
 };
 
