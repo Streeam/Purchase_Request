@@ -107,7 +107,8 @@
       "submitted": "Request Submitted",
       "rejected": "Request Rejected",
       "reject": "Reject",
-      "accept": "Accept"
+      "accept": "Accept",
+      "fired": "Employee Fired"
     },
     "detail": {
       "field": "Field",

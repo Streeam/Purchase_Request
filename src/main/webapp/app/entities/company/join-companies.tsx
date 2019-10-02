@@ -3,22 +3,20 @@ import { connect } from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import { Button, InputGroup, Col, Row, Table } from 'reactstrap';
 import { AvForm, AvGroup, AvInput } from 'availity-reactstrap-validation';
-import { GridComponent, Sort, ColumnDirective, ColumnsDirective, Inject, Page } from '@syncfusion/ej2-react-grids';
+import { AgGridReact } from '../../../../../../node_modules/ag-grid-react';
+import '../../../../../../node_modules/ag-grid-community/dist/styles/ag-grid.css';
+import '../../../../../../node_modules/ag-grid-community/dist/styles/ag-theme-balham.css';
 // tslint:disable-next-line:no-unused-variable
 import { openFile, byteSize, Translate, translate, getSortState, IPaginationBaseState, JhiPagination, JhiItemCount } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
 import { getSearchEntities, getEntities } from './company.reducer';
-import { getCurrentEmployeeEntity } from '../employee/employee.reducer';
-import { NOTIFICATIONS } from '../../../app/config/constants';
 // tslint:disable-next-line:no-unused-variable
-import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { ITEMS_PER_PAGE } from 'app/shared/util/pagination.constants';
 import '../../../content/css/grid.css';
 import { getAsyncCurentEntities as getNotifications } from '../notification/notification.reducer';
-import { INotification } from 'app/shared/model/notification.model';
-import moment from 'moment';
+import CustomButton from '../../shared/layout/custom-components/custom-status-button';
 
 export interface ICompanyProps extends StateProps, DispatchProps, RouteComponentProps<{ url: string }> {}
 
@@ -81,77 +79,8 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
 
   render() {
     const { companyList, match, totalItems, notifications } = this.props;
-    const requestToJoinPending = (companyId: Number): JSX.Element => {
-      if (notifications) {
-        const employeeNotifications = notifications.filter(value => value.company === companyId);
-        // extract from the server only the current employee's notifications
-        // extract the latest reject and pending request from the employee's notifications. The state is equals to the latest of them two.
-        const requestedAndRejectedNotification = employeeNotifications.filter(
-          value => NOTIFICATIONS.REJECT_REQUEST === value.format || NOTIFICATIONS.REQUEST_TO_JOIN === value.format
-        );
-
-        if (requestedAndRejectedNotification && requestedAndRejectedNotification.length === 0) {
-          return (
-            <Button tag={Link} to={`${this.props.match.url}/${companyId}/join`} color="primary" size="sm">
-              <FontAwesomeIcon icon="file-signature" />{' '}
-              <span className="d-none d-md-inline">
-                <Translate contentKey="entity.action.join">Join</Translate>
-              </span>
-            </Button>
-          );
-        } else {
-          let firstNotification: INotification = requestedAndRejectedNotification[0];
-          requestedAndRejectedNotification.forEach(nextNotification => {
-            const previousDate: Date = moment(firstNotification.sentDate).toDate();
-            const nextDate: Date = moment(nextNotification.sentDate).toDate();
-            if (nextDate > previousDate) {
-              firstNotification = nextNotification;
-            }
-            // console.log(firstNotification);
-            return firstNotification.format === NOTIFICATIONS.REJECT_REQUEST ? (
-              <Button color="danger" size="sm" disabled>
-                <FontAwesomeIcon icon="ban" />{' '}
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.rejected">Application Rejected</Translate>
-                </span>
-              </Button>
-            ) : (
-              <Button color="primary" size="sm" disabled>
-                <FontAwesomeIcon icon="file-signature" />{' '}
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.submitted">Application Submitted</Translate>
-                </span>
-              </Button>
-            );
-          });
-        }
-      } else {
-        return <div>Loading...</div>;
-      }
-    };
 
     return (
-      /*<div>
-        <GridComponent
-          dataSource={companyList && companyList.length > 0 ? companyList : []}
-          allowSorting
-          allowPaging
-          pageSettings={{ pageCount: 5 }}
-        >
-          <ColumnsDirective>
-            <ColumnDirective
-              headerText="Photo"
-              width="100" //src={`data:${company.companyLogoContentType};base64,${company.companyLogo}`}
-              template="<img src= 'data:{{:companyLogoContentType}};base64,{{:companyLogo}}'/>"
-            />
-            <ColumnDirective field="name" headerText="Name" width="220" />
-            <ColumnDirective field="email" headerText="Email" width="220" />
-            <ColumnDirective field="city" headerText="City" width="220" />
-            <ColumnDirective field="country" headerText="Country" width="220" />
-          </ColumnsDirective>
-          <Inject services={[Sort, Page]} />
-        </GridComponent>
-      </div>*/
       <div>
         <h2 id="company-heading">
           <Translate contentKey="cidApp.company.home.join">Join a Company</Translate>
@@ -244,7 +173,7 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
                             <Translate contentKey="entity.action.view">View</Translate>
                           </span>
                         </Button>
-                        {requestToJoinPending(company.id)}
+                        <CustomButton url={this.props.match.url} companyIndex={company.id} notifications={...notifications} />
                       </div>
                     </td>
                   </tr>
@@ -276,7 +205,7 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
   }
 }
 
-const mapStateToProps = ({ company, employee, notification }: IRootState) => ({
+const mapStateToProps = ({ company, notification }: IRootState) => ({
   companyList: company.entities,
   totalItems: company.totalItems,
   notifications: notification.currentEntities

@@ -3,6 +3,9 @@ import { connect } from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import { Button, InputGroup, Col, Row, Table } from 'reactstrap';
 import { AvForm, AvGroup, AvInput } from 'availity-reactstrap-validation';
+import { AgGridReact } from 'ag-grid-react';
+// import 'ag-grid-community/dist/styles/ag-grid.css';
+// import 'ag-grid-community/dist/styles/ag-theme-balham.css';
 // tslint:disable-next-line:no-unused-variable
 import {
   Translate,
@@ -35,7 +38,6 @@ export class Notification extends React.Component<INotificationProps, INotificat
     search: '',
     ...getSortState(this.props.location, ITEMS_PER_PAGE)
   };
-
   componentDidMount() {
     this.getEntities();
   }

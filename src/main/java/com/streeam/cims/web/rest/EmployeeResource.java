@@ -273,7 +273,6 @@ public class EmployeeResource {
         return ResponseEntity.ok().build();
     }
 
-
     /**
      * {@code GET  /employees/:id} : get the "id" employee.
      *

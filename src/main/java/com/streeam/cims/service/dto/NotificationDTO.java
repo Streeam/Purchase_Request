@@ -27,7 +27,7 @@ public class NotificationDTO implements Serializable {
 
     private String referenced_user;
 
-
+    @NotNull
     private Long employeeId;
 
     public Long getId() {

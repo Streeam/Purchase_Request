@@ -69,6 +69,12 @@ export default (state: NotificationState = initialState, action): NotificationSt
       };
     case SUCCESS(ACTION_TYPES.SEARCH_NOTIFICATIONS):
     case SUCCESS(ACTION_TYPES.FETCH_NOTIFICATION_LIST):
+      return {
+        ...state,
+        loading: false,
+        entities: action.payload.data,
+        totalItems: parseInt(action.payload.headers['x-total-count'], 10)
+      };
     case SUCCESS(ACTION_TYPES.FETCH_CURRENT_NOTIFICATION):
       return {
         ...state,

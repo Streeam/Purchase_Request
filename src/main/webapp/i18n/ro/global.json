@@ -116,7 +116,8 @@
       "submitted": "Aplicație Trimisă",
       "rejected": "Aplicație Respinsă",
       "reject": "Respins",
-      "accept": "Accept"
+      "accept": "Accept",
+      "fired": "Angajat Concediat"
     },
     "detail": {
       "field": "Câmp",

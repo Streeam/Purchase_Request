@@ -11,17 +11,11 @@ import { getEntity } from './company.reducer';
 import { joinCompany, getCurrentEmployeeEntity } from '../employee/employee.reducer';
 import { getEntities as getNotifications } from '../notification/notification.reducer';
 
-export interface ICompanyDeleteDialogProps extends StateProps, DispatchProps, RouteComponentProps<{ id: string }> {}
+export interface ICompanyDeleteDialogProps extends DispatchProps, RouteComponentProps<{ id: string }> {}
 
 export class CompanyDeleteDialog extends React.Component<ICompanyDeleteDialogProps> {
-  componentDidMount() {
-    // this.props.getEntity(this.props.match.params.id);
-  }
-
   confirmJoin = event => {
-    this.props.joinCompany(this.props.companyEntity.id);
-    // this.props.getEntity(this.props.match.params.id);
-    // this.props.getNotifications();
+    this.props.joinCompany(this.props.match.params.id);
     this.handleClose(event);
   };
 
@@ -31,14 +25,13 @@ export class CompanyDeleteDialog extends React.Component<ICompanyDeleteDialogPro
   };
 
   render() {
-    const { companyEntity } = this.props;
     return (
       <Modal isOpen toggle={this.handleClose}>
         <ModalHeader toggle={this.handleClose}>
           <Translate contentKey="entity.join.title">Confirm join operation</Translate>
         </ModalHeader>
         <ModalBody id="cidApp.company.join.question">
-          <Translate contentKey="cidApp.company.join.question" interpolate={{ name: companyEntity.name }}>
+          <Translate contentKey="cidApp.company.join.question" interpolate={{ name: this.props.match.params.id }}>
             Are you sure you want to join this Company?
           </Translate>
         </ModalBody>
@@ -59,16 +52,11 @@ export class CompanyDeleteDialog extends React.Component<ICompanyDeleteDialogPro
   }
 }
 
-const mapStateToProps = ({ company }: IRootState) => ({
-  companyEntity: company.entity
-});
+const mapDispatchToProps = { joinCompany, getNotifications, getCurrentEmployeeEntity };
 
-const mapDispatchToProps = { getEntity, joinCompany, getNotifications, getCurrentEmployeeEntity };
-
-type StateProps = ReturnType<typeof mapStateToProps>;
 type DispatchProps = typeof mapDispatchToProps;
 
 export default connect(
-  mapStateToProps,
+  null,
   mapDispatchToProps
 )(CompanyDeleteDialog);
