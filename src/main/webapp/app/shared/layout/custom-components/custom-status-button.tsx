@@ -1,15 +1,35 @@
-import React from 'react';
-import { Button } from 'reactstrap';
+import React, { useState } from 'react';
+import { Button, Tooltip, UncontrolledTooltip } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Translate } from 'react-jhipster';
 import { Link } from 'react-router-dom';
 import { INotification } from 'app/shared/model/notification.model';
 import moment from 'moment';
 import { NOTIFICATIONS } from '../../../config/constants';
+import '../../../app.scss';
 
 const customButton = props => {
+  const [tooltipOpen, setTooltipOpen] = useState(false);
+
+  const toggle = () => {
+    setTooltipOpen(!tooltipOpen);
+  };
+
+  const buttonTooltip = (numberOfDaysAgo: Date, sentDate: Date): String => {
+    const threeDaysTimeStamp = new Date().getTime() - numberOfDaysAgo.getTime();
+    const timeLeft = new Date().getTime() - sentDate.getTime();
+    const timeBeforeCanApplyAgain = Math.ceil((threeDaysTimeStamp - timeLeft) / (1000 * 60 * 60));
+    const days =
+      Math.round(timeBeforeCanApplyAgain / 24) === 1
+        ? `${Math.round(timeBeforeCanApplyAgain / 24)} day`
+        : `${Math.round(timeBeforeCanApplyAgain / 24)} days`;
+    const hours = timeBeforeCanApplyAgain % 24 === 1 ? `${timeBeforeCanApplyAgain % 24} hour` : `${timeBeforeCanApplyAgain % 24} hours`;
+    const tooltipMessage: String = `You can apply again in ${days} and ${hours}`;
+    return tooltipMessage;
+  };
+
   const joinButton = (companyId: Number): JSX.Element => (
-    <Button tag={Link} to={`${props.url}/${companyId}/join`} color="primary" size="sm">
+    <Button id="joinButton" tag={Link} to={`${props.url}/${companyId}/join`} color="primary" size="sm">
       <FontAwesomeIcon icon="file-signature" />{' '}
       <span className="d-none d-md-inline">
         <Translate contentKey="entity.action.join">Join</Translate>
@@ -26,22 +46,32 @@ const customButton = props => {
     </Button>
   );
 
-  const rejectedButton = (): JSX.Element => (
-    <Button color="danger" size="sm" disabled>
-      <FontAwesomeIcon icon="ban" />{' '}
-      <span className="d-none d-md-inline">
-        <Translate contentKey="entity.action.rejected">Application Rejected</Translate>
-      </span>
-    </Button>
+  const rejectedButton = (tooltipMessage: String): JSX.Element => (
+    <span id="rejectButton">
+      <Button color="danger" size="sm" disabled>
+        <FontAwesomeIcon icon="ban" />{' '}
+        <span className="d-none d-md-inline">
+          <Translate contentKey="entity.action.rejected">Application Rejected</Translate>
+        </span>
+      </Button>
+      <Tooltip placement="top" isOpen={tooltipOpen} target="rejectButton" toggle={toggle}>
+        {tooltipMessage}
+      </Tooltip>
+    </span>
   );
 
-  const firedButton = (): JSX.Element => (
-    <Button color="danger" size="sm" disabled>
-      <FontAwesomeIcon icon="ban" />{' '}
-      <span className="d-none d-md-inline">
-        <Translate contentKey="entity.action.fired">Fired</Translate>
-      </span>
-    </Button>
+  const firedButton = (tooltipMessage: String): JSX.Element => (
+    <span id="firedButton">
+      <Button color="danger" size="sm" disabled>
+        <FontAwesomeIcon icon="ban" />{' '}
+        <span className="d-none d-md-inline">
+          <Translate contentKey="entity.action.fired">Fired</Translate>
+        </span>
+      </Button>
+      <Tooltip placement="top" isOpen={tooltipOpen} target="firedButton" toggle={toggle}>
+        {tooltipMessage}
+      </Tooltip>
+    </span>
   );
 
   const requestToJoinPending = (): JSX.Element => {
@@ -56,6 +86,7 @@ const customButton = props => {
       const now2 = new Date();
       now2.setDate(now2.getDate() - 30); // Thirty days ago
       const thirtyDaysAgo = new Date(now2);
+
       if (rejectedNotifications.length === 0 && requestedNotifications.length === 0 && firedNotifications.length === 0) {
         return joinButton(props.companyIndex);
       }
@@ -70,7 +101,8 @@ const customButton = props => {
         });
 
         if (notificationDate > thirtyDaysAgo) {
-          return firedButton();
+          const tooltipMessage: String = buttonTooltip(thirtyDaysAgo, notificationDate);
+          return firedButton(tooltipMessage);
         }
       }
 
@@ -88,13 +120,23 @@ const customButton = props => {
 
       if (firstNotification.format === NOTIFICATIONS.REJECT_REQUEST) {
         if (firstDate > threeDaysAgo) {
-          return rejectedButton();
+          const threeDaysTimeStamp = new Date().getTime() - threeDaysAgo.getTime();
+          const timeLeft = new Date().getTime() - firstDate.getTime();
+          const timeBeforeCanApplyAgain = Math.ceil((threeDaysTimeStamp - timeLeft) / (1000 * 60 * 60));
+          const days =
+            Math.round(timeBeforeCanApplyAgain / 24) === 1
+              ? `${Math.round(timeBeforeCanApplyAgain / 24)} day`
+              : `${Math.round(timeBeforeCanApplyAgain / 24)} days`;
+          const hours =
+            timeBeforeCanApplyAgain % 24 === 1 ? `${timeBeforeCanApplyAgain % 24} hour` : `${timeBeforeCanApplyAgain % 24} hours`;
+          const tooltipMessage: String = buttonTooltip(threeDaysAgo, firstDate);
+          return rejectedButton(tooltipMessage);
         } else {
           return joinButton(props.companyIndex);
         }
       } else {
         if (firstDate > threeDaysAgo) {
-          return rejectedButton();
+          return submittedButton();
         } else {
           return joinButton(props.companyIndex);
         }

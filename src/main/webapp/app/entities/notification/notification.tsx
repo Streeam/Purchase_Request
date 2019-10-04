@@ -122,7 +122,7 @@ export class Notification extends React.Component<INotificationProps, INotificat
         </Row>
         <div className="table-responsive">
           {notificationList && notificationList.length > 0 ? (
-            <Table responsive>
+            <Table responsive striped>
               <thead>
                 <tr>
                   <th className="hand" onClick={this.sort('id')}>
