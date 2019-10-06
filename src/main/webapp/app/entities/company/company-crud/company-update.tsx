@@ -8,7 +8,7 @@ import { Translate, translate, ICrudGetAction, ICrudGetAllAction, setFileData, o
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IRootState } from 'app/shared/reducers';
 
-import { getEntity, updateEntity, createEntity, setBlob, reset } from './company.reducer';
+import { getEntity, updateEntity, createEntity, setBlob, reset } from '../company.reducer';
 import { ICompany } from 'app/shared/model/company.model';
 // tslint:disable-next-line:no-unused-variable
 import { convertDateTimeFromServer, convertDateTimeToServer } from 'app/shared/util/date-utils';
@@ -227,7 +227,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
                     <AvInput type="hidden" name="companyLogo" value={companyLogo ? companyLogo : ''} />
                   </AvGroup>
                 </AvGroup>
-                <Button tag={Link} id="cancel-save" to="/entity/company" replace>
+                <Button tag={Link} id="cancel-save" to="/" replace>
                   <FontAwesomeIcon icon="arrow-left" />
                   &nbsp;
                   <span className="d-none d-md-inline">

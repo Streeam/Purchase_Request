@@ -5,7 +5,12 @@ import { cleanEntity } from 'app/shared/util/entity-utils';
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 
 import { IEmployee, defaultValue } from 'app/shared/model/employee.model';
-import { getAsyncEntities as getNotifications } from '../notification/notification.reducer';
+import { getSession } from '../../shared/reducers/authentication';
+import {
+  getAsyncEntities as getAllNotifications,
+  getAsyncCurentEntities as getCurrentNotifications
+} from '../notification/notification.reducer';
+import { getCurrentUsersCompanyAsync as getCurrentCompany } from '../company/company.reducer';
 
 export const ACTION_TYPES = {
   SEARCH_EMPLOYEES: 'employee/SEARCH_EMPLOYEES',
@@ -17,7 +22,10 @@ export const ACTION_TYPES = {
   DELETE_EMPLOYEE: 'employee/DELETE_EMPLOYEE',
   SET_BLOB: 'employee/SET_BLOB',
   RESET: 'employee/RESET',
-  JOIN: 'employee/JOIN_COMPANY'
+  JOIN: 'employee/JOIN_COMPANY',
+  INVITE: 'employee/INVITE_EMPLOYEE',
+  ACCEPT_INVITE: 'employee/ACCEPT_INVITE',
+  REJECT_INVITE: 'employee/REJECT_INVITE'
 };
 
 const initialState = {
@@ -51,6 +59,9 @@ export default (state: EmployeeState = initialState, action): EmployeeState => {
     case REQUEST(ACTION_TYPES.UPDATE_EMPLOYEE):
     case REQUEST(ACTION_TYPES.DELETE_EMPLOYEE):
     case REQUEST(ACTION_TYPES.JOIN):
+    case REQUEST(ACTION_TYPES.INVITE):
+    case REQUEST(ACTION_TYPES.ACCEPT_INVITE):
+    case REQUEST(ACTION_TYPES.REJECT_INVITE):
       return {
         ...state,
         errorMessage: null,
@@ -65,6 +76,9 @@ export default (state: EmployeeState = initialState, action): EmployeeState => {
     case FAILURE(ACTION_TYPES.UPDATE_EMPLOYEE):
     case FAILURE(ACTION_TYPES.DELETE_EMPLOYEE):
     case FAILURE(ACTION_TYPES.JOIN):
+    case FAILURE(ACTION_TYPES.INVITE):
+    case FAILURE(ACTION_TYPES.ACCEPT_INVITE):
+    case FAILURE(ACTION_TYPES.REJECT_INVITE):
       return {
         ...state,
         loading: false,
@@ -95,6 +109,9 @@ export default (state: EmployeeState = initialState, action): EmployeeState => {
     case SUCCESS(ACTION_TYPES.CREATE_EMPLOYEE):
     case SUCCESS(ACTION_TYPES.UPDATE_EMPLOYEE):
     case SUCCESS(ACTION_TYPES.JOIN):
+    case SUCCESS(ACTION_TYPES.INVITE):
+    case SUCCESS(ACTION_TYPES.ACCEPT_INVITE):
+    case SUCCESS(ACTION_TYPES.REJECT_INVITE):
       return {
         ...state,
         updating: false,
@@ -199,7 +216,38 @@ export const joinCompany = companyId => async dispatch => {
     type: ACTION_TYPES.JOIN,
     payload: axios.post(requestUrl)
   });
-  await dispatch(getNotifications());
+  getCurrentNotifications();
+  return result;
+};
+
+export const acceptCompanyInvitation = (companyId: String) => async dispatch => {
+  const requestUrl = `${apiUrl}/accept-invitation/${companyId}`;
+  const result = await dispatch({
+    type: ACTION_TYPES.ACCEPT_INVITE,
+    payload: axios.post(requestUrl)
+  });
+  await dispatch(getSession());
+  await dispatch(getCurrentCompany());
+  return result;
+};
+
+export const rejectCompanyInvitation = (companyId: String) => async dispatch => {
+  const requestUrl = `${apiUrl}/decline-request/${companyId}`;
+  const result = await dispatch({
+    type: ACTION_TYPES.REJECT_INVITE,
+    payload: axios.post(requestUrl)
+  });
+  await getCurrentNotifications();
+  return result;
+};
+
+export const inviteEmployee = employeeEmail => async dispatch => {
+  const requestUrl = `${apiUrl}/invite-to-join/${employeeEmail}`;
+  const result = await dispatch({
+    type: ACTION_TYPES.INVITE,
+    payload: axios.post(requestUrl)
+  });
+  getAllNotifications();
   return result;
 };
 

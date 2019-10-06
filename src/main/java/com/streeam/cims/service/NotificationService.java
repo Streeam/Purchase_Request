@@ -20,9 +20,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.streeam.cims.domain.enumeration.NotificationType.*;
+import static com.streeam.cims.domain.enumeration.NotificationType.INVITATION;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 
 /**
@@ -144,7 +145,9 @@ public class NotificationService {
         notificationDTO.setReferenced_user(referencedEmployeeEmail);
         notificationDTO.setCompany(companyId);
         notificationRepository.save(notificationMapper.toEntity(notificationDTO));
-        authorEmployee.getNotifications().add(notificationMapper.toEntity(notificationDTO));
+        Set<Notification> notifications = authorEmployee.getNotifications();
+        notifications.add(notificationMapper.toEntity(notificationDTO));
+        authorEmployee.setNotifications(notifications);
         employeeRepository.save(authorEmployee);
         employeeSearchRepository.save(authorEmployee);
         notificationSearchRepository.save(notificationMapper.toEntity(notificationDTO));
@@ -183,4 +186,8 @@ public class NotificationService {
             .anyMatch(notification -> notification.getSentDate().isAfter(nDaysAgo));
     }
 
+    public List<NotificationDTO> findAllByCompanyId(Long companyId) {
+        List<Notification> notifications = notificationRepository.findAllByCompany(companyId);
+        return  notifications.stream().map(notificationMapper::toDto).collect(Collectors.toList());
+    }
 }

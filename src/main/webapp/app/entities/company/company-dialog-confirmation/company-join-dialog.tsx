@@ -2,18 +2,15 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { RouteComponentProps } from 'react-router-dom';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
-import { Translate, ICrudGetAction, ICrudDeleteAction } from 'react-jhipster';
+import { Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { ICompany } from 'app/shared/model/company.model';
-import { IRootState } from 'app/shared/reducers';
-import { getEntity } from './company.reducer';
-import { joinCompany, getCurrentEmployeeEntity } from '../employee/employee.reducer';
-import { getEntities as getNotifications } from '../notification/notification.reducer';
+import { joinCompany, getCurrentEmployeeEntity } from '../../employee/employee.reducer';
+import { getEntities as getNotifications } from '../../notification/notification.reducer';
 
-export interface ICompanyDeleteDialogProps extends DispatchProps, RouteComponentProps<{ id: string }> {}
+export interface ICompanyJoinDialogProps extends DispatchProps, RouteComponentProps<{ id: string }> {}
 
-export class CompanyDeleteDialog extends React.Component<ICompanyDeleteDialogProps> {
+export class CompanyJoinDialog extends React.Component<ICompanyJoinDialogProps> {
   confirmJoin = event => {
     this.props.joinCompany(this.props.match.params.id);
     this.handleClose(event);
@@ -59,4 +56,4 @@ type DispatchProps = typeof mapDispatchToProps;
 export default connect(
   null,
   mapDispatchToProps
-)(CompanyDeleteDialog);
+)(CompanyJoinDialog);

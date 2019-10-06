@@ -310,9 +310,7 @@ public class CompanyService {
     }
 
     public CompanyDTO saveUserEmployeeAndComapany(Employee employee, User user, Company company) {
-
         userService.save(user);
-
        CompanyDTO companyDTO = saveWithEmployee(company, employee);
         return  companyDTO;
     }

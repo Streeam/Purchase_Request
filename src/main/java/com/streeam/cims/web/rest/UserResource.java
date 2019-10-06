@@ -153,9 +153,9 @@ public class UserResource {
         }
         User currentUser = userService.getCurrentUser(currentUserLogin).orElseThrow(()->new BadRequestAlertException("No User currently logged in", ENTITY_NAME, "nouserloggedin"));
 
-        if (!userService.checkIfUserHasRoles(currentUser , AuthoritiesConstants.MANAGER, AuthoritiesConstants.ADMIN)){
-            throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "limitedaccessability");
-        }
+//        if (!userService.checkIfUserHasRoles(currentUser , AuthoritiesConstants.MANAGER, AuthoritiesConstants.ADMIN)){
+//            throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "limitedaccessability");
+//        }
 
         Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(()->new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
 

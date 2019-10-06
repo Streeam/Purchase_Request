@@ -279,6 +279,7 @@ public class UserService {
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .forEach(managedAuthorities::add);
+                userRepository.save(user);
                 userSearchRepository.save(user);
                 this.clearUserCaches(user);
                 log.debug("Changed Information for User: {}", user);
@@ -311,6 +312,7 @@ public class UserService {
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .forEach(managedAuthorities::add);
+                userRepository.save(user);
                 userSearchRepository.save(user);
                 this.clearUserCaches(user);
                 log.debug("Changed Information for User: {}", user);
@@ -440,11 +442,9 @@ public class UserService {
     }
 
     public UserDTO save(User user) {
-        User updatedUser = userRepository.save(user);
-        UserDTO result = userMapper.userToUserDTO(updatedUser);
-        userSearchRepository.save(user);
-        log.error("Save User : {}", user);
-
+        UserDTO result = userMapper.userToUserDTO(user);
+        updateUser(result);
+        log.debug("Save User : {}", result);
         return result;
     }
 

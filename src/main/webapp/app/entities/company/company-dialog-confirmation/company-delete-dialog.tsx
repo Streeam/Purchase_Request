@@ -5,9 +5,8 @@ import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
 import { Translate, ICrudGetAction, ICrudDeleteAction } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { ICompany } from 'app/shared/model/company.model';
 import { IRootState } from 'app/shared/reducers';
-import { getEntity, deleteEntity } from './company.reducer';
+import { getEntity, deleteEntity } from '../company.reducer';
 
 export interface ICompanyDeleteDialogProps extends StateProps, DispatchProps, RouteComponentProps<{ id: string }> {}
 

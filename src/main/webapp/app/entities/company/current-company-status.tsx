@@ -9,13 +9,17 @@ import { IRootState } from 'app/shared/reducers';
 import { getCurrentUsersCompanyAsync } from './company.reducer';
 import '../../app.scss';
 import TabBar from './company-tabpane';
+import { getSession } from '../../shared/reducers/authentication';
+import { getCurrentEmployeeAsync } from '../employee/employee.reducer';
+import CompanyEmployeeTab from './company-employee-tab';
 
 export const companyDetail = props => {
   const lableStyle = { color: 'black' };
-  const { companyEntity } = props;
+  const { companyEntity, isCurrentUserManager } = props;
 
   useEffect(() => {
     props.getCurrentUsersCompanyAsync();
+    props.getCurrentEmployeeAsync();
   }, []);
 
   return (
@@ -45,9 +49,13 @@ export const companyDetail = props => {
             <h1 style={lableStyle}>{companyEntity.name}</h1>
           </div>
           <div style={{ display: 'inline-block' }}>
-            <Button tag={Link} to={`/entity/company/${companyEntity.id}/edit`} replace color="link" title="Edit Company">
-              <FontAwesomeIcon icon="pencil-alt" />{' '}
-            </Button>
+            {isCurrentUserManager ? (
+              <Button tag={Link} to={`/entity/company/${companyEntity.id}/edit`} replace color="link" title="Edit Company">
+                <FontAwesomeIcon icon="pencil-alt" />{' '}
+              </Button>
+            ) : (
+              <div />
+            )}
           </div>
         </Col>
       </Row>
@@ -88,17 +96,18 @@ export const companyDetail = props => {
       </Table>
       <br />
       <br />
-      <TabBar {...props} />
+      {isCurrentUserManager ? <TabBar {...props} /> : <CompanyEmployeeTab {...props} />}
       <br />
     </div>
   );
 };
 
-const mapStateToProps = ({ company }: IRootState) => ({
-  companyEntity: company.employeeEntity
+const mapStateToProps = ({ company, employee }: IRootState) => ({
+  companyEntity: company.employeeEntity,
+  curentEmployee: employee.currentEmployeeEntity
 });
 
-const mapDispatchToProps = { getCurrentUsersCompanyAsync };
+const mapDispatchToProps = { getCurrentUsersCompanyAsync, getSession, getCurrentEmployeeAsync };
 
 export default connect(
   mapStateToProps,

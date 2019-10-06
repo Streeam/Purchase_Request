@@ -1,4 +1,6 @@
 import pick from 'lodash/pick';
+import { IEmployee } from '../model/employee.model';
+import { hasAnyAuthority } from '../auth/private-route';
 
 /**
  * Removes fields with an 'id' field that equals ''.
@@ -22,3 +24,13 @@ export const cleanEntity = entity => {
  */
 export const mapIdList = (idList: ReadonlyArray<any>) =>
   idList.filter((entityId: any) => entityId !== '').map((entityId: any) => ({ id: entityId }));
+
+export const employeeListWithout = (employeeList: ReadonlyArray<IEmployee>, hasAnyAuthorities: string[]): ReadonlyArray<IEmployee> =>
+  employeeList.filter(employee => {
+    if (employee.user.authorities.length === 0) {
+      return false;
+    }
+    const authorities: string[] = [];
+    employee.user.authorities.map(auth => authorities.push(auth.name));
+    return !hasAnyAuthority(authorities, hasAnyAuthorities);
+  });

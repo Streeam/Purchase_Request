@@ -5,7 +5,7 @@ import { Translate, ICrudGetAction, ICrudDeleteAction } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
-import { fireEmployee, getCurrentUsersCompanyAsync } from './company.reducer';
+import { fireEmployee, getCurrentUsersCompanyAsync } from '../company.reducer';
 
 export const employeeFireDialog = props => {
   const { companyEntity } = props;

@@ -6,10 +6,10 @@ import { AvFeedback, AvForm, AvGroup, AvInput, AvField } from 'availity-reactstr
 // tslint:disable-next-line:no-unused-variable
 import { Translate, translate, ICrudGetAction, ICrudGetAllAction, setFileData, openFile, byteSize, ICrudPutAction } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { IRootState } from 'app/shared/reducers';
 
-import { getEntity, createEntity, setBlob, reset } from './company.reducer';
-import { ICompany } from 'app/shared/model/company.model';
+import { IRootState } from 'app/shared/reducers';
+import { getEntity, createEntity, setBlob, reset } from '../company.reducer';
+import { getSession } from '../../../shared/reducers/authentication';
 // tslint:disable-next-line:no-unused-variable
 import { convertDateTimeFromServer, convertDateTimeToServer } from 'app/shared/util/date-utils';
 import { mapIdList } from 'app/shared/util/entity-utils';
@@ -47,6 +47,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps> {
         ...values
       };
       this.props.createEntity(entity);
+      this.props.getSession();
     }
   };
 
@@ -210,7 +211,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps> {
                     <AvInput type="hidden" name="companyLogo" value={companyLogo || ''} />
                   </AvGroup>
                 </AvGroup>
-                <Button tag={Link} id="cancel-save" to="/" replace color="info">
+                <Button tag={Link} id="cancel-save" to="/" replace>
                   <FontAwesomeIcon icon="arrow-left" />
                   &nbsp;
                   <span className="d-none d-md-inline">
@@ -218,7 +219,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps> {
                   </span>
                 </Button>
                 &nbsp;
-                <Button color="primary" id="save-entity" type="submit" disabled={updating}>
+                <Button id="save-entity" type="submit" disabled={updating}>
                   <FontAwesomeIcon icon="save" />
                   &nbsp;
                   <Translate contentKey="entity.action.save">Save</Translate>
@@ -243,7 +244,8 @@ const mapDispatchToProps = {
   getEntity,
   setBlob,
   createEntity,
-  reset
+  reset,
+  getSession
 };
 
 type StateProps = ReturnType<typeof mapStateToProps>;

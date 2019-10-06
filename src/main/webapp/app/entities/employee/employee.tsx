@@ -184,8 +184,14 @@ export class Employee extends React.Component<IEmployeeProps, IEmployeeState> {
                         </div>
                       ) : null}
                     </td>
-                    <td>{employee.userLogin ? employee.userLogin : ''}</td>
-                    <td>{employee.companyName ? <Link to={`company/${employee.companyId}`}>{employee.companyName}</Link> : ''}</td>
+                    <td>{employee.user && employee.user.login ? employee.user.login : ''}</td>
+                    <td>
+                      {employee.company && employee.company.name ? (
+                        <Link to={`company/${employee.companyId}`}>{employee.company.name}</Link>
+                      ) : (
+                        ''
+                      )}
+                    </td>
                     <td className="text-right">
                       <div className="btn-group flex-btn-group-container">
                         <Button tag={Link} to={`${match.url}/${employee.id}`} color="info" size="sm">
