@@ -108,7 +108,10 @@
       "rejected": "Request Rejected",
       "reject": "Reject",
       "accept": "Accept",
-      "fired": "Employee Fired"
+      "invite": "Invite",
+      "fired": "Employee Fired",
+      "acceptinvitation": "Accept Invitation",
+      "rejecteinvitation": "Reject Invitation"
     },
     "detail": {
       "field": "Field",
@@ -120,8 +123,17 @@
     "join": {
       "title": "Confirm the join operation"
     },
+    "invite": {
+      "title": "Confirm the invite operation"
+    },
     "fire": {
       "title": "Confirm the firing operation"
+    },
+    "acceptinvite": {
+      "title": "Accept Invitation!"
+    },
+    "rejectinvite": {
+      "title": "Reject Invitation!"
     },
     "validation": {
       "required": "This field is required.",

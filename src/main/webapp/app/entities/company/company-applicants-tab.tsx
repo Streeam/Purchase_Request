@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import { Button, Table } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Link } from 'react-router-dom';
 import { Translate } from 'react-jhipster';
+import moment from 'moment';
 
 import { NOTIFICATIONS } from '../../config/constants';
 import { IRootState } from 'app/shared/reducers';
@@ -27,27 +27,73 @@ const companyApplicantsTab = props => {
       props.rejectEmployee(companyEntity.id, employeeId);
     }
   };
-  // console.log(employeeList);
+
   const applicants = employeeList
     ? employeeList
         .filter(employee => employee.companyId !== companyEntity.id)
         .filter(employee => {
-          if (employee.notifications && employee.notifications.length === 0) {
+          if (!employee.notifications && employee.notifications.length === 0) {
             return false;
           }
+          // ****** FIRE NOTIFICATIONS */
+          const fired = employee.notifications.filter((notification1, i) => notification1.format === NOTIFICATIONS.FIRED);
+          if (fired.length > 0) {
+            let notificationDate: Date = moment(fired[0].sentDate).toDate();
+
+            const validFired = fired.filter(firedNotif => {
+              const nextDate: Date = moment(firedNotif.sentDate).toDate();
+              if (nextDate > notificationDate) {
+                notificationDate = moment(firedNotif.sentDate).toDate();
+              }
+              const now = Math.ceil(new Date().getTime() / (1000 * 60 * 60));
+              const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
+
+              // if latest rejected request is older then 720 hours (30 days) return true, false otherwise
+              return now - notificationDateTime > 720 ? true : false;
+            });
+            return validFired.lenght > 0 ? true : false;
+          }
+          // ****** REJECT NOTIFICATIONS */
           const rejected = employee.notifications.filter((notification1, i) => notification1.format === NOTIFICATIONS.REJECT_REQUEST);
           if (rejected.length > 0) {
-            return false;
-          }
-          const request = employee.notifications.filter((notification2, i) => notification2.format === NOTIFICATIONS.REQUEST_TO_JOIN);
+            let notificationDate: Date = moment(rejected[0].sentDate).toDate();
 
+            const validRejected = rejected.filter(rejectedNotif => {
+              const nextDate: Date = moment(rejectedNotif.sentDate).toDate();
+              if (nextDate > notificationDate) {
+                notificationDate = moment(rejectedNotif.sentDate).toDate();
+              }
+              const now = Math.ceil(new Date().getTime() / (1000 * 60 * 60));
+              const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
+
+              // if latest rejected request is older then 72 hours (3 days) return true, false otherwise
+              return now - notificationDateTime > 72 ? true : false;
+            });
+            return validRejected.lenght > 0 ? true : false;
+          }
+
+          // ****** REQUEST NOTIFICATIONS */
+          const request = employee.notifications.filter((notification1, i) => notification1.format === NOTIFICATIONS.REQUEST_TO_JOIN);
           if (request.length > 0) {
-            return true;
+            let notificationDate: Date = moment(request[0].sentDate).toDate();
+
+            const validRejected = request.filter(requestedNotif => {
+              const nextDate: Date = moment(requestedNotif.sentDate).toDate();
+              if (nextDate > notificationDate) {
+                notificationDate = moment(requestedNotif.sentDate).toDate();
+              }
+              const now = Math.ceil(new Date().getTime() / (1000 * 60 * 60));
+              const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
+
+              // if latest request request is older then 72 hours (3 days) return false, true otherwise
+              return now - notificationDateTime < 72 ? true : false;
+            });
+            return validRejected.lenght > 0 ? true : false;
           }
           return false;
         })
     : null;
-  // console.log(applicants);
+
   const tabContent = applicants ? (
     applicants.map((employee, i) => (
       <tr key={`entity-${i}`}>
@@ -68,8 +114,6 @@ const companyApplicantsTab = props => {
         <td className="text-right">
           <div className="btn-group flex-btn-group-container">
             <Button
-              tag={Link}
-              to={`/entity/company/${companyEntity.id}/hire-employee/${employee.id}`}
               color="success"
               size="sm"
               // tslint:disable
@@ -80,10 +124,10 @@ const companyApplicantsTab = props => {
                 <Translate contentKey="entity.action.accept">Accept</Translate>
               </span>
             </Button>
-            <Button tag={Link} to={``} color="danger" size="sm" onClick={() => handleReject(employee.id)}>
+            <Button color="danger" size="sm" onClick={() => handleReject(employee.id)}>
               <FontAwesomeIcon icon="ban" />{' '}
               <span className="d-none d-md-inline">
-                <Translate contentKey="entity.action.reject">Reject(TODO)</Translate>
+                <Translate contentKey="entity.action.reject">Reject</Translate>
               </span>
             </Button>
           </div>

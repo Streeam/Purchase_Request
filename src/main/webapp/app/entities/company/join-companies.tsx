@@ -11,12 +11,13 @@ import { openFile, byteSize, Translate, translate, getSortState, IPaginationBase
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
-import { getSearchEntities, getEntities } from './company.reducer';
+import { getSearchEntities, getEntities, reset as resetCompaniesState } from './company.reducer';
 // tslint:disable-next-line:no-unused-variable
 import { ITEMS_PER_PAGE } from 'app/shared/util/pagination.constants';
 import '../../../content/css/grid.css';
-import { getAsyncCurentEntities as getNotifications } from '../notification/notification.reducer';
+import { getAsyncCurentEntities as getNotifications, reset as resetNotificationState } from '../notification/notification.reducer';
 import CustomButton from '../../shared/layout/custom-components/custom-status-button';
+import { getCurrentEmployeeAsync } from '../employee/employee.reducer';
 
 export interface ICompanyProps extends StateProps, DispatchProps, RouteComponentProps<{ url: string }> {}
 
@@ -33,7 +34,14 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
   componentDidMount() {
     this.getEntities();
     this.props.getNotifications();
+    this.props.getCurrentEmployeeAsync();
   }
+
+  componentWillUnmount() {
+    this.props.resetCompaniesState();
+    this.props.resetNotificationState();
+  }
+
   search = () => {
     if (this.state.search) {
       this.setState({ activePage: 1 }, () => {
@@ -78,7 +86,7 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
   };
 
   render() {
-    const { companyList, match, totalItems, notifications } = this.props;
+    const { companyList, match, totalItems, notifications, currentEmployee } = this.props;
 
     return (
       <div>
@@ -173,7 +181,12 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
                             <Translate contentKey="entity.action.view">View</Translate>
                           </span>
                         </Button>
-                        <CustomButton url={this.props.match.url} companyIndex={company.id} notifications={...notifications} />
+                        <CustomButton
+                          url={this.props.match.url}
+                          currentEmployee={currentEmployee}
+                          companyIndex={company.id}
+                          notifications={...notifications}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -205,16 +218,20 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
   }
 }
 
-const mapStateToProps = ({ company, notification }: IRootState) => ({
+const mapStateToProps = ({ company, notification, employee }: IRootState) => ({
   companyList: company.entities,
   totalItems: company.totalItems,
-  notifications: notification.currentEntities
+  notifications: notification.currentEntities,
+  currentEmployee: employee.currentEmployeeEntity
 });
 
 const mapDispatchToProps = {
   getSearchEntities,
   getEntities,
-  getNotifications
+  getNotifications,
+  getCurrentEmployeeAsync,
+  resetCompaniesState,
+  resetNotificationState
 };
 
 type StateProps = ReturnType<typeof mapStateToProps>;

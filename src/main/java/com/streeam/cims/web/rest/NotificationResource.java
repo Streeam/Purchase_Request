@@ -1,7 +1,9 @@
 package com.streeam.cims.web.rest;
 
+import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.User;
+import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.security.SecurityUtils;
 import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.NotificationService;
@@ -27,6 +29,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+
+import static com.streeam.cims.security.AuthoritiesConstants.ADMIN;
+import static com.streeam.cims.security.AuthoritiesConstants.MANAGER;
 
 /**
  * REST controller for managing {@link com.streeam.cims.domain.Notification}.
@@ -121,6 +126,42 @@ public class NotificationResource {
             new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
 
         List<NotificationDTO> notifications = notificationService.findAllByEmployee(currentEmployee);
+        return ResponseEntity.ok().body(notifications);
+    }
+
+    /**
+     * {@code GET  /notifications/current} : get all the company notifications.
+     * @param companyId the id of company.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of notifications in body.
+     */
+    @GetMapping("/notifications/company/{companyId}")
+    public ResponseEntity<List<NotificationDTO>> getCompanyNotifications(@PathVariable Long companyId) {
+        if (companyId == null) {
+            throw new BadRequestAlertException("Invalid company id", ENTITY_NAME, "idcompanynull");
+        }
+
+        log.debug("REST request to get all employee notifications");
+        String currentUserLogin = SecurityUtils.getCurrentUserLogin().get();
+        User currentUser = employeeService.findCurrentUser(currentUserLogin).orElseThrow(() ->
+            new ResourceNotFoundException("No user logged in."));
+        Employee currentEmployee = employeeService.findOneByEmail(currentUser.getEmail()).orElseThrow(() ->
+            new BadRequestAlertException("No Employee currently logged in", ENTITY_NAME, "noemployeeloggedin"));
+
+        if (!employeeService.checkUserHasRoles(currentUser, ADMIN, MANAGER)) {
+            throw new BadRequestAlertException("You don't have the authority to access this endpoint.", ENTITY_NAME, "accessrestricted");
+        }
+        Company company = employeeService.findCompanyById(companyId).orElseThrow(() ->
+            new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
+
+        if (employeeService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)) {
+
+            if (!company.getId().equals(currentEmployee.getCompany().getId())) {
+                throw new BadRequestAlertException("The manager can only access notifications sent to his company.", ENTITY_NAME, "canonlyaccesscompanynotifications");
+            }
+
+        }
+
+        List<NotificationDTO> notifications = notificationService.findAllByCompanyId(companyId);
         return ResponseEntity.ok().body(notifications);
     }
 

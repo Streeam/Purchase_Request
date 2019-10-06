@@ -78,10 +78,12 @@ export class Notification extends React.Component<INotificationProps, INotificat
 
   getEntities = () => {
     const { activePage, itemsPerPage, sort, order, search } = this.state;
-    if (search) {
-      this.props.getSearchEntities(search, activePage - 1, itemsPerPage, `${sort},${order}`);
-    } else {
-      this.props.getEntities(activePage - 1, itemsPerPage, `${sort},${order}`);
+    if (activePage) {
+      if (search) {
+        this.props.getSearchEntities(search, activePage - 1, itemsPerPage, `${sort},${order}`);
+      } else {
+        this.props.getEntities(activePage - 1, itemsPerPage, `${sort},${order}`);
+      }
     }
   };
 

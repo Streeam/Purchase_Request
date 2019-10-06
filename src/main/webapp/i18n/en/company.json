@@ -19,6 +19,15 @@
       "join": {
         "question": "Are you sure you want to join Company {{ name }}?"
       },
+      "invite": {
+        "question": "Are you sure you want to invite the employee with the email address: {{ name }}?"
+      },
+      "acceptinvitation": {
+        "question": "Are you sure you want to accept the invitation?"
+      },
+      "rejectinvitation": {
+        "question": "Are you sure you want to reject the company's invitation?"
+      },
       "fire": {
         "question": "Are you sure you want to fire employee: {{ name }}?"
       },

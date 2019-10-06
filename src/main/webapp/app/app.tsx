@@ -18,6 +18,7 @@ import { hasAnyAuthority } from 'app/shared/auth/private-route';
 import ErrorBoundary from 'app/shared/error/error-boundary';
 import { AUTHORITIES } from 'app/config/constants';
 import AppRoutes from 'app/routes';
+import { getCurrentUsersCompanyAsync } from '../app/entities/company/company.reducer';
 
 const baseHref = document
   .querySelector('base')
@@ -25,6 +26,13 @@ const baseHref = document
   .replace(/\/$/, '');
 
 export interface IAppProps extends StateProps, DispatchProps {}
+
+/**
+ * TODO
+ * 1. Get only employees that applied to the company
+ * 2. As an employee you cannot eddit the company details and view other employees
+ * 3.
+ */
 
 export const App = (props: IAppProps) => {
   useEffect(() => {
@@ -70,7 +78,7 @@ const mapStateToProps = ({ authentication, applicationProfile, locale }: IRootSt
   isSwaggerEnabled: applicationProfile.isSwaggerEnabled
 });
 
-const mapDispatchToProps = { setLocale, getSession, getProfile };
+const mapDispatchToProps = { setLocale, getSession, getProfile, getCurrentUsersCompanyAsync };
 
 type StateProps = ReturnType<typeof mapStateToProps>;
 type DispatchProps = typeof mapDispatchToProps;

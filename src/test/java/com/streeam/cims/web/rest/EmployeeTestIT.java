@@ -598,7 +598,7 @@ class EmployeeTestIT {
 
         employeeDTO.setEmail(DEFAULT_USER_EMAIL);
         employeeDTO.setHired(true);
-        assertThat(employeeDTO.isHired()).isNotEqualTo(employee1.isHired());
+        assertThat(employeeDTO.getHired()).isNotEqualTo(employee1.isHired());
         /**
          * You cannot update the hire value.
          */
@@ -1260,30 +1260,20 @@ class EmployeeTestIT {
         /**
          * The logged user has to be unemployed.
          */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(), updatedCompany.getId())
+        restEmployeeMockMvc.perform(post("/api/employees/accept-invitation/{companyId}", updatedCompany.getId())
             .with(user(user_employee.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.joinonlyifunemployed")));
 
         /**
-         * Only the current user can accept to join a company. No one else can accept the invitation on his behalf.
-         */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(), updatedCompany.getId())
-            .with(user(user_two.getLogin().toLowerCase()))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.onlycurrentusercanaccept")));
-
-        /**
          * No invitation sent to this employee_user2 by updatedCompany.
          */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user2.getId(), updatedCompany.getId())
+        restEmployeeMockMvc.perform(post("/api/employees/accept-invitation/{companyId}", updatedCompany.getId())
             .with(user(user_two.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.hasinvitationlessthen14days")));
-
 
         notification1.setEmployee(employee_user2);
         notification1.sentDate(Instant.now().minus(15, ChronoUnit.DAYS));
@@ -1298,7 +1288,7 @@ class EmployeeTestIT {
         notificationRepository.saveAndFlush(notification2);
 
          //An invitation was sent to employee_user2 from updatedCompany but was sent after 14 days.
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user2.getId(), updatedCompany.getId())
+        restEmployeeMockMvc.perform(post("/api/employees/accept-invitation/{companyId}", updatedCompany.getId())
             .with(user(user_two.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isBadRequest())
@@ -1309,7 +1299,7 @@ class EmployeeTestIT {
         notificationRepository.saveAndFlush(notification1);
 
         // Only the manager and the admin can access this endpoint
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user2.getId(), updatedCompany.getId())
+        restEmployeeMockMvc.perform(post("/api/employees/accept-invitation/{companyId}", updatedCompany.getId())
             .with(user(user_two.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isBadRequest())
@@ -1320,7 +1310,7 @@ class EmployeeTestIT {
         /**
          * The user joins the company and he is given the Employee role
          */
-        restEmployeeMockMvc.perform(post("/api/employees/{employeeId}/approve-request/{companyId}", employee_user1.getId(), updatedCompany2.getId())
+        restEmployeeMockMvc.perform(post("/api/employees/accept-invitation/{companyId}", updatedCompany2.getId())
             .with(user(user_one.getLogin().toLowerCase()))
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
@@ -1329,9 +1319,8 @@ class EmployeeTestIT {
         Employee newEmployee = employeeRepository.findOneByEmail(employee_user1.getEmail()).get();
         assertThat(newEmployee.getUser().getAuthorities().stream().map(Authority::getName)).contains(AuthoritiesConstants.EMPLOYEE);
         assertThat(newEmployee.isHired()).isTrue();
-        List<Notification> allNotificationsFromCompany2 = notificationRepository.findAllByCompany(updatedCompany2.getId());
-        assertThat(allNotificationsFromCompany2.size()).isEqualTo(4);
 
+        List<User> users = userRepository.findAll();
         assertThat(notificationRepository.findAllByEmployee(employee_user1).size()).isEqualTo(2);
         assertThat(notificationRepository.findAllByEmployee(employee_user1).stream().map(notification -> notification.getFormat())).containsOnly(WELCOME, INVITATION);
         assertThat(notificationRepository.findAllByEmployee(manager).stream().map(notification -> notification.getFormat())).containsOnly(ACCEPT_REQUEST);

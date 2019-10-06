@@ -243,7 +243,7 @@ export class EmployeeUpdate extends React.Component<IEmployeeUpdateProps, IEmplo
                       : null}
                   </AvInput>
                 </AvGroup>
-                <Button tag={Link} id="cancel-save" to="/entity/employee" replace color="info">
+                <Button tag={Link} id="cancel-save" to="/entity/employee" replace>
                   <FontAwesomeIcon icon="arrow-left" />
                   &nbsp;
                   <span className="d-none d-md-inline">
@@ -251,7 +251,7 @@ export class EmployeeUpdate extends React.Component<IEmployeeUpdateProps, IEmplo
                   </span>
                 </Button>
                 &nbsp;
-                <Button color="primary" id="save-entity" type="submit" disabled={updating}>
+                <Button id="save-entity" type="submit" disabled={updating}>
                   <FontAwesomeIcon icon="save" />
                   &nbsp;
                   <Translate contentKey="entity.action.save">Save</Translate>

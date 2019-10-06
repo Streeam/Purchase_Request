@@ -1,4 +1,6 @@
 import { INotification } from 'app/shared/model/notification.model';
+import { IUser } from './user.model';
+import { ICompany } from './company.model';
 
 export interface IEmployee {
   id?: number;
@@ -10,10 +12,10 @@ export interface IEmployee {
   language?: string;
   imageContentType?: string;
   image?: any;
-  userLogin?: string;
+  user?: IUser;
   userId?: number;
   notifications?: INotification[];
-  companyName?: string;
+  company?: ICompany;
   companyId?: number;
 }
 

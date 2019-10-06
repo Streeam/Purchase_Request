@@ -24,16 +24,8 @@ export class EmployeeDetail extends React.Component<IEmployeeDetailProps> {
     return (
       <Row>
         <Col md="8">
-          <h2>
-            <Translate contentKey="cidApp.employee.detail.title">Employee</Translate> [<b>{employeeEntity.id}</b>]
-          </h2>
+          <h2>{employeeEntity.login}</h2>
           <dl className="jh-entity-details">
-            <dt>
-              <span id="login">
-                <Translate contentKey="cidApp.employee.login">Login</Translate>
-              </span>
-            </dt>
-            <dd>{employeeEntity.login}</dd>
             <dt>
               <span id="firstName">
                 <Translate contentKey="cidApp.employee.firstName">First Name</Translate>
@@ -84,20 +76,20 @@ export class EmployeeDetail extends React.Component<IEmployeeDetailProps> {
             <dt>
               <Translate contentKey="cidApp.employee.user">User</Translate>
             </dt>
-            <dd>{employeeEntity.userLogin ? employeeEntity.userLogin : ''}</dd>
+            <dd>{employeeEntity.user && employeeEntity.user.login ? employeeEntity.user.login : ''}</dd>
             <dt>
               <Translate contentKey="cidApp.employee.company">Company</Translate>
             </dt>
-            <dd>{employeeEntity.companyName ? employeeEntity.companyName : ''}</dd>
+            <dd>{employeeEntity.company && employeeEntity.company.name ? employeeEntity.company.name : ''}</dd>
           </dl>
-          <Button tag={Link} to="/" replace color="info">
+          <Button tag={Link} to="/" replace>
             <FontAwesomeIcon icon="arrow-left" />{' '}
             <span className="d-none d-md-inline">
               <Translate contentKey="entity.action.back">Back</Translate>
             </span>
           </Button>
           &nbsp;
-          <Button tag={Link} to={`/entity/employee/${employeeEntity.id}/edit`} replace color="primary">
+          <Button tag={Link} to={`/entity/employee/${employeeEntity.id}/edit`} replace>
             <FontAwesomeIcon icon="pencil-alt" />{' '}
             <span className="d-none d-md-inline">
               <Translate contentKey="entity.action.edit">Edit</Translate>

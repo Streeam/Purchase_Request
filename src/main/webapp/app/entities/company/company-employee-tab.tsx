@@ -9,13 +9,10 @@ import { AUTHORITIES } from '../../../app/config/constants';
 import { hasAnyAuthority } from '../../shared/auth/private-route';
 import { IRootState } from 'app/shared/reducers';
 import { getCurrentUsersCompanyAsync } from './company.reducer';
+import { IEmployee } from 'app/shared/model/employee.model';
 
 const companyEmployeeTab = props => {
-  const { companyEntity } = props;
-
-  useEffect(() => {
-    // props.getCurrentUsersCompanyAsync();
-  }, []);
+  const { companyEntity, isCurrentUserManager } = props;
 
   const isManager = authorities => {
     const auth = authorities.map(authority => authority.name);
@@ -26,6 +23,33 @@ const companyEmployeeTab = props => {
     return manager ? (
       <div>
         <img src={`content/images/check.png`} style={{ maxHeight: '20px' }} />
+      </div>
+    ) : (
+      <div />
+    );
+  };
+
+  const fireAndViewButtons = (employee: IEmployee): JSX.Element => {
+    return isCurrentUserManager ? (
+      <div className="btn-group flex-btn-group-container">
+        <Button tag={Link} to={`/entity/employee/${employee.id}`} color="info" size="sm">
+          <FontAwesomeIcon icon="eye" />{' '}
+          <span className="d-none d-md-inline">
+            <Translate contentKey="entity.action.view">View</Translate>
+          </span>
+        </Button>
+        <Button
+          tag={Link}
+          to={`/entity/company/fire/${employee.id}`}
+          color="danger"
+          size="sm"
+          disabled={isManager(employee.user.authorities)}
+        >
+          <FontAwesomeIcon icon="ban" />{' '}
+          <span className="d-none d-md-inline">
+            <Translate contentKey="entity.action.fire">Fire</Translate>
+          </span>
+        </Button>
       </div>
     ) : (
       <div />
@@ -50,28 +74,7 @@ const companyEmployeeTab = props => {
           <td>{employee.login ? employee.login : ''}</td>
           <td>{isManagerCheck(isManager(employee.user.authorities))}</td>
           <td>{isManagerCheck(!isManager(employee.user.authorities))}</td>
-          <td className="text-right">
-            <div className="btn-group flex-btn-group-container">
-              <Button tag={Link} to={`/entity/employee/${employee.id}`} color="info" size="sm">
-                <FontAwesomeIcon icon="eye" />{' '}
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.view">View</Translate>
-                </span>
-              </Button>
-              <Button
-                tag={Link}
-                to={`/entity/company/fire/${employee.id}`}
-                color="danger"
-                size="sm"
-                disabled={isManager(employee.user.authorities)}
-              >
-                <FontAwesomeIcon icon="ban" />{' '}
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.fire">Fire(TODO)</Translate>
-                </span>
-              </Button>
-            </div>
-          </td>
+          <td className="text-right">{fireAndViewButtons(employee)}</td>
         </tr>
       ))
     : null;
@@ -93,7 +96,7 @@ const companyEmployeeTab = props => {
   );
 };
 
-const mapStateToProps = ({ company }: IRootState) => ({
+const mapStateToProps = ({ company, employee }: IRootState) => ({
   companyEntity: company.employeeEntity
 });
 

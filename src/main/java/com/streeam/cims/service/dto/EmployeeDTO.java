@@ -1,6 +1,8 @@
 package com.streeam.cims.service.dto;
 
+import com.streeam.cims.domain.Company;
 import com.streeam.cims.domain.Notification;
+import com.streeam.cims.domain.User;
 import lombok.Data;
 
 import javax.persistence.Lob;
@@ -46,11 +48,11 @@ public class EmployeeDTO implements Serializable {
 
     private Long userId;
 
-    private String userLogin;
+    private User user;
 
     private Long companyId;
 
-    private String companyName;
+    private Company company;
 
     private Set<Notification> notifications;
 
@@ -89,9 +91,9 @@ public class EmployeeDTO implements Serializable {
             ", language='" + getLanguage() + "'" +
             ", image='" + getImage() + "'" +
             ", user=" + getUserId() +
-            ", user='" + getUserLogin() + "'" +
+            ", user='" + getUser() + "'" +
             ", company=" + getCompanyId() +
-            ", company='" + getCompanyName() + "'" +
+            ", company='" + getCompany() + "'" +
             "}";
     }
 }

@@ -176,7 +176,7 @@ export const hireEmployee = (companyId: Number, employeeId: Number) => async dis
     type: ACTION_TYPES.HIRE_EMPLOYEE,
     payload: axios.post(requestUrl)
   });
-  await dispatch(getEntities());
+  await dispatch(getEmployees());
   return result;
 };
 
@@ -186,7 +186,7 @@ export const rejectEmployee = (companyId: Number, employeeId: Number) => async d
     type: ACTION_TYPES.REJECT_EMPLOYEE,
     payload: axios.post(requestUrl)
   });
-  await dispatch(getEntities());
+  await dispatch(getCurrentUserEntity());
   await dispatch(getEmployees());
   return result;
 };
@@ -198,6 +198,7 @@ export const fireEmployee = (companyId: Number, employeeId: Number) => async dis
     payload: axios.post(requestUrl)
   });
   await dispatch(getCurrentUserEntity());
+  await dispatch(getEmployees());
   return result;
 };
 

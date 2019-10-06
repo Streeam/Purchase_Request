@@ -117,7 +117,10 @@
       "rejected": "Aplicație Respinsă",
       "reject": "Respins",
       "accept": "Accept",
-      "fired": "Angajat Concediat"
+      "invite": "Invita",
+      "fired": "Angajat Concediat",
+      "acceptinvitation": "Confirmă Invitația",
+      "rejecteinvitation": "Refuză invitația"
     },
     "detail": {
       "field": "Câmp",
@@ -129,8 +132,17 @@
     "join": {
       "title": "Confirmați operația de alaturare"
     },
+    "invite": {
+      "title": "Confirmați invitația"
+    },
     "fire": {
       "title": "Confirmați operația de concediere"
+    },
+    "acceptinvite": {
+      "title": "Acceptarea invitației"
+    },
+    "rejectinvite": {
+      "title": "Refuză invitația"
     },
     "validation": {
       "required": "Acest câmp este necesar.",

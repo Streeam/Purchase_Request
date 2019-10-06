@@ -5,6 +5,7 @@ import { Translate } from 'react-jhipster';
 import { IRootState } from 'app/shared/reducers';
 import ErrorBoundary from 'app/shared/error/error-boundary';
 import { AUTHORITIES } from 'app/config/constants';
+import { hasAnyAuthority } from './private-route';
 
 export interface IPrivateRouteProps extends RouteProps, StateProps {}
 
@@ -13,11 +14,12 @@ export const UserPrivateRoute = ({
   isAuthenticated,
   sessionHasBeenFetched,
   isAuthorized,
+  isUserManager,
   ...rest
 }: IPrivateRouteProps) => {
   const checkAuthorities = props => (
     <ErrorBoundary>
-      <Component isUserOnly={isAuthorized} {...props} />
+      <Component isUserOnly={isAuthorized} isCurrentUserManager={isUserManager} {...props} />
     </ErrorBoundary>
   );
 
@@ -41,10 +43,18 @@ export const hasOnlyUserRole = (authorities: string[]) => {
   return false;
 };
 
+export const isManager = authorities => {
+  if (authorities) {
+    return authorities.includes(AUTHORITIES.MANAGER);
+  }
+  return false;
+};
+
 const mapStateToProps = ({ authentication: { isAuthenticated, account, sessionHasBeenFetched } }: IRootState) => ({
   isAuthenticated,
   isAuthorized: hasOnlyUserRole(account.authorities),
-  sessionHasBeenFetched
+  sessionHasBeenFetched,
+  isUserManager: isManager(account.authorities)
 });
 
 type StateProps = ReturnType<typeof mapStateToProps>;

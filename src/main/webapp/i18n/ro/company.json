@@ -19,8 +19,17 @@
       "join": {
         "question": "Sunteți sigur că doriți să va alaturați Companie {{ name }}?"
       },
+      "invite": {
+        "question": "Sunteți sigur că doriți să initați pe anagajatul cu adresa de email: {{ name }}?"
+      },
+      "acceptinvitation": {
+        "question": "Sunteți sigur că doriți să acceptați invitația?"
+      },
+      "rejectinvitation": {
+        "question": "Sunteți sigur că doriți să refuzați invitația?"
+      },
       "fire": {
-        "question": "Sunteți sigur că doriți să concediati pe angajatul: {{ name }}?"
+        "question": "Sunteți sigur că doriți să concediați pe angajatul: {{ name }}?"
       },
       "detail": {
         "title": "Companie"
