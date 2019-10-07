@@ -4,6 +4,7 @@ import { RouteComponentProps } from 'react-router-dom';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
 import { Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import axios from 'axios';
 
 import { joinCompany, getCurrentEmployeeEntity } from '../../employee/employee.reducer';
 import { getEntities as getNotifications } from '../../notification/notification.reducer';

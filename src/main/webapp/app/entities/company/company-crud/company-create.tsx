@@ -52,7 +52,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps> {
   };
 
   handleClose = () => {
-    this.props.history.push('/entity/company');
+    this.props.history.push('/');
   };
 
   render() {

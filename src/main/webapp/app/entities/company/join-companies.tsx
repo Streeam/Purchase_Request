@@ -3,9 +3,7 @@ import { connect } from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import { Button, InputGroup, Col, Row, Table } from 'reactstrap';
 import { AvForm, AvGroup, AvInput } from 'availity-reactstrap-validation';
-import { AgGridReact } from '../../../../../../node_modules/ag-grid-react';
-import '../../../../../../node_modules/ag-grid-community/dist/styles/ag-grid.css';
-import '../../../../../../node_modules/ag-grid-community/dist/styles/ag-theme-balham.css';
+import axios from 'axios';
 // tslint:disable-next-line:no-unused-variable
 import { openFile, byteSize, Translate, translate, getSortState, IPaginationBaseState, JhiPagination, JhiItemCount } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -15,7 +13,7 @@ import { getSearchEntities, getEntities, reset as resetCompaniesState } from './
 // tslint:disable-next-line:no-unused-variable
 import { ITEMS_PER_PAGE } from 'app/shared/util/pagination.constants';
 import '../../../content/css/grid.css';
-import { getAsyncCurentEntities as getNotifications, reset as resetNotificationState } from '../notification/notification.reducer';
+import { getAsyncCurentEntities as getNotifications } from '../notification/notification.reducer';
 import CustomButton from '../../shared/layout/custom-components/custom-status-button';
 import { getCurrentEmployeeAsync } from '../employee/employee.reducer';
 
@@ -35,11 +33,6 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
     this.getEntities();
     this.props.getNotifications();
     this.props.getCurrentEmployeeAsync();
-  }
-
-  componentWillUnmount() {
-    this.props.resetCompaniesState();
-    this.props.resetNotificationState();
   }
 
   search = () => {
@@ -229,9 +222,7 @@ const mapDispatchToProps = {
   getSearchEntities,
   getEntities,
   getNotifications,
-  getCurrentEmployeeAsync,
-  resetCompaniesState,
-  resetNotificationState
+  getCurrentEmployeeAsync
 };
 
 type StateProps = ReturnType<typeof mapStateToProps>;

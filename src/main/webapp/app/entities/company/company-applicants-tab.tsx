@@ -14,6 +14,7 @@ const companyApplicantsTab = props => {
   const { companyEntity, employeeList } = props;
   useEffect(() => {
     props.getEmployees();
+    props.getCurrentUserEntity();
   }, []);
 
   const handleAccept = (employeeId: Number) => {
@@ -49,9 +50,9 @@ const companyApplicantsTab = props => {
               const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
 
               // if latest rejected request is older then 720 hours (30 days) return true, false otherwise
-              return now - notificationDateTime > 720 ? true : false;
+              return now - notificationDateTime > 720;
             });
-            return validFired.lenght > 0 ? true : false;
+            return validFired.length > 0;
           }
           // ****** REJECT NOTIFICATIONS */
           const rejected = employee.notifications.filter((notification1, i) => notification1.format === NOTIFICATIONS.REJECT_REQUEST);
@@ -67,9 +68,9 @@ const companyApplicantsTab = props => {
               const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
 
               // if latest rejected request is older then 72 hours (3 days) return true, false otherwise
-              return now - notificationDateTime > 72 ? true : false;
+              return now - notificationDateTime > 72;
             });
-            return validRejected.lenght > 0 ? true : false;
+            return validRejected.length > 0;
           }
 
           // ****** REQUEST NOTIFICATIONS */
@@ -77,7 +78,7 @@ const companyApplicantsTab = props => {
           if (request.length > 0) {
             let notificationDate: Date = moment(request[0].sentDate).toDate();
 
-            const validRejected = request.filter(requestedNotif => {
+            const validRequested = request.filter(requestedNotif => {
               const nextDate: Date = moment(requestedNotif.sentDate).toDate();
               if (nextDate > notificationDate) {
                 notificationDate = moment(requestedNotif.sentDate).toDate();
@@ -86,9 +87,9 @@ const companyApplicantsTab = props => {
               const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
 
               // if latest request request is older then 72 hours (3 days) return false, true otherwise
-              return now - notificationDateTime < 72 ? true : false;
+              return now - notificationDateTime < 72;
             });
-            return validRejected.lenght > 0 ? true : false;
+            return validRequested.length > 0;
           }
           return false;
         })
@@ -100,11 +101,23 @@ const companyApplicantsTab = props => {
         <td style={{ maxWidth: '10px' }}>
           {employee.image ? (
             <div>
-              <img src={`data:${employee.imageContentType};base64,${employee.image}`} style={{ maxHeight: '30px' }} />
+              <img
+                src={`data:${employee.imageContentType};base64,${employee.image}`}
+                style={{
+                  maxHeight: '30px',
+                  borderRadius: '50%'
+                }}
+              />
             </div>
           ) : (
             <div>
-              <img src={`content/images/default_profile_icon.png`} style={{ maxHeight: '30px' }} />
+              <img
+                src={`content/images/default_profile_icon.png`}
+                style={{
+                  maxHeight: '30px',
+                  borderRadius: '50%'
+                }}
+              />
             </div>
           )}
         </td>

@@ -68,7 +68,6 @@ export class EmployeeUpdate extends React.Component<IEmployeeUpdateProps, IEmplo
         ...employeeEntity,
         ...values
       };
-
       if (this.state.isNew) {
         this.props.createEntity(entity);
       } else {

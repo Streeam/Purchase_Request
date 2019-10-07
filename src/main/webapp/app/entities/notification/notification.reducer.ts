@@ -129,7 +129,7 @@ export const getEntities: ICrudGetAllAction<INotification> = (page, size, sort) 
     payload: axios.get<INotification>(`${requestUrl}${sort ? '&' : '?'}cacheBuster=${new Date().getTime()}`)
   };
 };
-export const getCurrentEntities: ICrudGetAllAction<INotification> = () => {
+export const getCurrentEntities = () => {
   const requestUrl = `${apiUrl}/current`;
   return {
     type: ACTION_TYPES.FETCH_CURRENT_NOTIFICATION,

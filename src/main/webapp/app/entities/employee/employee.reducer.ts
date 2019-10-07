@@ -216,7 +216,7 @@ export const joinCompany = companyId => async dispatch => {
     type: ACTION_TYPES.JOIN,
     payload: axios.post(requestUrl)
   });
-  getCurrentNotifications();
+  await dispatch(getCurrentNotifications());
   return result;
 };
 
@@ -237,7 +237,7 @@ export const rejectCompanyInvitation = (companyId: String) => async dispatch => 
     type: ACTION_TYPES.REJECT_INVITE,
     payload: axios.post(requestUrl)
   });
-  await getCurrentNotifications();
+  await dispatch(getCurrentNotifications());
   return result;
 };
 

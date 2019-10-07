@@ -62,11 +62,23 @@ const companyEmployeeTab = props => {
           <td style={{ maxWidth: '10px' }}>
             {employee.image ? (
               <div>
-                <img src={`data:${employee.imageContentType};base64,${employee.image}`} style={{ maxHeight: '30px' }} />
+                <img
+                  src={`data:${employee.imageContentType};base64,${employee.image}`}
+                  style={{
+                    maxHeight: '30px',
+                    borderRadius: '50%'
+                  }}
+                />
               </div>
             ) : (
               <div>
-                <img src={`content/images/default_profile_icon.png`} style={{ maxHeight: '30px' }} />
+                <img
+                  src={`content/images/default_profile_icon.png`}
+                  style={{
+                    maxHeight: '30px',
+                    borderRadius: '50%'
+                  }}
+                />
               </div>
             )}
           </td>

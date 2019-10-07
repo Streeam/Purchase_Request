@@ -1,14 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import { RouteComponentProps } from 'react-router-dom';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Spinner } from 'reactstrap';
 import { Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import axios from 'axios';
 
 import { rejectCompanyInvitation } from '../../employee/employee.reducer';
 import { IRootState } from 'app/shared/reducers';
-
-export interface ICompanyAcceptInvitationDialogProps extends DispatchProps, RouteComponentProps<{ id: string }> {}
 
 export const companyAcceptInvitationDialog = props => {
   const rejectInvitation = event => {
@@ -56,8 +55,6 @@ const mapDispatchToProps = { rejectCompanyInvitation };
 const mapStateToProps = (storeState: IRootState) => ({
   updating: storeState.employee.updating
 });
-
-type DispatchProps = typeof mapDispatchToProps;
 
 export default connect(
   mapStateToProps,
