@@ -8,8 +8,9 @@ import Activate from 'app/modules/account/activate/activate';
 import PasswordResetInit from 'app/modules/account/password-reset/init/password-reset-init';
 import PasswordResetFinish from 'app/modules/account/password-reset/finish/password-reset-finish';
 import Logout from 'app/modules/login/logout';
-import Home from 'app/modules/home/home';
+import Home from 'app/modules/home/home-page';
 import Entities from 'app/entities';
+import Company from 'app/modules/company';
 import PrivateRoute from 'app/shared/auth/private-route';
 import HomeRoute from 'app/shared/auth/user-route';
 import ErrorBoundaryRoute from 'app/shared/error/error-boundary-route';
@@ -40,7 +41,8 @@ const Routes = () => (
       <PrivateRoute path="/admin" component={Admin} hasAnyAuthorities={[AUTHORITIES.ADMIN]} />
       <PrivateRoute path="/account" component={Account} hasAnyAuthorities={[AUTHORITIES.ADMIN, AUTHORITIES.USER]} />
       <PrivateRoute path="/entity" component={Entities} hasAnyAuthorities={[AUTHORITIES.USER]} />
-      <HomeRoute path="/" exact component={Home} />
+      <PrivateRoute path="/company" component={Company} hasAnyAuthorities={[AUTHORITIES.USER]} />
+      <HomeRoute path="/" component={Home} />
       <ErrorBoundaryRoute component={PageNotFound} />
     </Switch>
   </div>

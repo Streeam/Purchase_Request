@@ -27,6 +27,7 @@ export interface IEmployeeUpdateState {
 }
 
 export class EmployeeUpdate extends React.Component<IEmployeeUpdateProps, IEmployeeUpdateState> {
+  _isMounted = false;
   constructor(props) {
     super(props);
     this.state = {
@@ -43,6 +44,7 @@ export class EmployeeUpdate extends React.Component<IEmployeeUpdateProps, IEmplo
   }
 
   componentDidMount() {
+    this._isMounted = true;
     if (this.state.isNew) {
       this.props.reset();
     } else {
@@ -50,7 +52,11 @@ export class EmployeeUpdate extends React.Component<IEmployeeUpdateProps, IEmplo
     }
 
     this.props.getUsers();
-    this.props.getCompanies();
+    this.props.getCompanies(this._isMounted);
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   onBlobChange = (isAnImage, name) => event => {

@@ -2,7 +2,7 @@ import '../../app.scss';
 import React from 'react';
 import { NavLink as Link } from 'react-router-dom';
 import { Row, Col, Button, Spinner } from 'reactstrap';
-import CompanyStatus from '../../entities/company/current-company-status';
+import CompanyStatus from '../company/current-company-status';
 
 export const home = props =>
   false ? (

@@ -25,7 +25,7 @@ export const UserPrivateRoute = ({
 
   const renderRedirect = props => {
     if (!sessionHasBeenFetched) {
-      return <div />;
+      return <div>Home Sesion Not Fetched Yet</div>;
     } else {
       return isAuthenticated ? checkAuthorities(props) : <div>Home unauthorize</div>;
     }

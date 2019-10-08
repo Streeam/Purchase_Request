@@ -3,19 +3,18 @@ import { connect } from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import { Button, InputGroup, Col, Row, Table } from 'reactstrap';
 import { AvForm, AvGroup, AvInput } from 'availity-reactstrap-validation';
-import axios from 'axios';
 // tslint:disable-next-line:no-unused-variable
-import { openFile, byteSize, Translate, translate, getSortState, IPaginationBaseState, JhiPagination, JhiItemCount } from 'react-jhipster';
+import { openFile, Translate, translate, getSortState, IPaginationBaseState, JhiPagination, JhiItemCount } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
-import { getSearchEntities, getEntities, reset as resetCompaniesState } from './company.reducer';
+import { getSearchEntities, getEntities } from '../../entities/company/company.reducer';
 // tslint:disable-next-line:no-unused-variable
 import { ITEMS_PER_PAGE } from 'app/shared/util/pagination.constants';
 import '../../../content/css/grid.css';
-import { getAsyncCurentEntities as getNotifications } from '../notification/notification.reducer';
+import { getAsyncCurentEntities as getNotifications } from '../../entities/notification/notification.reducer';
 import CustomButton from '../../shared/layout/custom-components/custom-status-button';
-import { getCurrentEmployeeAsync } from '../employee/employee.reducer';
+import { getCurrentEmployeeAsync } from '../../entities/employee/employee.reducer';
 
 export interface ICompanyProps extends StateProps, DispatchProps, RouteComponentProps<{ url: string }> {}
 
@@ -24,15 +23,21 @@ export interface ICompanyState extends IPaginationBaseState {
 }
 
 export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
+  _isMounted = false;
   state: ICompanyState = {
     search: '',
     ...getSortState(this.props.location, ITEMS_PER_PAGE)
   };
 
   componentDidMount() {
-    this.getEntities();
-    this.props.getNotifications();
-    this.props.getCurrentEmployeeAsync();
+    this._isMounted = true;
+    this.props.getEntities(this._isMounted);
+    this.props.getNotifications(this._isMounted);
+    this.props.getCurrentEmployeeAsync(this._isMounted);
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   search = () => {
@@ -46,7 +51,7 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
 
   clear = () => {
     this.setState({ search: '', activePage: 1 }, () => {
-      this.props.getEntities();
+      this.props.getEntities(this._isMounted);
     });
   };
 
@@ -74,7 +79,7 @@ export class JoinCompany extends React.Component<ICompanyProps, ICompanyState> {
     if (search) {
       this.props.getSearchEntities(search, activePage - 1, itemsPerPage, `${sort},${order}`);
     } else {
-      this.props.getEntities(activePage - 1, itemsPerPage, `${sort},${order}`);
+      this.props.getEntities(activePage - 1, itemsPerPage, `${sort},${order}`, this._isMounted);
     }
   };
 

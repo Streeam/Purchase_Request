@@ -5,7 +5,7 @@ import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
 import { Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { inviteEmployee } from '../../employee/employee.reducer';
+import { inviteEmployee } from '../../../entities/employee/employee.reducer';
 
 export interface ICompanyInviteDialogProps extends DispatchProps, RouteComponentProps<{ email: string }> {}
 

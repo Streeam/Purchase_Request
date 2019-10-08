@@ -7,11 +7,11 @@ import { Translate, ICrudGetAction, openFile, byteSize } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
-import { getEntity } from './company.reducer';
+import { getEntity } from '../../entities/company/company.reducer';
 import { ICompany } from 'app/shared/model/company.model';
 // tslint:disable-next-line:no-unused-variable
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
-import { AUTHORITIES } from '../../../app/config/constants';
+import { AUTHORITIES } from '../../config/constants';
 import { hasAnyAuthority } from '../../shared/auth/private-route';
 
 export interface ICompanyDetailProps extends StateProps, DispatchProps, RouteComponentProps<{ id: string }> {}

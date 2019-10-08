@@ -19,7 +19,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
-import { getSearchEntities, getEntities } from '../company.reducer';
+import { getSearchEntities, getEntities } from './company.reducer';
 import { ICompany } from 'app/shared/model/company.model';
 // tslint:disable-next-line:no-unused-variable
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
@@ -32,13 +32,19 @@ export interface ICompanyState extends IPaginationBaseState {
 }
 
 export class Company extends React.Component<ICompanyProps, ICompanyState> {
+  _isMounted = false;
   state: ICompanyState = {
     search: '',
     ...getSortState(this.props.location, ITEMS_PER_PAGE)
   };
 
   componentDidMount() {
+    this._isMounted = true;
     this.getEntities();
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   search = () => {
@@ -52,7 +58,7 @@ export class Company extends React.Component<ICompanyProps, ICompanyState> {
 
   clear = () => {
     this.setState({ search: '', activePage: 1 }, () => {
-      this.props.getEntities();
+      this.props.getEntities(this._isMounted);
     });
   };
 
@@ -80,7 +86,7 @@ export class Company extends React.Component<ICompanyProps, ICompanyState> {
     if (search) {
       this.props.getSearchEntities(search, activePage - 1, itemsPerPage, `${sort},${order}`);
     } else {
-      this.props.getEntities(activePage - 1, itemsPerPage, `${sort},${order}`);
+      this.props.getEntities(this._isMounted, activePage - 1, itemsPerPage, `${sort},${order}`);
     }
   };
 

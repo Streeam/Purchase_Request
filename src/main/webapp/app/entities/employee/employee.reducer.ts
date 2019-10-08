@@ -170,15 +170,19 @@ export const getEntity: ICrudGetAction<IEmployee> = id => {
   };
 };
 
-export const getCurrentEmployeeEntity = () => {
+export const getCurrentEmployeeEntity = isMounted => {
   const requestUrl = `${apiUrl}/current-employee`;
   return {
     type: ACTION_TYPES.FETCH_CURRENT_EMPLOYEE,
-    payload: axios.get<IEmployee>(requestUrl)
+    payload: axios.get<IEmployee>(requestUrl).then(result => {
+      if (isMounted) {
+        return result;
+      }
+    })
   };
 };
 
-export const getCurrentEmployeeAsync = () => dispatch => dispatch(getCurrentEmployeeEntity());
+export const getCurrentEmployeeAsync = isMounted => dispatch => dispatch(getCurrentEmployeeEntity(isMounted));
 
 export const createEntity: ICrudPutAction<IEmployee> = entity => async dispatch => {
   const result = await dispatch({
@@ -216,7 +220,6 @@ export const joinCompany = companyId => async dispatch => {
     type: ACTION_TYPES.JOIN,
     payload: axios.post(requestUrl)
   });
-  await dispatch(getCurrentNotifications());
   return result;
 };
 
@@ -237,7 +240,6 @@ export const rejectCompanyInvitation = (companyId: String) => async dispatch => 
     type: ACTION_TYPES.REJECT_INVITE,
     payload: axios.post(requestUrl)
   });
-  await dispatch(getCurrentNotifications());
   return result;
 };
 

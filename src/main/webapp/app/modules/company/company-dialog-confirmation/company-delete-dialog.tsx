@@ -6,7 +6,7 @@ import { Translate, ICrudGetAction, ICrudDeleteAction } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
-import { getEntity, deleteEntity } from '../company.reducer';
+import { getEntity, deleteEntity } from '../../../entities/company/company.reducer';
 
 export interface ICompanyDeleteDialogProps extends StateProps, DispatchProps, RouteComponentProps<{ id: string }> {}
 

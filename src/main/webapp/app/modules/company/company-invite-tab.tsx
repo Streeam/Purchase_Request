@@ -8,9 +8,9 @@ import { Link } from 'react-router-dom';
 
 import { NOTIFICATIONS, AUTHORITIES } from '../../config/constants';
 import { IRootState } from 'app/shared/reducers';
-import { inviteEmployee } from '../employee/employee.reducer';
+import { inviteEmployee } from '../../entities/employee/employee.reducer';
 import { employeeListWithout } from '../../shared/util/entity-utils';
-import { getAsyncEntities as getNotifications } from '../notification/notification.reducer';
+import { getAsyncEntities as getNotifications } from '../../entities/notification/notification.reducer';
 
 const companyInvite = props => {
   const { employeeList, notificationList } = props;

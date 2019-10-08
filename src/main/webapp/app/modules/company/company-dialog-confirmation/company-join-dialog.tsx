@@ -6,16 +6,26 @@ import { Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 
-import { joinCompany, getCurrentEmployeeEntity } from '../../employee/employee.reducer';
-import { getEntities as getNotifications } from '../../notification/notification.reducer';
+import { joinCompany, getCurrentEmployeeEntity } from '../../../entities/employee/employee.reducer';
+import { getAsyncCurentEntities as getCurrentNotifications } from '../../../entities/notification/notification.reducer';
 
 export interface ICompanyJoinDialogProps extends DispatchProps, RouteComponentProps<{ id: string }> {}
 
 export class CompanyJoinDialog extends React.Component<ICompanyJoinDialogProps> {
+  _isMounted = false;
   confirmJoin = event => {
     this.props.joinCompany(this.props.match.params.id);
+    this.props.getCurrentNotifications(this._isMounted);
     this.handleClose(event);
   };
+
+  componentDidMount() {
+    this._isMounted = true;
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
 
   handleClose = event => {
     event.stopPropagation();
@@ -50,7 +60,7 @@ export class CompanyJoinDialog extends React.Component<ICompanyJoinDialogProps> 
   }
 }
 
-const mapDispatchToProps = { joinCompany, getNotifications, getCurrentEmployeeEntity };
+const mapDispatchToProps = { joinCompany, getCurrentNotifications, getCurrentEmployeeEntity };
 
 type DispatchProps = typeof mapDispatchToProps;
 

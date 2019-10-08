@@ -5,10 +5,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
 import { Translate } from 'react-jhipster';
 
-import { AUTHORITIES } from '../../../app/config/constants';
+import { AUTHORITIES } from '../../config/constants';
 import { hasAnyAuthority } from '../../shared/auth/private-route';
 import { IRootState } from 'app/shared/reducers';
-import { getCurrentUsersCompanyAsync } from './company.reducer';
+import { getCurrentUsersCompanyAsync } from '../../entities/company/company.reducer';
 import { IEmployee } from 'app/shared/model/employee.model';
 
 const companyEmployeeTab = props => {

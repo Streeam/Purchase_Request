@@ -1,17 +1,17 @@
 import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
-import { RouteComponentProps } from 'react-router-dom';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Spinner } from 'reactstrap';
 import { Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import axios from 'axios';
+import { getAsyncCurentEntities as getCurrentNotifications } from '../../../entities/notification/notification.reducer';
 
-import { rejectCompanyInvitation } from '../../employee/employee.reducer';
+import { rejectCompanyInvitation } from '../../../entities/employee/employee.reducer';
 import { IRootState } from 'app/shared/reducers';
 
 export const companyAcceptInvitationDialog = props => {
   const rejectInvitation = event => {
     props.rejectCompanyInvitation(props.match.params.id);
+    props.getCurrentNotifications();
     handleClose(event);
   };
 
@@ -50,7 +50,7 @@ export const companyAcceptInvitationDialog = props => {
   );
 };
 
-const mapDispatchToProps = { rejectCompanyInvitation };
+const mapDispatchToProps = { rejectCompanyInvitation, getCurrentNotifications };
 
 const mapStateToProps = (storeState: IRootState) => ({
   updating: storeState.employee.updating

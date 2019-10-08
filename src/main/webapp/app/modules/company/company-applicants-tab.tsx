@@ -7,8 +7,8 @@ import moment from 'moment';
 
 import { NOTIFICATIONS } from '../../config/constants';
 import { IRootState } from 'app/shared/reducers';
-import { getCurrentUsersCompanyAsync as getCurrentUserEntity, hireEmployee, rejectEmployee } from './company.reducer';
-import { getAsyncEntities as getEmployees } from '../employee/employee.reducer';
+import { getCurrentUsersCompanyAsync as getCurrentUserEntity, hireEmployee, rejectEmployee } from '../../entities/company/company.reducer';
+import { getAsyncEntities as getEmployees } from '../../entities/employee/employee.reducer';
 
 const companyApplicantsTab = props => {
   const { companyEntity, employeeList } = props;

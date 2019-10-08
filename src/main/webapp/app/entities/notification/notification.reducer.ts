@@ -129,11 +129,15 @@ export const getEntities: ICrudGetAllAction<INotification> = (page, size, sort) 
     payload: axios.get<INotification>(`${requestUrl}${sort ? '&' : '?'}cacheBuster=${new Date().getTime()}`)
   };
 };
-export const getCurrentEntities = () => {
+export const getCurrentEntities = isMounted => {
   const requestUrl = `${apiUrl}/current`;
   return {
     type: ACTION_TYPES.FETCH_CURRENT_NOTIFICATION,
-    payload: axios.get<INotification>(requestUrl)
+    payload: axios.get<INotification>(requestUrl).then(result => {
+      if (isMounted) {
+        return result;
+      }
+    })
   };
 };
 
@@ -146,7 +150,7 @@ export const getEntity: ICrudGetAction<INotification> = id => {
 };
 
 export const getAsyncEntities = () => async dispatch => dispatch(getEntities());
-export const getAsyncCurentEntities = () => async dispatch => dispatch(getCurrentEntities());
+export const getAsyncCurentEntities = isMounted => async dispatch => dispatch(getCurrentEntities(isMounted));
 
 export const createEntity: ICrudPutAction<INotification> = entity => async dispatch => {
   const result = await dispatch({

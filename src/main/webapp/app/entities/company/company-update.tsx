@@ -8,7 +8,7 @@ import { Translate, translate, ICrudGetAction, ICrudGetAllAction, setFileData, o
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IRootState } from 'app/shared/reducers';
 
-import { getEntity, updateEntity, createEntity, setBlob, reset } from '../company.reducer';
+import { getEntity, updateEntity, createEntity, setBlob, reset } from './company.reducer';
 import { ICompany } from 'app/shared/model/company.model';
 // tslint:disable-next-line:no-unused-variable
 import { convertDateTimeFromServer, convertDateTimeToServer } from 'app/shared/util/date-utils';
@@ -21,6 +21,7 @@ export interface ICompanyUpdateState {
 }
 
 export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompanyUpdateState> {
+  _isMounted = false;
   constructor(props) {
     super(props);
     this.state = {
@@ -35,11 +36,16 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
   }
 
   componentDidMount() {
+    this._isMounted = true;
     if (this.state.isNew) {
       this.props.reset();
     } else {
       this.props.getEntity(this.props.match.params.id);
     }
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   onBlobChange = (isAnImage, name) => event => {
@@ -59,9 +65,9 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
       };
 
       if (this.state.isNew) {
-        this.props.createEntity(entity);
+        this.props.createEntity(entity, this._isMounted);
       } else {
-        this.props.updateEntity(entity);
+        this.props.updateEntity(entity, this._isMounted);
       }
     }
   };

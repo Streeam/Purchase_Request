@@ -79,6 +79,9 @@ export default (state: CompanyState = initialState, action): CompanyState => {
       };
     case SUCCESS(ACTION_TYPES.SEARCH_COMPANIES):
     case SUCCESS(ACTION_TYPES.FETCH_COMPANY_LIST):
+      if (!action.payload) {
+        return state;
+      }
       return {
         ...state,
         loading: false,
@@ -144,11 +147,15 @@ export const getSearchEntities: ICrudSearchAction<ICompany> = (query, page, size
   payload: axios.get<ICompany>(`${apiSearchUrl}?query=${query}${sort ? `&page=${page}&size=${size}&sort=${sort}` : ''}`)
 });
 
-export const getEntities: ICrudGetAllAction<ICompany> = (page, size, sort) => {
+export const getEntities = (isMounted, page?, size?, sort?) => {
   const requestUrl = `${apiUrl}${sort ? `?page=${page}&size=${size}&sort=${sort}` : ''}`;
   return {
     type: ACTION_TYPES.FETCH_COMPANY_LIST,
-    payload: axios.get<ICompany>(`${requestUrl}${sort ? '&' : '?'}cacheBuster=${new Date().getTime()}`)
+    payload: axios.get<ICompany>(`${requestUrl}${sort ? '&' : '?'}cacheBuster=${new Date().getTime()}`).then(result => {
+      if (isMounted) {
+        return result;
+      }
+    })
   };
 };
 
@@ -202,31 +209,31 @@ export const fireEmployee = (companyId: Number, employeeId: Number) => async dis
   return result;
 };
 
-export const createEntity: ICrudPutAction<ICompany> = entity => async dispatch => {
+export const createEntity = (entity, isMounted) => async dispatch => {
   const result = await dispatch({
     type: ACTION_TYPES.CREATE_COMPANY,
     payload: axios.post(apiUrl, cleanEntity(entity))
   });
-  dispatch(getEntities());
+  dispatch(getEntities(isMounted));
   return result;
 };
 
-export const updateEntity: ICrudPutAction<ICompany> = entity => async dispatch => {
+export const updateEntity = (entity, isMounted) => async dispatch => {
   const result = await dispatch({
     type: ACTION_TYPES.UPDATE_COMPANY,
     payload: axios.put(apiUrl, cleanEntity(entity))
   });
-  dispatch(getEntities());
+  dispatch(getEntities(isMounted));
   return result;
 };
 
-export const deleteEntity: ICrudDeleteAction<ICompany> = id => async dispatch => {
+export const deleteEntity = (id, IsMounted) => async dispatch => {
   const requestUrl = `${apiUrl}/${id}`;
   const result = await dispatch({
     type: ACTION_TYPES.DELETE_COMPANY,
     payload: axios.delete(requestUrl)
   });
-  dispatch(getEntities());
+  dispatch(getEntities(IsMounted));
   return result;
 };
 

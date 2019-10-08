@@ -8,8 +8,8 @@ import { Translate, translate, ICrudGetAction, ICrudGetAllAction, setFileData, o
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
-import { getEntity, createEntity, setBlob, reset } from '../company.reducer';
-import { getSession } from '../../../shared/reducers/authentication';
+import { getEntity, createEntity, setBlob, reset } from './company.reducer';
+import { getSession } from '../../shared/reducers/authentication';
 // tslint:disable-next-line:no-unused-variable
 import { convertDateTimeFromServer, convertDateTimeToServer } from 'app/shared/util/date-utils';
 import { mapIdList } from 'app/shared/util/entity-utils';
@@ -17,6 +17,7 @@ import { mapIdList } from 'app/shared/util/entity-utils';
 export interface ICompanyUpdateProps extends StateProps, DispatchProps, RouteComponentProps<{ id: string }> {}
 
 export class CompanyUpdate extends React.Component<ICompanyUpdateProps> {
+  _isMounted = false;
   constructor(props) {
     super(props);
   }
@@ -28,7 +29,12 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps> {
   }
 
   componentDidMount() {
+    this._isMounted = true;
     this.props.reset();
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   onBlobChange = (isAnImage, name) => event => {
@@ -46,7 +52,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps> {
         ...companyEntity,
         ...values
       };
-      this.props.createEntity(entity);
+      this.props.createEntity(entity, this._isMounted);
       this.props.getSession();
     }
   };

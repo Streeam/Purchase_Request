@@ -6,11 +6,11 @@ import { Button, Row, Col, Table } from 'reactstrap';
 import { Translate, openFile } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IRootState } from 'app/shared/reducers';
-import { getCurrentUsersCompanyAsync } from './company.reducer';
+import { getCurrentUsersCompanyAsync } from '../../entities/company/company.reducer';
 import '../../app.scss';
 import TabBar from './company-tabpane';
 import { getSession } from '../../shared/reducers/authentication';
-import { getCurrentEmployeeAsync } from '../employee/employee.reducer';
+import { getCurrentEmployeeAsync } from '../../entities/employee/employee.reducer';
 import CompanyEmployeeTab from './company-employee-tab';
 
 export const companyDetail = props => {

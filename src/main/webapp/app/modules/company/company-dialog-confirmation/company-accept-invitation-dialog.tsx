@@ -5,8 +5,8 @@ import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Spinner } from 'rea
 import { Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { acceptCompanyInvitation } from '../../employee/employee.reducer';
-import { getUser, getRoles, updateUser, reset as userReset } from '../../../modules/administration/user-management/user-management.reducer';
+import { acceptCompanyInvitation } from '../../../entities/employee/employee.reducer';
+import { getUser, getRoles, updateUser, reset as userReset } from '../../administration/user-management/user-management.reducer';
 import { IRootState } from 'app/shared/reducers';
 import { AUTHORITIES } from 'app/config/constants';
 
