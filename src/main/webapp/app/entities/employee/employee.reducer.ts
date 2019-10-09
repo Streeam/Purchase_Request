@@ -1,16 +1,33 @@
 import axios from 'axios';
-import { ICrudSearchAction, ICrudGetAction, ICrudGetAllAction, ICrudPutAction, ICrudDeleteAction } from 'react-jhipster';
+import {
+  ICrudSearchAction,
+  ICrudGetAction,
+  ICrudGetAllAction,
+  ICrudPutAction,
+  ICrudDeleteAction,
+  IPayload,
+  IPayloadResult
+} from 'react-jhipster';
 
 import { cleanEntity } from 'app/shared/util/entity-utils';
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 
 import { IEmployee, defaultValue } from 'app/shared/model/employee.model';
 import { getSession } from '../../shared/reducers/authentication';
-import {
-  getAsyncEntities as getAllNotifications,
-  getAsyncCurentEntities as getCurrentNotifications
-} from '../notification/notification.reducer';
-import { getCurrentUsersCompanyAsync as getCurrentCompany } from '../company/company.reducer';
+import { getAsyncEntities as getAllNotifications } from '../notification/notification.reducer';
+
+export declare type ICrudGetAllActionWithGuard<T> = (
+  isMounted: boolean,
+  page?: number,
+  size?: number,
+  sort?: string
+) => IPayload<T> | ((dispatch: any) => IPayload<T>);
+export declare type ICrudPutActionWithGuard<T> = (isMounted: boolean, data?: T) => IPayload<T> | IPayloadResult<T>;
+export declare type ICrudDeleteActionWithGuard<T> = (isMounted: boolean, id?: string | number) => IPayload<T> | IPayloadResult<T>;
+export declare type ICrudGetActionWithGuard<T> = (
+  isMounted: boolean,
+  id: string | number
+) => IPayload<T> | ((dispatch: any) => IPayload<T>);
 
 export const ACTION_TYPES = {
   SEARCH_EMPLOYEES: 'employee/SEARCH_EMPLOYEES',
@@ -154,23 +171,31 @@ export const getSearchEntities: ICrudSearchAction<IEmployee> = (query, page, siz
   payload: axios.get<IEmployee>(`${apiSearchUrl}?query=${query}${sort ? `&page=${page}&size=${size}&sort=${sort}` : ''}`)
 });
 
-export const getEntities: ICrudGetAllAction<IEmployee> = (page, size, sort) => {
+export const getEntities: ICrudGetAllActionWithGuard<IEmployee> = (isMounted, page?, size?, sort?) => {
   const requestUrl = `${apiUrl}${sort ? `?page=${page}&size=${size}&sort=${sort}` : ''}`;
   return {
     type: ACTION_TYPES.FETCH_EMPLOYEE_LIST,
-    payload: axios.get<IEmployee>(`${requestUrl}${sort ? '&' : '?'}cacheBuster=${new Date().getTime()}`)
+    payload: axios.get<IEmployee>(`${requestUrl}${sort ? '&' : '?'}cacheBuster=${new Date().getTime()}`).then(result => {
+      if (isMounted) {
+        return result;
+      }
+    })
   };
 };
 
-export const getEntity: ICrudGetAction<IEmployee> = id => {
+export const getEntity: ICrudGetActionWithGuard<IEmployee> = (isMounted: boolean, id) => {
   const requestUrl = `${apiUrl}/${id}`;
   return {
     type: ACTION_TYPES.FETCH_EMPLOYEE,
-    payload: axios.get<IEmployee>(requestUrl)
+    payload: axios.get<IEmployee>(requestUrl).then(result => {
+      if (isMounted) {
+        return result;
+      }
+    })
   };
 };
 
-export const getCurrentEmployeeEntity = isMounted => {
+export const getCurrentEmployeeEntity = (isMounted: boolean) => {
   const requestUrl = `${apiUrl}/current-employee`;
   return {
     type: ACTION_TYPES.FETCH_CURRENT_EMPLOYEE,
@@ -182,35 +207,47 @@ export const getCurrentEmployeeEntity = isMounted => {
   };
 };
 
-export const getCurrentEmployeeAsync = isMounted => dispatch => dispatch(getCurrentEmployeeEntity(isMounted));
+export const getCurrentEmployeeAsync = (isMounted: boolean) => dispatch => dispatch(getCurrentEmployeeEntity(isMounted));
 
-export const createEntity: ICrudPutAction<IEmployee> = entity => async dispatch => {
+export const createEntity: ICrudPutActionWithGuard<IEmployee> = (isMounted, entity) => async dispatch => {
   const result = await dispatch({
     type: ACTION_TYPES.CREATE_EMPLOYEE,
-    payload: axios.post(apiUrl, cleanEntity(entity))
+    payload: axios.post(apiUrl, cleanEntity(entity)).then(data => {
+      if (isMounted) {
+        return data;
+      }
+    })
   });
-  dispatch(getEntities());
+  dispatch(getEntities(isMounted));
   return result;
 };
 
-export const getAsyncEntities = () => async dispatch => dispatch(getEntities());
+export const getAsyncEntities = (isMounted: boolean) => async dispatch => dispatch(getEntities(isMounted));
 
-export const updateEntity: ICrudPutAction<IEmployee> = entity => async dispatch => {
+export const updateEntity: ICrudPutActionWithGuard<IEmployee> = (isMounted, entity) => async dispatch => {
   const result = await dispatch({
     type: ACTION_TYPES.UPDATE_EMPLOYEE,
-    payload: axios.put(apiUrl, cleanEntity(entity))
+    payload: axios.put(apiUrl, cleanEntity(entity)).then(data => {
+      if (isMounted) {
+        return data;
+      }
+    })
   });
-  dispatch(getEntities());
+  dispatch(getEntities(isMounted));
   return result;
 };
 
-export const deleteEntity: ICrudDeleteAction<IEmployee> = id => async dispatch => {
+export const deleteEntity: ICrudDeleteActionWithGuard<IEmployee> = (isMounted: boolean, id) => async dispatch => {
   const requestUrl = `${apiUrl}/${id}`;
   const result = await dispatch({
     type: ACTION_TYPES.DELETE_EMPLOYEE,
-    payload: axios.delete(requestUrl)
+    payload: axios.delete(requestUrl).then(data => {
+      if (isMounted) {
+        return data;
+      }
+    })
   });
-  dispatch(getEntities());
+  dispatch(getEntities(isMounted));
   return result;
 };
 
@@ -230,7 +267,7 @@ export const acceptCompanyInvitation = (companyId: String) => async dispatch => 
     payload: axios.post(requestUrl)
   });
   await dispatch(getSession());
-  await dispatch(getCurrentCompany());
+  // await dispatch(getCurrentCompany());
   return result;
 };
 

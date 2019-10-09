@@ -32,12 +32,15 @@ export interface IEmployeeState extends IPaginationBaseState {
 }
 
 export class Employee extends React.Component<IEmployeeProps, IEmployeeState> {
+  _isMounted = false;
+
   state: IEmployeeState = {
     search: '',
     ...getSortState(this.props.location, ITEMS_PER_PAGE)
   };
 
   componentDidMount() {
+    this._isMounted = true;
     this.getEntities();
   }
 
@@ -50,9 +53,13 @@ export class Employee extends React.Component<IEmployeeProps, IEmployeeState> {
     }
   };
 
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
+
   clear = () => {
     this.setState({ search: '', activePage: 1 }, () => {
-      this.props.getEntities();
+      this.props.getEntities(this._isMounted);
     });
   };
 
@@ -80,7 +87,7 @@ export class Employee extends React.Component<IEmployeeProps, IEmployeeState> {
     if (search) {
       this.props.getSearchEntities(search, activePage - 1, itemsPerPage, `${sort},${order}`);
     } else {
-      this.props.getEntities(activePage - 1, itemsPerPage, `${sort},${order}`);
+      this.props.getEntities(this._isMounted, activePage - 1, itemsPerPage, `${sort},${order}`);
     }
   };
 

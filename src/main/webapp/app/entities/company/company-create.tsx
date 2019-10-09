@@ -12,12 +12,13 @@ import { getEntity, createEntity, setBlob, reset } from './company.reducer';
 import { getSession } from '../../shared/reducers/authentication';
 // tslint:disable-next-line:no-unused-variable
 import { convertDateTimeFromServer, convertDateTimeToServer } from 'app/shared/util/date-utils';
-import { mapIdList } from 'app/shared/util/entity-utils';
+import '../../app.scss';
 
 export interface ICompanyUpdateProps extends StateProps, DispatchProps, RouteComponentProps<{ id: string }> {}
 
 export class CompanyUpdate extends React.Component<ICompanyUpdateProps> {
   _isMounted = false;
+
   constructor(props) {
     super(props);
   }
@@ -217,7 +218,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps> {
                     <AvInput type="hidden" name="companyLogo" value={companyLogo || ''} />
                   </AvGroup>
                 </AvGroup>
-                <Button tag={Link} id="cancel-save" to="/" replace>
+                <Button tag={Link} id="cancel-save" to="/" className="Botton" replace>
                   <FontAwesomeIcon icon="arrow-left" />
                   &nbsp;
                   <span className="d-none d-md-inline">
@@ -225,7 +226,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps> {
                   </span>
                 </Button>
                 &nbsp;
-                <Button id="save-entity" type="submit" disabled={updating}>
+                <Button id="save-entity" type="submit" className="Botton" disabled={updating}>
                   <FontAwesomeIcon icon="save" />
                   &nbsp;
                   <Translate contentKey="entity.action.save">Save</Translate>

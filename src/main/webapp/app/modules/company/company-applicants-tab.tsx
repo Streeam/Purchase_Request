@@ -8,18 +8,19 @@ import moment from 'moment';
 import { NOTIFICATIONS } from '../../config/constants';
 import { IRootState } from 'app/shared/reducers';
 import { getCurrentUsersCompanyAsync as getCurrentUserEntity, hireEmployee, rejectEmployee } from '../../entities/company/company.reducer';
-import { getAsyncEntities as getEmployees } from '../../entities/employee/employee.reducer';
 
 const companyApplicantsTab = props => {
+  let _isMounted = false;
   const { companyEntity, employeeList } = props;
+
   useEffect(() => {
-    props.getEmployees();
-    props.getCurrentUserEntity();
+    _isMounted = true;
+    return () => (_isMounted = false);
   }, []);
 
   const handleAccept = (employeeId: Number) => {
     if (employeeId && companyEntity.id) {
-      props.hireEmployee(companyEntity.id, employeeId);
+      props.hireEmployee(companyEntity.id, employeeId, _isMounted);
     }
   };
 
@@ -33,10 +34,12 @@ const companyApplicantsTab = props => {
     ? employeeList
         .filter(employee => employee.companyId !== companyEntity.id)
         .filter(employee => {
-          if (!employee.notifications && employee.notifications.length === 0) {
+          if (!employee.notifications || employee.notifications.length === 0) {
             return false;
           }
           // ****** FIRE NOTIFICATIONS */
+          // console.log(employee.notifications);
+
           const fired = employee.notifications.filter((notification1, i) => notification1.format === NOTIFICATIONS.FIRED);
           if (fired.length > 0) {
             let notificationDate: Date = moment(fired[0].sentDate).toDate();
@@ -173,7 +176,6 @@ const mapStateToProps = ({ employee }: IRootState) => ({
 });
 
 const mapDispatchToProps = {
-  getEmployees,
   getCurrentUserEntity,
   hireEmployee,
   rejectEmployee

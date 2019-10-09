@@ -3,25 +3,27 @@ import { connect } from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import { Button, Row, Col, Table } from 'reactstrap';
 // tslint:disable-next-line:no-unused-variable
-import { Translate, ICrudGetAction, openFile, byteSize } from 'react-jhipster';
+import { Translate, ICrudGetAction, openFile } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
 import { getEntity } from '../../entities/company/company.reducer';
-import { ICompany } from 'app/shared/model/company.model';
 // tslint:disable-next-line:no-unused-variable
 import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { AUTHORITIES } from '../../config/constants';
 import { hasAnyAuthority } from '../../shared/auth/private-route';
-
-export interface ICompanyDetailProps extends StateProps, DispatchProps, RouteComponentProps<{ id: string }> {}
-
 import '../../app.scss';
 
-export const companyDetail = props => {
+export interface ICompanyDetailProps extends StateProps, DispatchProps, RouteComponentProps<{ id: string; match: string }> {}
+
+export const companyDetail = (props: ICompanyDetailProps) => {
+  let _isMounted = false;
+
   useEffect(() => {
-    props.getEntity(props.match.params.id);
-  }, []);
+    _isMounted = true;
+    props.getEntity(props.match.params.id, _isMounted);
+    return () => (_isMounted = false);
+  }, [props.match.params.id]);
 
   const lableStyle = { color: 'black' };
   const { companyEntity } = props;
@@ -43,11 +45,23 @@ export const companyDetail = props => {
           <td>
             {employee.image ? (
               <div>
-                <img src={`data:${employee.imageContentType};base64,${employee.image}`} style={{ maxHeight: '30px' }} />
+                <img
+                  src={`data:${employee.imageContentType};base64,${employee.image}`}
+                  style={{
+                    maxHeight: '50px',
+                    borderRadius: '50%'
+                  }}
+                />
               </div>
             ) : (
               <div>
-                <img src={`content/images/default_profile_icon.png`} style={{ maxHeight: '30px' }} />
+                <img
+                  src={`content/images/default_profile_icon.png`}
+                  style={{
+                    maxHeight: '50px',
+                    borderRadius: '50%'
+                  }}
+                />
               </div>
             )}
           </td>
@@ -135,7 +149,7 @@ export const companyDetail = props => {
         <tbody>{tableContent}</tbody>
       </Table>
       <br />
-      <Button className="Button" tag={Link} to="/entity/company/join-company" replace color="info" size="sm">
+      <Button className="Button" tag={Link} to="/company/join-company" replace size="sm">
         <FontAwesomeIcon icon="arrow-left" />{' '}
         <span className="d-none d-md-inline">
           <Translate contentKey="entity.action.back">Back</Translate>

@@ -24,6 +24,7 @@ export interface INotificationUpdateState {
 }
 
 export class NotificationUpdate extends React.Component<INotificationUpdateProps, INotificationUpdateState> {
+  _isMounted = false;
   constructor(props) {
     super(props);
     this.state = {
@@ -39,13 +40,18 @@ export class NotificationUpdate extends React.Component<INotificationUpdateProps
   }
 
   componentDidMount() {
+    this._isMounted = true;
     if (this.state.isNew) {
       this.props.reset();
     } else {
       this.props.getEntity(this.props.match.params.id);
     }
 
-    this.props.getEmployees();
+    this.props.getEmployees(this._isMounted);
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   saveEntity = (event, errors, values) => {

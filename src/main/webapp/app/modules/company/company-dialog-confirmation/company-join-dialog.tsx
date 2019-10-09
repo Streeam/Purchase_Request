@@ -4,9 +4,8 @@ import { RouteComponentProps } from 'react-router-dom';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
 import { Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import axios from 'axios';
 
-import { joinCompany, getCurrentEmployeeEntity } from '../../../entities/employee/employee.reducer';
+import { joinCompany } from '../../../entities/employee/employee.reducer';
 import { getAsyncCurentEntities as getCurrentNotifications } from '../../../entities/notification/notification.reducer';
 
 export interface ICompanyJoinDialogProps extends DispatchProps, RouteComponentProps<{ id: string }> {}
@@ -15,10 +14,9 @@ export class CompanyJoinDialog extends React.Component<ICompanyJoinDialogProps> 
   _isMounted = false;
   confirmJoin = event => {
     this.props.joinCompany(this.props.match.params.id);
-    this.props.getCurrentNotifications(this._isMounted);
+    // this.props.getCurrentNotifications(this._isMounted);
     this.handleClose(event);
   };
-
   componentDidMount() {
     this._isMounted = true;
   }
@@ -60,7 +58,7 @@ export class CompanyJoinDialog extends React.Component<ICompanyJoinDialogProps> 
   }
 }
 
-const mapDispatchToProps = { joinCompany, getCurrentNotifications, getCurrentEmployeeEntity };
+const mapDispatchToProps = { joinCompany, getCurrentNotifications };
 
 type DispatchProps = typeof mapDispatchToProps;
 

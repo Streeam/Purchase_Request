@@ -48,9 +48,8 @@ export class EmployeeUpdate extends React.Component<IEmployeeUpdateProps, IEmplo
     if (this.state.isNew) {
       this.props.reset();
     } else {
-      this.props.getEntity(this.props.match.params.id);
+      this.props.getEntity(this._isMounted, this.props.match.params.id);
     }
-
     this.props.getUsers();
     this.props.getCompanies(this._isMounted);
   }

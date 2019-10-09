@@ -10,18 +10,21 @@ import { getCurrentUsersCompanyAsync } from '../../entities/company/company.redu
 import '../../app.scss';
 import TabBar from './company-tabpane';
 import { getSession } from '../../shared/reducers/authentication';
-import { getCurrentEmployeeAsync } from '../../entities/employee/employee.reducer';
+import { getCurrentEmployeeAsync, getAsyncEntities as getEmployees } from '../../entities/employee/employee.reducer';
 import CompanyEmployeeTab from './company-employee-tab';
 
 export const companyDetail = props => {
+  let _isMounted = false;
   const lableStyle = { color: 'black' };
   const { companyEntity, isCurrentUserManager } = props;
 
   useEffect(() => {
-    props.getCurrentUsersCompanyAsync();
-    props.getCurrentEmployeeAsync();
+    _isMounted = true;
+    props.getCurrentUsersCompanyAsync(_isMounted);
+    props.getEmployees(_isMounted);
+    props.getCurrentEmployeeAsync(_isMounted);
+    return () => (_isMounted = false);
   }, []);
-
   return (
     <div>
       <Row>
@@ -102,12 +105,13 @@ export const companyDetail = props => {
   );
 };
 
-const mapStateToProps = ({ company, employee }: IRootState) => ({
+const mapStateToProps = ({ company, employee, authentication }: IRootState) => ({
   companyEntity: company.employeeEntity,
-  curentEmployee: employee.currentEmployeeEntity
+  curentEmployee: employee.currentEmployeeEntity,
+  isCurrentUserManager: authentication.isCurrentUserManager
 });
 
-const mapDispatchToProps = { getCurrentUsersCompanyAsync, getSession, getCurrentEmployeeAsync };
+const mapDispatchToProps = { getCurrentUsersCompanyAsync, getSession, getCurrentEmployeeAsync, getEmployees };
 
 export default connect(
   mapStateToProps,

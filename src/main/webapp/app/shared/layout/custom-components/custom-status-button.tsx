@@ -35,7 +35,7 @@ const customButton = props => {
     <Button id="joinButton" tag={Link} to={`${props.url}/${companyId}/join`} color="primary" size="sm">
       <FontAwesomeIcon icon="file-signature" />{' '}
       <span className="d-none d-md-inline">
-        <Translate contentKey="entity.action.join">Join</Translate>
+        <Translate contentKey="entity.action.join">Request to Join</Translate>
       </span>
     </Button>
   );

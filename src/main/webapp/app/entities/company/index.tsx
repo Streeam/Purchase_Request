@@ -6,7 +6,7 @@ import ErrorBoundaryRoute from 'app/shared/error/error-boundary-route';
 import Company from './company';
 import CompanyUpdate from './company-update';
 import CompanyCreate from './company-create';
-import CompanyDeleteDialog from '../../modules/company/company-dialog-confirmation/company-delete-dialog';
+import CompanyDeleteDialog from './company-delete-dialog';
 
 const Routes = ({ match }) => (
   <>

@@ -13,7 +13,7 @@ const TabBar = props => {
   const toggleTab = (tab: any): void => setMenuOpen(tab);
   const firstTab = () => toggleTab('1');
   const secondTab = () => toggleTab('2');
-  const thirdTab = () => toggleTab('3');
+  // const thirdTab = () => toggleTab('3');
   return (
     <div id="app-header">
       <div>
@@ -28,11 +28,11 @@ const TabBar = props => {
               Applicants
             </NavLink>
           </NavItem>
-          <NavItem>
+          {/*<NavItem>
             <NavLink className={classnames({ active: tabPane === '3' })} onClick={thirdTab}>
               Invite
             </NavLink>
-          </NavItem>
+          </NavItem> */}
         </Nav>
         <TabContent activeTab={tabPane}>
           <TabPane tabId="1">
@@ -41,9 +41,9 @@ const TabBar = props => {
           <TabPane tabId="2">
             <CompanyApplicantsTab {...props} />
           </TabPane>
-          <TabPane tabId="3">
+          {/*<TabPane tabId="3">
             <InviteTab {...props} />
-          </TabPane>
+          </TabPane> */}
         </TabContent>
       </div>
     </div>

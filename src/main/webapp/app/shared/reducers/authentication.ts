@@ -3,6 +3,8 @@ import { Storage } from 'react-jhipster';
 
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 import { setLocale } from 'app/shared/reducers/locale';
+import { AUTHORITIES } from 'app/config/constants';
+import { FlattenStage } from 'ag-grid-community';
 
 export const ACTION_TYPES = {
   LOGIN: 'authentication/LOGIN',
@@ -17,6 +19,8 @@ const AUTH_TOKEN_KEY = 'jhi-authenticationToken';
 const initialState = {
   loading: false,
   isAuthenticated: false,
+  isCurrentUserManager: false,
+  isUnemployed: false,
   loginSuccess: false,
   loginError: false, // Errors returned from server side
   showModalLogin: false,
@@ -38,7 +42,8 @@ export default (state: AuthenticationState = initialState, action): Authenticati
     case REQUEST(ACTION_TYPES.GET_SESSION):
       return {
         ...state,
-        loading: true
+        loading: true,
+        isCurrentUserManager: false
       };
     case FAILURE(ACTION_TYPES.LOGIN):
       return {
@@ -54,7 +59,9 @@ export default (state: AuthenticationState = initialState, action): Authenticati
         isAuthenticated: false,
         sessionHasBeenFetched: true,
         showModalLogin: true,
-        errorMessage: action.payload
+        errorMessage: action.payload,
+        isCurrentUserManager: false,
+        isUnemployed: false
       };
     case SUCCESS(ACTION_TYPES.LOGIN):
       return {
@@ -70,10 +77,15 @@ export default (state: AuthenticationState = initialState, action): Authenticati
         showModalLogin: true
       };
     case SUCCESS(ACTION_TYPES.GET_SESSION): {
+      const { authorities } = action.payload.data;
       const isAuthenticated = action.payload && action.payload.data && action.payload.data.activated;
+      const isCurrentUserManager = authorities ? authorities.includes(AUTHORITIES.MANAGER) : false;
+      const isUnemployed = authorities ? authorities.includes(AUTHORITIES.USER) && authorities.length === 1 : false;
       return {
         ...state,
         isAuthenticated,
+        isCurrentUserManager,
+        isUnemployed,
         loading: false,
         sessionHasBeenFetched: true,
         account: action.payload.data

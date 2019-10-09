@@ -8,22 +8,27 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
 import { getEntity } from './employee.reducer';
-import { IEmployee } from 'app/shared/model/employee.model';
 // tslint:disable-next-line:no-unused-variable
-import { APP_DATE_FORMAT, APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 
 export interface IEmployeeDetailProps extends StateProps, DispatchProps, RouteComponentProps<{ id: string }> {}
 
 export class EmployeeDetail extends React.Component<IEmployeeDetailProps> {
+  _isMounted = false;
+
   componentDidMount() {
-    this.props.getEntity(this.props.match.params.id);
+    this._isMounted = true;
+    this.props.getEntity(this._isMounted, this.props.match.params.id);
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
   }
 
   render() {
     const { employeeEntity } = this.props;
     return (
       <Row>
-        <Col md="8">
+        <Col md="10">
           <h2>{employeeEntity.login}</h2>
           <dl className="jh-entity-details">
             <dt>
@@ -57,44 +62,42 @@ export class EmployeeDetail extends React.Component<IEmployeeDetailProps> {
             </dt>
             <dd>{employeeEntity.language}</dd>
             <dt>
-              <span id="image">
-                <Translate contentKey="cidApp.employee.image">Image</Translate>
-              </span>
-            </dt>
-            <dd>
-              {employeeEntity.image ? (
-                <div>
-                  <a onClick={openFile(employeeEntity.imageContentType, employeeEntity.image)}>
-                    <img src={`data:${employeeEntity.imageContentType};base64,${employeeEntity.image}`} style={{ maxHeight: '30px' }} />
-                  </a>
-                  <span>
-                    {employeeEntity.imageContentType}, {byteSize(employeeEntity.image)}
-                  </span>
-                </div>
-              ) : null}
-            </dd>
-            <dt>
-              <Translate contentKey="cidApp.employee.user">User</Translate>
-            </dt>
-            <dd>{employeeEntity.user && employeeEntity.user.login ? employeeEntity.user.login : ''}</dd>
-            <dt>
               <Translate contentKey="cidApp.employee.company">Company</Translate>
             </dt>
             <dd>{employeeEntity.company && employeeEntity.company.name ? employeeEntity.company.name : ''}</dd>
           </dl>
-          <Button tag={Link} to="/" replace>
+          <Button tag={Link} to="/company/company-status" replace>
             <FontAwesomeIcon icon="arrow-left" />{' '}
             <span className="d-none d-md-inline">
               <Translate contentKey="entity.action.back">Back</Translate>
             </span>
           </Button>
           &nbsp;
-          <Button tag={Link} to={`/entity/employee/${employeeEntity.id}/edit`} replace>
-            <FontAwesomeIcon icon="pencil-alt" />{' '}
-            <span className="d-none d-md-inline">
-              <Translate contentKey="entity.action.edit">Edit</Translate>
-            </span>
-          </Button>
+        </Col>
+        <Col md="1">
+          {employeeEntity.image ? (
+            <div>
+              <a>
+                <img
+                  src={`data:${employeeEntity.imageContentType};base64,${employeeEntity.image}`}
+                  style={{
+                    maxHeight: '100px',
+                    borderRadius: '50%'
+                  }}
+                />
+              </a>
+            </div>
+          ) : (
+            <div>
+              <img
+                src={`content/images/company-logo.png`}
+                style={{
+                  maxHeight: '100px',
+                  borderRadius: '50%'
+                }}
+              />
+            </div>
+          )}
         </Col>
       </Row>
     );

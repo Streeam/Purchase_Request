@@ -1,38 +1,53 @@
 import React, { useEffect } from 'react';
 import { Button, Col, Alert, Row } from 'reactstrap';
 import { connect } from 'react-redux';
-import { Translate, translate } from 'react-jhipster';
+import { Translate, translate, setFileData, byteSize } from 'react-jhipster';
 import { AvForm, AvField } from 'availity-reactstrap-validation';
 
 import { locales, languages } from 'app/config/translation';
 import { IRootState } from 'app/shared/reducers';
 import { getSession } from 'app/shared/reducers/authentication';
-import { saveAccountSettings, reset } from './settings.reducer';
+import { saveAccountSettings, reset as accountReset } from './settings.reducer';
+import { getCurrentEmployeeEntity, updateEntity, setBlob, reset as employeeReset } from '../../../entities/employee/employee.reducer';
+import '../../../app.scss';
+import { RouteComponentProps } from 'react-router-dom';
+import Avatar from '../../../shared/layout/custom-components/avatar/avatar';
 
-export interface IUserSettingsProps extends StateProps, DispatchProps {}
+export interface IUserSettingsProps extends StateProps, DispatchProps, RouteComponentProps<{}> {}
 
 export const SettingsPage = (props: IUserSettingsProps) => {
+  let _isMounted = false;
+
+  const { currentEmployee } = props;
+
   useEffect(() => {
+    _isMounted = true;
     props.getSession();
+    props.getCurrentEmployeeEntity(_isMounted);
     return () => {
-      props.reset();
+      props.accountReset();
+      _isMounted = false;
     };
   }, []);
 
-  const handleValidSubmit = (event, values) => {
+  const handleValidSubmit = (event, error, values) => {
     const account = {
       ...props.account,
       ...values
     };
-
     props.saveAccountSettings(account);
     event.persist();
   };
 
+  const handleClose = () => {
+    props.history.push('/');
+  };
+
   return (
     <div>
+      <Avatar imageContentType={currentEmployee.imageContentType} image={currentEmployee.image} maxHeight="100px" round />
       <Row className="justify-content-center">
-        <Col md="8">
+        <Col md="7">
           <h2 id="settings-title">
             <Translate contentKey="settings.title" interpolate={{ username: props.account.login }}>
               User settings for {props.account.login}
@@ -95,7 +110,7 @@ export const SettingsPage = (props: IUserSettingsProps) => {
                 </option>
               ))}
             </AvField>
-            <Button color="primary" type="submit">
+            <Button className="Button" type="submit">
               <Translate contentKey="settings.form.button">Save</Translate>
             </Button>
           </AvForm>
@@ -105,12 +120,13 @@ export const SettingsPage = (props: IUserSettingsProps) => {
   );
 };
 
-const mapStateToProps = ({ authentication }: IRootState) => ({
-  account: authentication.account,
-  isAuthenticated: authentication.isAuthenticated
+const mapStateToProps = (storeState: IRootState) => ({
+  account: storeState.authentication.account,
+  isAuthenticated: storeState.authentication.isAuthenticated,
+  currentEmployee: storeState.employee.currentEmployeeEntity
 });
 
-const mapDispatchToProps = { getSession, saveAccountSettings, reset };
+const mapDispatchToProps = { getSession, saveAccountSettings, accountReset, getCurrentEmployeeEntity };
 
 type StateProps = ReturnType<typeof mapStateToProps>;
 type DispatchProps = typeof mapDispatchToProps;

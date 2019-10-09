@@ -249,7 +249,7 @@ describe('Entities reducer tests', () => {
           payload: resolvedObject
         }
       ];
-      await store.dispatch(getEntity(42666)).then(() => expect(store.getActions()).toEqual(expectedActions));
+      await store.dispatch(getEntity(42666, true)).then(() => expect(store.getActions()).toEqual(expectedActions));
     });
 
     it('dispatches ACTION_TYPES.CREATE_COMPANY actions', async () => {

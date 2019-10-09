@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ICrudSearchAction, ICrudGetAction, ICrudGetAllAction, ICrudPutAction, ICrudDeleteAction } from 'react-jhipster';
+import { ICrudSearchAction, ICrudGetAction, ICrudGetAllAction, ICrudPutAction, ICrudDeleteAction, IPayload } from 'react-jhipster';
 
 import { cleanEntity } from 'app/shared/util/entity-utils';
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
@@ -32,6 +32,10 @@ const initialState = {
   updateSuccess: false
 };
 
+export declare type ICrudGetActionWithGuard<T> = (
+  id: string | number,
+  isMounted: boolean
+) => IPayload<T> | ((dispatch: any) => IPayload<T>);
 export type CompanyState = Readonly<typeof initialState>;
 
 // Reducer
@@ -159,31 +163,43 @@ export const getEntities = (isMounted, page?, size?, sort?) => {
   };
 };
 
-export const getEntity: ICrudGetAction<ICompany> = id => {
+export const getEntity: ICrudGetActionWithGuard<ICompany> = (id, isMounted) => {
   const requestUrl = `${apiUrl}/${id}`;
   return {
     type: ACTION_TYPES.FETCH_COMPANY,
-    payload: axios.get<ICompany>(requestUrl)
+    payload: axios.get<ICompany>(requestUrl).then(result => {
+      if (isMounted) {
+        return result;
+      }
+    })
   };
 };
 
-export const getCurrentUserEntity = () => {
+export const getCurrentUserEntity = isMounted => {
   const requestUrl = `${apiUrl}/current-company`;
   return {
     type: ACTION_TYPES.FETCH_CURRENT_COMPANY,
-    payload: axios.get<ICompany>(requestUrl)
+    payload: axios.get<ICompany>(requestUrl).then(result => {
+      if (isMounted) {
+        return result;
+      }
+    })
   };
 };
 
-export const getCurrentUsersCompanyAsync = () => async dispatch => dispatch(getCurrentUserEntity());
+export const getCurrentUsersCompanyAsync = isMounted => async dispatch => dispatch(getCurrentUserEntity(isMounted));
 
-export const hireEmployee = (companyId: Number, employeeId: Number) => async dispatch => {
+export const hireEmployee = (companyId: Number, employeeId: Number, isMounted: boolean) => async dispatch => {
   const requestUrl = `${apiUrl}/${companyId}/hire-employee/${employeeId}`;
   const result = await dispatch({
     type: ACTION_TYPES.HIRE_EMPLOYEE,
-    payload: axios.post(requestUrl)
+    payload: axios.post(requestUrl).then(data => {
+      if (isMounted) {
+        return data;
+      }
+    })
   });
-  await dispatch(getEmployees());
+  await dispatch(getEmployees(isMounted));
   return result;
 };
 
@@ -193,8 +209,8 @@ export const rejectEmployee = (companyId: Number, employeeId: Number) => async d
     type: ACTION_TYPES.REJECT_EMPLOYEE,
     payload: axios.post(requestUrl)
   });
-  await dispatch(getCurrentUserEntity());
-  await dispatch(getEmployees());
+  // await dispatch(getCurrentUserEntity());
+  // await dispatch(getEmployees());
   return result;
 };
 
@@ -204,8 +220,8 @@ export const fireEmployee = (companyId: Number, employeeId: Number) => async dis
     type: ACTION_TYPES.FIRE_EMPLOYEE,
     payload: axios.post(requestUrl)
   });
-  await dispatch(getCurrentUserEntity());
-  await dispatch(getEmployees());
+  // await dispatch(getCurrentUserEntity());
+  // await dispatch(getEmployees());
   return result;
 };
 

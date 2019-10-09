@@ -40,7 +40,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
     if (this.state.isNew) {
       this.props.reset();
     } else {
-      this.props.getEntity(this.props.match.params.id);
+      this.props.getEntity(this.props.match.params.id, this._isMounted);
     }
   }
 
@@ -233,7 +233,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
                     <AvInput type="hidden" name="companyLogo" value={companyLogo ? companyLogo : ''} />
                   </AvGroup>
                 </AvGroup>
-                <Button tag={Link} id="cancel-save" to="/" replace>
+                <Button tag={Link} id="cancel-save" to="/company/company-status" replace>
                   <FontAwesomeIcon icon="arrow-left" />
                   &nbsp;
                   <span className="d-none d-md-inline">

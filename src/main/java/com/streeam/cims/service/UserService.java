@@ -111,7 +111,7 @@ public class UserService {
         newUser.setLastName(userDTO.getLastName());
         newUser.setEmail(userDTO.getEmail().toLowerCase());
         newUser.setImageUrl(userDTO.getImageUrl());
-        newUser.setLangKey(userDTO.getLangKey());
+        newUser.setLangKey("en");
           Set<Authority> authorities = new HashSet<>();
 
          List<Long> companyId =  notificationService.hasUserBeenInvited(userDTO.getEmail());

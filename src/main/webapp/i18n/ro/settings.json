@@ -1,6 +1,6 @@
 {
   "settings": {
-    "title": "Profilul pentru [<strong>{{username}}</strong>]",
+    "title": "Modifica profilul",
     "form": {
       "firstname": "Prenume",
       "firstname.placeholder": "Prenumele dumneavoastră",
