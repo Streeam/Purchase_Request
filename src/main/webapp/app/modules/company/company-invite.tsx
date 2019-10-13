@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Fragment } from 'react';
 import { connect } from 'react-redux';
 import { Button, Table, ButtonGroup } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,18 +8,25 @@ import { Link } from 'react-router-dom';
 
 import { NOTIFICATIONS, AUTHORITIES } from '../../config/constants';
 import { IRootState } from 'app/shared/reducers';
-import { inviteEmployee } from '../../entities/employee/employee.reducer';
+import { inviteEmployee, getCurrentEmployeeAsync, getAsyncEntities as getEmployees } from '../../entities/employee/employee.reducer';
 import { employeeListWithout } from '../../shared/util/entity-utils';
 import { getAsyncEntities as getNotifications } from '../../entities/notification/notification.reducer';
+import LoadingModal from '../../shared/layout/custom-components/loading-modal/loading-modal';
 
 const companyInvite = props => {
-  const { employeeList, notificationList } = props;
+  let _isMounted = false;
+  const { currentEmployee, employeeList, notificationList, employeesLoading, notificationsLoading } = props;
+  const isLoading = employeesLoading || notificationsLoading;
 
   useEffect(() => {
+    _isMounted = true;
     props.getNotifications();
-  }, []);
+    props.getCurrentEmployeeAsync(_isMounted);
+    props.getEmployees(_isMounted);
+    return () => (_isMounted = false);
+  }, [props.getNotifications, props.getCurrentEmployeeAsync, props.getEmployees, _isMounted]);
 
-  const employeesWithoutAuth = employeeListWithout(employeeList, [AUTHORITIES.ADMIN, AUTHORITIES.MANAGER]);
+  const employeesWithoutAuth = employeeListWithout(employeeList, [AUTHORITIES.ADMIN, AUTHORITIES.EMPLOYEE, AUTHORITIES.MANAGER]);
 
   const invitees = employeesWithoutAuth
     ? employeesWithoutAuth.filter(employee => {
@@ -111,11 +118,23 @@ const companyInvite = props => {
         <td style={{ maxWidth: '10px' }}>
           {employee.image ? (
             <div>
-              <img src={`data:${employee.imageContentType};base64,${employee.image}`} style={{ maxHeight: '30px' }} />
+              <img
+                src={`data:${employee.imageContentType};base64,${employee.image}`}
+                style={{
+                  maxHeight: '30px',
+                  borderRadius: '50%'
+                }}
+              />
             </div>
           ) : (
             <div>
-              <img src={`content/images/default_profile_icon.png`} style={{ maxHeight: '30px' }} />
+              <img
+                src={`content/images/default_profile_icon.png`}
+                style={{
+                  maxHeight: '30px',
+                  borderRadius: '50%'
+                }}
+              />
             </div>
           )}
         </td>
@@ -123,26 +142,28 @@ const companyInvite = props => {
         <td>{employee.firstName && employee.lastName ? `${employee.firstName}` + ` ${employee.lastName}` : ''}</td>
         <td>{employee.email ? employee.email : ''}</td>
         <td className="text-right">
-          <div className="btn-group flex-btn-group-container">
-            <ButtonGroup>
-              <Button tag={Link} to={`/entity/employee/${employee.id}`} size="sm">
-                <FontAwesomeIcon icon="eye" />{' '}
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.view">View</Translate>
-                </span>
-              </Button>
-              <Button
-                tag={Link}
-                to={`/entity/company/invite/${employee.email}`}
-                // color="primary"
-                size="sm"
-              >
-                <FontAwesomeIcon icon="user" />{' '}
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.invite">Invite</Translate>
-                </span>
-              </Button>
-            </ButtonGroup>
+          <div className="table-button">
+            <div className="btn-group flex-btn-group-container">
+              <ButtonGroup>
+                <Button tag={Link} to={`/entity/employee/${employee.id}`} size="sm">
+                  <FontAwesomeIcon icon="eye" />{' '}
+                  <span className="d-none d-md-inline">
+                    <Translate contentKey="entity.action.view">View</Translate>
+                  </span>
+                </Button>
+                <Button
+                  tag={Link}
+                  to={`/company/invite/${currentEmployee.companyId}/invite-employee/${employee.email}`}
+                  // color="primary"
+                  size="sm"
+                >
+                  <FontAwesomeIcon icon="user" />{' '}
+                  <span className="d-none d-md-inline">
+                    <Translate contentKey="entity.action.invite">Invite</Translate>
+                  </span>
+                </Button>
+              </ButtonGroup>
+            </div>
           </div>
         </td>
       </tr>
@@ -151,31 +172,44 @@ const companyInvite = props => {
     <div>Loading...</div>
   );
 
-  return (
-    <Table striped>
-      <thead>
-        <tr>
-          <th />
-          <th>Username</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th />
-        </tr>
-      </thead>
-      <tbody>{tabContent}</tbody>
-    </Table>
+  return isLoading ? (
+    <LoadingModal />
+  ) : (
+    <Fragment>
+      <h3>Hire Employees</h3>
+      {invitees && invitees.length > 0 ? (
+        <Table striped>
+          <thead>
+            <tr>
+              <th />
+              <th>Username</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>{tabContent}</tbody>
+        </Table>
+      ) : (
+        <div className="alert alert-light">No Available employees</div>
+      )}
+    </Fragment>
   );
 };
 
 const mapStateToProps = ({ employee, notification }: IRootState) => ({
   employeeList: employee.entities,
   currentEmployee: employee.currentEmployeeEntity,
-  notificationList: notification.entities
+  notificationList: notification.entities,
+  employeesLoading: employee.loading && employee.updating,
+  notificationsLoading: notification.loading
 });
 
 const mapDispatchToProps = {
   inviteEmployee,
-  getNotifications
+  getNotifications,
+  getCurrentEmployeeAsync,
+  getEmployees
 };
 
 export default connect(

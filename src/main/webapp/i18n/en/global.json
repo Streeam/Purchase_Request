@@ -103,15 +103,13 @@
       "save": "Save",
       "view": "View",
       "fire": "Fire",
-      "join": " Request to Join ",
-      "submitted": "Request Submitted",
-      "rejected": "Request Rejected",
+      "join": " Join ",
+      "submitted": "Submitted",
+      "rejected": "Rejected",
       "reject": "Reject",
       "accept": "Accept",
       "invite": "Invite",
-      "fired": "Employee Fired",
-      "acceptinvitation": "Accept Invitation",
-      "rejecteinvitation": "Reject Invitation"
+      "fired": "Fired"
     },
     "detail": {
       "field": "Field",
@@ -134,6 +132,9 @@
     },
     "rejectinvite": {
       "title": "Reject Invitation!"
+    },
+    "rejectrequest": {
+      "title": "Reject Application!"
     },
     "validation": {
       "required": "This field is required.",

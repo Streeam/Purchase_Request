@@ -113,14 +113,14 @@
       "view": "Vizualizare",
       "fire": "Concediere",
       "join": "Alătura",
-      "submitted": "Aplicație Trimisă",
-      "rejected": "Aplicație Respinsă",
+      "submitted": "Trimisă",
+      "rejected": "Respinsă",
       "reject": "Respins",
       "accept": "Accept",
       "invite": "Invita",
       "fired": "Angajat Concediat",
-      "acceptinvitation": "Confirmă Invitația",
-      "rejecteinvitation": "Refuză invitația"
+      "acceptinvitation": "Confirmă",
+      "rejecteinvitation": "Refuză"
     },
     "detail": {
       "field": "Câmp",
@@ -143,6 +143,9 @@
     },
     "rejectinvite": {
       "title": "Refuză invitația"
+    },
+    "rejectrequest": {
+      "title": "Refuză aplicația"
     },
     "validation": {
       "required": "Acest câmp este necesar.",

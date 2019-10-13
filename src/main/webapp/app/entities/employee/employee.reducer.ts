@@ -1,20 +1,12 @@
 import axios from 'axios';
-import {
-  ICrudSearchAction,
-  ICrudGetAction,
-  ICrudGetAllAction,
-  ICrudPutAction,
-  ICrudDeleteAction,
-  IPayload,
-  IPayloadResult
-} from 'react-jhipster';
+import { ICrudSearchAction, IPayload, IPayloadResult } from 'react-jhipster';
 
 import { cleanEntity } from 'app/shared/util/entity-utils';
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 
 import { IEmployee, defaultValue } from 'app/shared/model/employee.model';
 import { getSession } from '../../shared/reducers/authentication';
-import { getAsyncEntities as getAllNotifications } from '../notification/notification.reducer';
+import { getCompanysNotifiactions, getCurrentEntities as getCurrentNotifications } from '../notification/notification.reducer';
 
 export declare type ICrudGetAllActionWithGuard<T> = (
   isMounted: boolean,
@@ -105,12 +97,14 @@ export default (state: EmployeeState = initialState, action): EmployeeState => {
       };
     case SUCCESS(ACTION_TYPES.SEARCH_EMPLOYEES):
     case SUCCESS(ACTION_TYPES.FETCH_EMPLOYEE_LIST):
-      return {
-        ...state,
-        loading: false,
-        entities: action.payload.data,
-        totalItems: parseInt(action.payload.headers['x-total-count'], 10)
-      };
+      return !action.payload
+        ? state
+        : {
+            ...state,
+            loading: false,
+            entities: action.payload.data,
+            totalItems: parseInt(action.payload.headers['x-total-count'], 10)
+          };
     case SUCCESS(ACTION_TYPES.FETCH_EMPLOYEE):
       return {
         ...state,
@@ -125,17 +119,19 @@ export default (state: EmployeeState = initialState, action): EmployeeState => {
       };
     case SUCCESS(ACTION_TYPES.CREATE_EMPLOYEE):
     case SUCCESS(ACTION_TYPES.UPDATE_EMPLOYEE):
+      return !action.payload
+        ? state
+        : {
+            ...state,
+            updating: false,
+            updateSuccess: true,
+            entity: action.payload.data
+          };
+    case SUCCESS(ACTION_TYPES.DELETE_EMPLOYEE):
     case SUCCESS(ACTION_TYPES.JOIN):
     case SUCCESS(ACTION_TYPES.INVITE):
     case SUCCESS(ACTION_TYPES.ACCEPT_INVITE):
     case SUCCESS(ACTION_TYPES.REJECT_INVITE):
-      return {
-        ...state,
-        updating: false,
-        updateSuccess: true,
-        entity: action.payload.data
-      };
-    case SUCCESS(ACTION_TYPES.DELETE_EMPLOYEE):
       return {
         ...state,
         updating: false,
@@ -233,7 +229,7 @@ export const updateEntity: ICrudPutActionWithGuard<IEmployee> = (isMounted, enti
       }
     })
   });
-  dispatch(getEntities(isMounted));
+  await dispatch(getCurrentEmployeeEntity(isMounted));
   return result;
 };
 
@@ -251,42 +247,59 @@ export const deleteEntity: ICrudDeleteActionWithGuard<IEmployee> = (isMounted: b
   return result;
 };
 
-export const joinCompany = companyId => async dispatch => {
+export const joinCompany = (isMounted: boolean, companyId: string) => async dispatch => {
   const requestUrl = `${apiUrl}/request-to-join/${companyId}`;
   const result = await dispatch({
     type: ACTION_TYPES.JOIN,
-    payload: axios.post(requestUrl)
+    payload: axios.post(requestUrl).then(data => {
+      if (isMounted) {
+        return data;
+      }
+    })
   });
+  await dispatch(getCurrentNotifications(isMounted));
   return result;
 };
 
-export const acceptCompanyInvitation = (companyId: String) => async dispatch => {
+export const acceptCompanyInvitation = (isMounted: boolean, companyId: String) => async dispatch => {
   const requestUrl = `${apiUrl}/accept-invitation/${companyId}`;
   const result = await dispatch({
     type: ACTION_TYPES.ACCEPT_INVITE,
-    payload: axios.post(requestUrl)
+    payload: axios.post(requestUrl).then(data => {
+      if (isMounted) {
+        return data;
+      }
+    })
   });
   await dispatch(getSession());
-  // await dispatch(getCurrentCompany());
   return result;
 };
 
-export const rejectCompanyInvitation = (companyId: String) => async dispatch => {
+export const rejectCompanyInvitation = (isMounted: boolean, companyId: String) => async dispatch => {
   const requestUrl = `${apiUrl}/decline-request/${companyId}`;
   const result = await dispatch({
     type: ACTION_TYPES.REJECT_INVITE,
-    payload: axios.post(requestUrl)
+    payload: axios.post(requestUrl).then(data => {
+      if (isMounted) {
+        return data;
+      }
+    })
   });
+  await dispatch(getCurrentNotifications(isMounted));
   return result;
 };
 
-export const inviteEmployee = employeeEmail => async dispatch => {
+export const inviteEmployee = (isMounted: boolean, employeeEmail: string, companyId: string) => async dispatch => {
   const requestUrl = `${apiUrl}/invite-to-join/${employeeEmail}`;
   const result = await dispatch({
     type: ACTION_TYPES.INVITE,
-    payload: axios.post(requestUrl)
+    payload: axios.post(requestUrl).then(data => {
+      if (isMounted) {
+        return data;
+      }
+    })
   });
-  getAllNotifications();
+  await dispatch(getCompanysNotifiactions(isMounted, companyId));
   return result;
 };
 

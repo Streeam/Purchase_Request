@@ -284,6 +284,13 @@ button.anchor-btn {
   width: 100%;
 }
 
+a {
+  color: #009688;
+  text-decoration: none;
+  background-color: transparent;
+  -webkit-text-decoration-skip: objects;
+}
+
 a.anchor-btn:hover {
   text-decoration: none;
 }
@@ -366,6 +373,13 @@ http://stackoverflow.com/questions/23436430/bootstrap-3-input-group-100-width */
   margin-bottom: 1rem;
   color: #000000;
 }
+
+tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* tr td div.table-button { display:none;}
+tr:hover td div.table-button { display:inline-block;} */
 
 .modal-content {
   position: relative;

@@ -6,48 +6,56 @@ import { Button, Row, Col, Table } from 'reactstrap';
 import { Translate, openFile } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IRootState } from 'app/shared/reducers';
-import { getCurrentUsersCompanyAsync } from '../../entities/company/company.reducer';
+import { getCurrentUsersCompanyAsync as getCurrentCompany } from '../../entities/company/company.reducer';
 import '../../app.scss';
-import TabBar from './company-tabpane';
 import { getSession } from '../../shared/reducers/authentication';
-import { getCurrentEmployeeAsync, getAsyncEntities as getEmployees } from '../../entities/employee/employee.reducer';
-import CompanyEmployeeTab from './company-employee-tab';
+import { getCurrentEmployeeAsync } from '../../entities/employee/employee.reducer';
+import CompanyStructure from './company-employee';
+import LoadingModal from '../../shared/layout/custom-components/loading-modal/loading-modal';
 
-export const companyDetail = props => {
+export interface ICompanyProps extends StateProps, DispatchProps {}
+
+export const companyDetail = (props: ICompanyProps) => {
   let _isMounted = false;
   const lableStyle = { color: 'black' };
-  const { companyEntity, isCurrentUserManager } = props;
+  const {
+    companyEntity,
+    isCurrentUserManager,
+    companiesAreLoading,
+    notificationsAreLoading,
+    currentEmployeeIsLoading,
+    acceptOrDeclineRequestUpdating,
+    userAccountIsLoading,
+    companyIsUpdating
+  } = props;
+
+  const isLoading =
+    companiesAreLoading ||
+    notificationsAreLoading ||
+    currentEmployeeIsLoading ||
+    acceptOrDeclineRequestUpdating ||
+    userAccountIsLoading ||
+    companyIsUpdating;
 
   useEffect(() => {
     _isMounted = true;
-    props.getCurrentUsersCompanyAsync(_isMounted);
-    props.getEmployees(_isMounted);
+    props.getCurrentCompany(_isMounted);
     props.getCurrentEmployeeAsync(_isMounted);
     return () => (_isMounted = false);
-  }, []);
-  return (
+  }, [props.getCurrentCompany, props.getCurrentEmployeeAsync, _isMounted]);
+
+  return isLoading ? (
+    <LoadingModal />
+  ) : (
     <div>
-      <Row>
-        <Col sm="2">
-          {companyEntity && companyEntity.companyLogo ? (
-            <div>
-              <a onClick={openFile(companyEntity.companyLogoContentType, companyEntity.companyLogo)}>
-                <img
-                  src={`data:${companyEntity.companyLogoContentType};base64,${companyEntity.companyLogo}`}
-                  style={{
-                    maxHeight: '50px',
-                    borderRadius: '50%'
-                  }}
-                />
-              </a>
-            </div>
-          ) : (
-            <div>
-              <img src={`content/images/company-logo.png`} style={{ maxHeight: '50px' }} />
-            </div>
-          )}
-        </Col>
-        <Col md="8">
+      <div>
+        <div
+          style={{
+            display: 'inline-block',
+            textAlign: 'left',
+            width: '50%'
+          }}
+        >
           <div style={{ display: 'inline-block' }}>
             <h1 style={lableStyle}>{companyEntity.name}</h1>
           </div>
@@ -60,8 +68,35 @@ export const companyDetail = props => {
               <div />
             )}
           </div>
-        </Col>
-      </Row>
+        </div>
+        <div
+          style={{
+            display: 'inline-block',
+            textAlign: 'right',
+            width: '50%'
+          }}
+        >
+          {companyEntity && companyEntity.companyLogo ? (
+            <div>
+              <a onClick={openFile(companyEntity.companyLogoContentType, companyEntity.companyLogo)}>
+                <img
+                  src={`data:${companyEntity.companyLogoContentType};base64,${companyEntity.companyLogo}`}
+                  style={{
+                    maxHeight: '70px',
+                    borderRadius: '5%'
+                  }}
+                />
+              </a>
+            </div>
+          ) : (
+            <div>
+              <img src={`content/images/company-logo.png`} style={{ maxHeight: '50px' }} />
+            </div>
+          )}
+        </div>
+      </div>
+      <br />
+      <h4>Company Details</h4>
       <br />
       <Table>
         <thead>
@@ -99,21 +134,37 @@ export const companyDetail = props => {
       </Table>
       <br />
       <br />
-      {isCurrentUserManager ? <TabBar {...props} /> : <CompanyEmployeeTab {...props} />}
       <br />
+      <h4>Company Structure</h4>
+      <br />
+      <CompanyStructure {...props} />
+      <br />
+      <br />
+      <div style={{ textAlign: 'right' }}>
+        <img src={`content/images/Info-icon.png`} style={{ maxHeight: '20px' }} />
+      </div>
     </div>
   );
 };
 
-const mapStateToProps = ({ company, employee, authentication }: IRootState) => ({
+const mapStateToProps = ({ company, employee, authentication, notification }: IRootState) => ({
   companyEntity: company.employeeEntity,
   curentEmployee: employee.currentEmployeeEntity,
-  isCurrentUserManager: authentication.isCurrentUserManager
+  isCurrentUserManager: authentication.isCurrentUserManager,
+  companiesAreLoading: company.loading,
+  notificationsAreLoading: notification.loading,
+  currentEmployeeIsLoading: employee.loading,
+  acceptOrDeclineRequestUpdating: employee.updating,
+  userAccountIsLoading: authentication.loading,
+  companyIsUpdating: company.updating
 });
 
-const mapDispatchToProps = { getCurrentUsersCompanyAsync, getSession, getCurrentEmployeeAsync, getEmployees };
+const mapDispatchToProps = { getCurrentCompany, getSession, getCurrentEmployeeAsync };
+
+type StateProps = ReturnType<typeof mapStateToProps>;
+type DispatchProps = typeof mapDispatchToProps;
 
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(companyDetail);
+)(React.memo(companyDetail));

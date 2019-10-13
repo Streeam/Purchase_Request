@@ -1,9 +1,12 @@
 import React, { useEffect } from 'react';
+import { Spinner } from 'reactstrap';
 import { connect } from 'react-redux';
 import { Route, Redirect, RouteProps } from 'react-router-dom';
+
 import { IRootState } from 'app/shared/reducers';
 import ErrorBoundary from 'app/shared/error/error-boundary';
 import { AUTHORITIES } from 'app/config/constants';
+import HomeUnauthorize from '../../modules/home/home-unauthorize';
 
 export interface IPrivateRouteProps extends RouteProps, StateProps {}
 
@@ -23,9 +26,9 @@ export const UserPrivateRoute = ({
 
   const renderRedirect = props => {
     if (!sessionHasBeenFetched) {
-      return <div>Home Sesion Not Been Fetched Yet</div>;
+      return <Spinner />;
     } else {
-      return isAuthenticated ? checkAuthorities(props) : <div>Home unauthorize</div>;
+      return isAuthenticated ? checkAuthorities(props) : <HomeUnauthorize />;
     }
   };
 

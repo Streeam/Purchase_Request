@@ -13,7 +13,7 @@ const defaultMiddlewares = [
   errorMiddleware,
   notificationMiddleware,
   promiseMiddleware,
-  loadingBarMiddleware(),
+  // loadingBarMiddleware(),
   loggerMiddleware
 ];
 const composedMiddlewares = middlewares =>

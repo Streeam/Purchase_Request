@@ -1,23 +1,26 @@
 import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
-import { Translate, ICrudGetAction, ICrudDeleteAction } from 'react-jhipster';
+import { Translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { IRootState } from 'app/shared/reducers';
 import { fireEmployee, getCurrentUsersCompanyAsync } from '../../../entities/company/company.reducer';
+import { RouteComponentProps } from 'react-router';
 
-export const employeeFireDialog = props => {
-  const { companyEntity } = props;
+export interface ICompanyProps extends StateProps, DispatchProps, RouteComponentProps<{ companyId: string; employeeId: string }> {}
 
-  /*   useEffect(() => {
-    props.getCurrentUsersCompanyAsync();
-  }, []); */
+export const employeeFireDialog = (props: ICompanyProps) => {
+  let _isMounted = false;
+  const { companyId, employeeId } = props.match.params;
+
+  useEffect(() => {
+    _isMounted = true;
+    return () => (_isMounted = false);
+  }, []);
 
   const confirmFire = event => {
-    // console.log(companyEntity);
-    props.fireEmployee(companyEntity.id, props.match.params.id);
-    // console.log(companyEntity);
+    props.fireEmployee(_isMounted, companyId, employeeId);
     handleClose(event);
   };
 
@@ -32,7 +35,7 @@ export const employeeFireDialog = props => {
         <Translate contentKey="entity.fire.title">Confirm firing employee</Translate>
       </ModalHeader>
       <ModalBody id="cidApp.company.join.question">
-        <Translate contentKey="cidApp.company.fire.question" interpolate={{ name: props.match.params.id }}>
+        <Translate contentKey="cidApp.company.fire.question" interpolate={{ name: employeeId }}>
           Are you sure you want to fire the employee?
         </Translate>
       </ModalBody>
@@ -56,6 +59,9 @@ const mapStateToProps = ({ company }: IRootState) => ({
 });
 
 const mapDispatchToProps = { fireEmployee, getCurrentUsersCompanyAsync };
+
+type DispatchProps = typeof mapDispatchToProps;
+type StateProps = ReturnType<typeof mapStateToProps>;
 
 export default connect(
   mapStateToProps,

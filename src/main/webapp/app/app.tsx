@@ -27,13 +27,6 @@ const baseHref = document
 
 export interface IAppProps extends StateProps, DispatchProps {}
 
-/**
- * TODO
- * 1. Get only employees that applied to the company
- * 2. As an employee you cannot eddit the company details and view other employees
- * 3.
- */
-
 export const App = (props: IAppProps) => {
   useEffect(() => {
     props.getSession();

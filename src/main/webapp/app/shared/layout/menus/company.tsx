@@ -14,8 +14,13 @@ export const CompanyMenu = props => {
           </MenuItem>
         )}
         {isManager && (
+          <MenuItem icon="asterisk" to="/company/applicants">
+            Applicants
+          </MenuItem>
+        )}
+        {isManager && (
           <MenuItem icon="asterisk" to="/company/invite">
-            Invite
+            Hire
           </MenuItem>
         )}
         {isUnemployed && (

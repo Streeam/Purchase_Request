@@ -3,6 +3,7 @@ package com.streeam.cims.service;
 import com.streeam.cims.domain.Employee;
 import com.streeam.cims.domain.Notification;
 import com.streeam.cims.domain.enumeration.NotificationType;
+import com.streeam.cims.repository.EmployeeRepository;
 import com.streeam.cims.repository.NotificationRepository;
 import com.streeam.cims.repository.search.EmployeeSearchRepository;
 import com.streeam.cims.repository.search.NotificationSearchRepository;
@@ -37,7 +38,7 @@ public class NotificationService {
     private EmployeeSearchRepository employeeSearchRepository;
 
     @Autowired
-    private EmployeeSearchRepository employeeRepository;
+    private EmployeeRepository employeeRepository;
 
     private final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
@@ -144,13 +145,11 @@ public class NotificationService {
         notificationDTO.setComment(comment);
         notificationDTO.setReferenced_user(referencedEmployeeEmail);
         notificationDTO.setCompany(companyId);
-        notificationRepository.save(notificationMapper.toEntity(notificationDTO));
+        // notificationRepository.save(notificationMapper.toEntity(notificationDTO));
         Set<Notification> notifications = authorEmployee.getNotifications();
         notifications.add(notificationMapper.toEntity(notificationDTO));
         authorEmployee.setNotifications(notifications);
-        employeeRepository.save(authorEmployee);
-        employeeSearchRepository.save(authorEmployee);
-        notificationSearchRepository.save(notificationMapper.toEntity(notificationDTO));
+        // employeeRepository.save(authorEmployee);
         return notificationDTO;}
 
 

@@ -34,6 +34,7 @@ describe('Entities reducer tests', () => {
     entities: [] as ReadonlyArray<INotification>,
     employeeEntities: [] as ReadonlyArray<INotification>,
     currentEntities: [] as ReadonlyArray<INotification>,
+    companysNotifications: [] as ReadonlyArray<INotification>,
     entity: defaultValue,
     totalItems: 0,
     updating: false,

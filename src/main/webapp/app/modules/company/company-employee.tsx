@@ -40,7 +40,7 @@ const companyEmployeeTab = props => {
         </Button>
         <Button
           tag={Link}
-          to={`/entity/company/fire/${employee.id}`}
+          to={`/company/company-status/${companyEntity.id}/fire/${employee.id}`}
           color="danger"
           size="sm"
           disabled={isManager(employee.user.authorities)}
@@ -82,7 +82,7 @@ const companyEmployeeTab = props => {
               </div>
             )}
           </td>
-          <td>{employee.firstName && employee.lastName ? `${employee.firstName}` + ` ${employee.lastName}` : ''}</td>
+          <td>{employee.user.firstName && employee.user.lastName ? `${employee.user.firstName}` + ` ${employee.user.lastName}` : ''}</td>
           <td>{employee.login ? employee.login : ''}</td>
           <td>{isManagerCheck(isManager(employee.user.authorities))}</td>
           <td>{isManagerCheck(!isManager(employee.user.authorities))}</td>
@@ -96,7 +96,7 @@ const companyEmployeeTab = props => {
       <thead>
         <tr>
           <th />
-          <th>Name</th>
+          <th>Employee's Name</th>
           <th>Username</th>
           <th>Manager</th>
           <th>Employee</th>
@@ -108,7 +108,7 @@ const companyEmployeeTab = props => {
   );
 };
 
-const mapStateToProps = ({ company, employee }: IRootState) => ({
+const mapStateToProps = ({ company }: IRootState) => ({
   companyEntity: company.employeeEntity
 });
 

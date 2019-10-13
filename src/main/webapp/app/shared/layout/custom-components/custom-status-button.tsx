@@ -26,19 +26,15 @@ const customButton = props => {
       Math.round(timeBeforeCanApplyAgain / 24) === 1
         ? `${Math.round(timeBeforeCanApplyAgain / 24)} day`
         : `${Math.round(timeBeforeCanApplyAgain / 24)} days`;
-    const hours = timeBeforeCanApplyAgain % 24 === 1 ? `${timeBeforeCanApplyAgain % 24} hour` : `${timeBeforeCanApplyAgain % 24} hours`;
-    const tooltipMessage: String = `${tooltipMessagePrefix} ${days} and ${hours}`;
+    const hours =
+      timeBeforeCanApplyAgain % 24 === 1
+        ? `and ${timeBeforeCanApplyAgain % 24} hour`
+        : timeBeforeCanApplyAgain % 24 === 0
+        ? ''
+        : `and ${timeBeforeCanApplyAgain % 24} hours`;
+    const tooltipMessage: String = `${tooltipMessagePrefix} ${days} ${hours}`;
     return tooltipMessage;
   };
-
-  const joinButton = (companyId: Number): JSX.Element => (
-    <Button id="joinButton" tag={Link} to={`${props.url}/${companyId}/join`} color="primary" size="sm">
-      <FontAwesomeIcon icon="file-signature" />{' '}
-      <span className="d-none d-md-inline">
-        <Translate contentKey="entity.action.join">Request to Join</Translate>
-      </span>
-    </Button>
-  );
 
   const submittedButton = (): JSX.Element => (
     <Button color="primary" size="sm" disabled>
@@ -91,26 +87,33 @@ const customButton = props => {
     </span>
   );
 
+  const joinButton = (companyId: Number): JSX.Element => (
+    <Button id="joinButton" tag={Link} to={`${props.url}/${companyId}/join`} color="primary" size="sm">
+      <FontAwesomeIcon icon="file-signature" />{' '}
+      <span className="d-none d-md-inline">
+        <Translate contentKey="entity.action.join">Request to Join</Translate>
+      </span>
+    </Button>
+  );
+
   const acceptButton = (tooltipMessage: String, companyId: Number): JSX.Element => (
-    <span id="acceptButton">
-      <ButtonGroup>
-        <Button tag={Link} to={`${props.url}/${companyId}/accept-invitation`} color="success" size="sm">
-          <FontAwesomeIcon icon="check" />{' '}
-          <span className="d-none d-md-inline">
-            <Translate contentKey="entity.action.acceptinvitation">Accept Invitation</Translate>
-          </span>
-        </Button>
-        <Button tag={Link} to={`${props.url}/${companyId}/reject-invitation`} color="danger" size="sm">
-          <FontAwesomeIcon icon="ban" />{' '}
-          <span className="d-none d-md-inline">
-            <Translate contentKey="entity.action.rejecteinvitation">Invitation Rejected</Translate>
-          </span>
-        </Button>
-      </ButtonGroup>
-      <Tooltip placement="top" isOpen={tooltipOpen} target="acceptButton" toggle={toggle}>
+    <div className="btn-group flex-btn-group-container" id="acceptAndRejectButton">
+      <Button tag={Link} to={`${props.url}/${companyId}/accept-invitation`} color="success" size="sm">
+        <FontAwesomeIcon icon="check" />{' '}
+        <span className="d-none d-md-inline">
+          <Translate contentKey="entity.action.accept">Accept Invitation</Translate>
+        </span>
+      </Button>
+      <Button tag={Link} to={`${props.url}/${companyId}/reject-invitation`} color="danger" size="sm">
+        <FontAwesomeIcon icon="ban" />{' '}
+        <span className="d-none d-md-inline">
+          <Translate contentKey="entity.action.reject">Invitation Rejected</Translate>
+        </span>
+      </Button>
+      <Tooltip placement="top" isOpen={tooltipOpen} target="acceptAndRejectButton" toggle={toggle}>
         {tooltipMessage}
       </Tooltip>
-    </span>
+    </div>
   );
 
   const requestToJoinPending = (): JSX.Element => {
@@ -166,8 +169,9 @@ const customButton = props => {
         });
 
         if (notificationDate > threeDaysAgo) {
-          const tooltipMessage: String = buttonTooltipMessageApplyAgain(tooltipMessageExpiresIn, threeDaysAgo, notificationDate);
-          return rejectedInviteButton(tooltipMessage);
+          const tooltipMessage: String = buttonTooltipMessageApplyAgain(tooltipMessageApplyAgain, threeDaysAgo, notificationDate);
+          const rejectMessage: String = 'You have rejected the invitation. ' + tooltipMessage;
+          return rejectedInviteButton(rejectMessage);
         }
       }
 

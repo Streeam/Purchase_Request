@@ -13,19 +13,22 @@ import { AUTHORITIES } from 'app/config/constants';
 export interface ICompanyAcceptInvitationDialogProps extends DispatchProps, RouteComponentProps<{ id: string }> {}
 
 export const companyAcceptInvitationDialog = props => {
+  let _isMounted = false;
+
   useEffect(() => {
+    _isMounted = true;
     props.getUser(props.currentEmployee.user.login);
   }, []);
 
   const confirmAccept = event => {
-    props.acceptCompanyInvitation(props.match.params.id);
-    const updatedUser = { ...props.user };
+    props.acceptCompanyInvitation(_isMounted, props.match.params.id);
+    /*     const updatedUser = { ...props.user };
     const authorities = [...updatedUser.authorities];
     authorities.push(AUTHORITIES.EMPLOYEE);
     updatedUser.authorities = authorities;
     props.updateUser(updatedUser);
-    event.stopPropagation();
-    props.history.push('/');
+    event.stopPropagation(); */
+    props.history.push('/company/company-status');
   };
 
   const handleClose = event => {
@@ -56,7 +59,7 @@ export const companyAcceptInvitationDialog = props => {
         <Button id="jhi-confirm-acceptinvitation-company" color="primary" onClick={confirmAccept}>
           <FontAwesomeIcon icon="check" />
           &nbsp;
-          <Translate contentKey="entity.action.acceptinvitation">Join</Translate>
+          <Translate contentKey="entity.action.accept">Join</Translate>
         </Button>
       </ModalFooter>
     </Modal>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { connect } from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router-dom';
 import { Button, Row, Col, Label } from 'reactstrap';
@@ -9,10 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IRootState } from 'app/shared/reducers';
 
 import { getEntity, updateEntity, createEntity, setBlob, reset } from './company.reducer';
-import { ICompany } from 'app/shared/model/company.model';
-// tslint:disable-next-line:no-unused-variable
-import { convertDateTimeFromServer, convertDateTimeToServer } from 'app/shared/util/date-utils';
-import { mapIdList } from 'app/shared/util/entity-utils';
+import LoadingModal from '../../shared/layout/custom-components/loading-modal/loading-modal';
 
 export interface ICompanyUpdateProps extends StateProps, DispatchProps, RouteComponentProps<{ id: string }> {}
 
@@ -63,194 +60,189 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
         ...companyEntity,
         ...values
       };
-
       if (this.state.isNew) {
-        this.props.createEntity(entity, this._isMounted);
+        this.props.createEntity(this._isMounted, entity);
       } else {
-        this.props.updateEntity(entity, this._isMounted);
+        this.props.updateEntity(this._isMounted, entity);
       }
     }
   };
 
   handleClose = () => {
-    this.props.history.push('/');
+    this.props.history.push('/company/company-status');
   };
 
   render() {
     const { companyEntity, loading, updating } = this.props;
     const { isNew } = this.state;
-
+    const redirect = isNew ? '/' : '/company/company-status';
     const { companyLogo, companyLogoContentType } = companyEntity;
-
-    return (
-      <div>
+    return loading || updating ? (
+      <LoadingModal />
+    ) : (
+      <Fragment>
         <Row className="justify-content-center">
           <Col md="8">
-            <h2 id="cidApp.company.home.createOrEditLabel">
-              <Translate contentKey="cidApp.company.home.editLabel">Create or edit a Company</Translate>
-            </h2>
-          </Col>
-        </Row>
-        <Row className="justify-content-center">
-          <Col md="8">
-            {loading ? (
-              <p>Loading...</p>
+            {isNew ? (
+              <h2 id="cidApp.company.home.createOrEditLabel">Create a New Company</h2>
             ) : (
-              <AvForm model={isNew ? {} : companyEntity} onSubmit={this.saveEntity}>
-                <AvGroup>
-                  <Label id="nameLabel" for="company-name">
-                    <Translate contentKey="cidApp.company.name">Name</Translate>
-                  </Label>
-                  <AvField
-                    id="company-name"
-                    type="text"
-                    name="name"
-                    validate={{
-                      required: { value: true, errorMessage: translate('entity.validation.required') }
-                    }}
-                  />
-                </AvGroup>
-                <AvGroup>
-                  <Label id="emailLabel" for="company-email">
-                    <Translate contentKey="cidApp.company.email">Email</Translate>
-                  </Label>
-                  <AvField
-                    id="company-email"
-                    type="text"
-                    name="email"
-                    validate={{
-                      required: { value: true, errorMessage: translate('entity.validation.required') },
-                      minLength: { value: 5, errorMessage: translate('entity.validation.minlength', { min: 5 }) },
-                      maxLength: { value: 254, errorMessage: translate('entity.validation.maxlength', { max: 254 }) },
-                      pattern: {
-                        value: '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$',
-                        errorMessage: translate('entity.validation.pattern', { pattern: '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$' })
-                      }
-                    }}
-                  />
-                </AvGroup>
-                <AvGroup>
-                  <Label id="phoneLabel" for="company-phone">
-                    <Translate contentKey="cidApp.company.phone">Phone</Translate>
-                  </Label>
-                  <AvField
-                    id="company-phone"
-                    type="text"
-                    name="phone"
-                    validate={{
-                      required: { value: true, errorMessage: translate('entity.validation.required') }
-                    }}
-                  />
-                </AvGroup>
-                <AvGroup>
-                  <Label id="addressLine1Label" for="company-addressLine1">
-                    <Translate contentKey="cidApp.company.addressLine1">Address Line 1</Translate>
-                  </Label>
-                  <AvField
-                    id="company-addressLine1"
-                    type="text"
-                    name="addressLine1"
-                    validate={{
-                      required: { value: true, errorMessage: translate('entity.validation.required') }
-                    }}
-                  />
-                </AvGroup>
-                <AvGroup>
-                  <Label id="addressLine2Label" for="company-addressLine2">
-                    <Translate contentKey="cidApp.company.addressLine2">Address Line 2</Translate>
-                  </Label>
-                  <AvField id="company-addressLine2" type="text" name="addressLine2" />
-                </AvGroup>
-                <AvGroup>
-                  <Label id="cityLabel" for="company-city">
-                    <Translate contentKey="cidApp.company.city">City</Translate>
-                  </Label>
-                  <AvField
-                    id="company-city"
-                    type="text"
-                    name="city"
-                    validate={{
-                      required: { value: true, errorMessage: translate('entity.validation.required') }
-                    }}
-                  />
-                </AvGroup>
-                <AvGroup>
-                  <Label id="countryLabel" for="company-country">
-                    <Translate contentKey="cidApp.company.country">Country</Translate>
-                  </Label>
-                  <AvField
-                    id="company-country"
-                    type="text"
-                    name="country"
-                    validate={{
-                      required: { value: true, errorMessage: translate('entity.validation.required') }
-                    }}
-                  />
-                </AvGroup>
-                <AvGroup>
-                  <Label id="postcodeLabel" for="company-postcode">
-                    <Translate contentKey="cidApp.company.postcode">Postcode</Translate>
-                  </Label>
-                  <AvField
-                    id="company-postcode"
-                    type="text"
-                    name="postcode"
-                    validate={{
-                      required: { value: true, errorMessage: translate('entity.validation.required') }
-                    }}
-                  />
-                </AvGroup>
-                <AvGroup>
-                  <AvGroup>
-                    <Label id="companyLogoLabel" for="companyLogo">
-                      <Translate contentKey="cidApp.company.companyLogo">Company Logo</Translate>
-                    </Label>
-                    <br />
-                    {companyLogo ? (
-                      <div>
-                        <a onClick={openFile(companyLogoContentType, companyLogo)}>
-                          <img
-                            src={`data:${companyLogoContentType};base64,${companyLogo}`}
-                            style={{ maxHeight: '50px', borderRadius: '50%' }}
-                          />
-                        </a>
-                        <br />
-                        <Row>
-                          <Col md="11">
-                            <span>
-                              {companyLogoContentType}, {byteSize(companyLogo)}
-                            </span>
-                          </Col>
-                          <Col md="1">
-                            <Button onClick={this.clearBlob('companyLogo')}>
-                              <FontAwesomeIcon icon="times-circle" />
-                            </Button>
-                          </Col>
-                        </Row>
-                      </div>
-                    ) : null}
-                    <input id="file_companyLogo" type="file" onChange={this.onBlobChange(true, 'companyLogo')} accept="image/*" />
-                    <AvInput type="hidden" name="companyLogo" value={companyLogo ? companyLogo : ''} />
-                  </AvGroup>
-                </AvGroup>
-                <Button tag={Link} id="cancel-save" to="/company/company-status" replace>
-                  <FontAwesomeIcon icon="arrow-left" />
-                  &nbsp;
-                  <span className="d-none d-md-inline">
-                    <Translate contentKey="entity.action.back">Back</Translate>
-                  </span>
-                </Button>
-                &nbsp;
-                <Button id="save-entity" type="submit" disabled={updating}>
-                  <FontAwesomeIcon icon="save" />
-                  &nbsp;
-                  <Translate contentKey="entity.action.save">Save</Translate>
-                </Button>
-              </AvForm>
+              <h2 id="cidApp.company.home.createOrEditLabel">Edit Company</h2>
             )}
           </Col>
         </Row>
-      </div>
+        <Row className="justify-content-center">
+          <Col md="8">
+            <AvForm model={isNew ? {} : companyEntity} onSubmit={this.saveEntity}>
+              <AvGroup>
+                <Label id="nameLabel" for="company-name">
+                  <Translate contentKey="cidApp.company.name">Name</Translate>
+                </Label>
+                <AvField
+                  id="company-name"
+                  type="text"
+                  name="name"
+                  validate={{
+                    required: { value: true, errorMessage: translate('entity.validation.required') }
+                  }}
+                />
+              </AvGroup>
+              <AvGroup>
+                <Label id="emailLabel" for="company-email">
+                  <Translate contentKey="cidApp.company.email">Email</Translate>
+                </Label>
+                <AvField
+                  id="company-email"
+                  type="text"
+                  name="email"
+                  validate={{
+                    required: { value: true, errorMessage: translate('entity.validation.required') },
+                    minLength: { value: 5, errorMessage: translate('entity.validation.minlength', { min: 5 }) },
+                    maxLength: { value: 254, errorMessage: translate('entity.validation.maxlength', { max: 254 }) },
+                    pattern: {
+                      value: '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$',
+                      errorMessage: translate('entity.validation.pattern', { pattern: '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$' })
+                    }
+                  }}
+                />
+              </AvGroup>
+              <AvGroup>
+                <Label id="phoneLabel" for="company-phone">
+                  <Translate contentKey="cidApp.company.phone">Phone</Translate>
+                </Label>
+                <AvField
+                  id="company-phone"
+                  type="text"
+                  name="phone"
+                  validate={{
+                    required: { value: true, errorMessage: translate('entity.validation.required') }
+                  }}
+                />
+              </AvGroup>
+              <AvGroup>
+                <Label id="addressLine1Label" for="company-addressLine1">
+                  <Translate contentKey="cidApp.company.addressLine1">Address Line 1</Translate>
+                </Label>
+                <AvField
+                  id="company-addressLine1"
+                  type="text"
+                  name="addressLine1"
+                  validate={{
+                    required: { value: true, errorMessage: translate('entity.validation.required') }
+                  }}
+                />
+              </AvGroup>
+              <AvGroup>
+                <Label id="addressLine2Label" for="company-addressLine2">
+                  <Translate contentKey="cidApp.company.addressLine2">Address Line 2</Translate>
+                </Label>
+                <AvField id="company-addressLine2" type="text" name="addressLine2" />
+              </AvGroup>
+              <AvGroup>
+                <Label id="cityLabel" for="company-city">
+                  <Translate contentKey="cidApp.company.city">City</Translate>
+                </Label>
+                <AvField
+                  id="company-city"
+                  type="text"
+                  name="city"
+                  validate={{
+                    required: { value: true, errorMessage: translate('entity.validation.required') }
+                  }}
+                />
+              </AvGroup>
+              <AvGroup>
+                <Label id="countryLabel" for="company-country">
+                  <Translate contentKey="cidApp.company.country">Country</Translate>
+                </Label>
+                <AvField
+                  id="company-country"
+                  type="text"
+                  name="country"
+                  validate={{
+                    required: { value: true, errorMessage: translate('entity.validation.required') }
+                  }}
+                />
+              </AvGroup>
+              <AvGroup>
+                <Label id="postcodeLabel" for="company-postcode">
+                  <Translate contentKey="cidApp.company.postcode">Postcode</Translate>
+                </Label>
+                <AvField
+                  id="company-postcode"
+                  type="text"
+                  name="postcode"
+                  validate={{
+                    required: { value: true, errorMessage: translate('entity.validation.required') }
+                  }}
+                />
+              </AvGroup>
+              <AvGroup>
+                <AvGroup>
+                  <Label id="companyLogoLabel" for="companyLogo">
+                    <Translate contentKey="cidApp.company.companyLogo">Company Logo</Translate>
+                  </Label>
+                  <br />
+                  {companyLogo ? (
+                    <div>
+                      <a onClick={openFile(companyLogoContentType, companyLogo)}>
+                        <img src={`data:${companyLogoContentType};base64,${companyLogo}`} style={{ maxHeight: '50px' }} />
+                      </a>
+                      <br />
+                      <Row>
+                        <Col md="11">
+                          <span>
+                            {companyLogoContentType}, {byteSize(companyLogo)}
+                          </span>
+                        </Col>
+                        <Col md="1">
+                          <Button onClick={this.clearBlob('companyLogo')}>
+                            <FontAwesomeIcon icon="times-circle" />
+                          </Button>
+                        </Col>
+                      </Row>
+                    </div>
+                  ) : null}
+                  <input id="file_companyLogo" type="file" onChange={this.onBlobChange(true, 'companyLogo')} accept="image/*" />
+                  <AvInput type="hidden" name="companyLogo" value={companyLogo ? companyLogo : ''} />
+                </AvGroup>
+              </AvGroup>
+              <Button tag={Link} id="cancel-save" to={redirect} replace>
+                <FontAwesomeIcon icon="arrow-left" />
+                &nbsp;
+                <span className="d-none d-md-inline">
+                  <Translate contentKey="entity.action.back">Back</Translate>
+                </span>
+              </Button>
+              &nbsp;
+              <Button id="save-entity" type="submit" disabled={updating}>
+                <FontAwesomeIcon icon="save" />
+                &nbsp;
+                <Translate contentKey="entity.action.save">Save</Translate>
+              </Button>
+            </AvForm>
+          </Col>
+        </Row>
+      </Fragment>
     );
   }
 }

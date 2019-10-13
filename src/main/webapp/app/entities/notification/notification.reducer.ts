@@ -11,6 +11,7 @@ export const ACTION_TYPES = {
   FETCH_NOTIFICATION_LIST: 'notification/FETCH_NOTIFICATION_LIST',
   FETCH_NOTIFICATION: 'notification/FETCH_NOTIFICATION',
   FETCH_CURRENT_NOTIFICATION: 'notification/FETCH_CURRENT_NOTIFICATION',
+  FETCH_COMPANYS_NOTIFICATIONS: 'notification/FETCH_COMPANYS_NOTIFICATIONS',
   CREATE_NOTIFICATION: 'notification/CREATE_NOTIFICATION',
   UPDATE_NOTIFICATION: 'notification/UPDATE_NOTIFICATION',
   DELETE_NOTIFICATION: 'notification/DELETE_NOTIFICATION',
@@ -22,6 +23,7 @@ const initialState = {
   errorMessage: null,
   entities: [] as ReadonlyArray<INotification>,
   currentEntities: [] as ReadonlyArray<INotification>,
+  companysNotifications: [] as ReadonlyArray<INotification>,
   entity: defaultValue,
   updating: false,
   totalItems: 0,
@@ -37,6 +39,7 @@ export default (state: NotificationState = initialState, action): NotificationSt
     case REQUEST(ACTION_TYPES.SEARCH_NOTIFICATIONS):
     case REQUEST(ACTION_TYPES.FETCH_NOTIFICATION_LIST):
     case REQUEST(ACTION_TYPES.FETCH_CURRENT_NOTIFICATION):
+    case REQUEST(ACTION_TYPES.FETCH_COMPANYS_NOTIFICATIONS):
     case REQUEST(ACTION_TYPES.FETCH_NOTIFICATION):
       return {
         ...state,
@@ -56,6 +59,7 @@ export default (state: NotificationState = initialState, action): NotificationSt
     case FAILURE(ACTION_TYPES.SEARCH_NOTIFICATIONS):
     case FAILURE(ACTION_TYPES.FETCH_NOTIFICATION_LIST):
     case FAILURE(ACTION_TYPES.FETCH_CURRENT_NOTIFICATION):
+    case FAILURE(ACTION_TYPES.FETCH_COMPANYS_NOTIFICATIONS):
     case FAILURE(ACTION_TYPES.FETCH_NOTIFICATION):
     case FAILURE(ACTION_TYPES.CREATE_NOTIFICATION):
     case FAILURE(ACTION_TYPES.UPDATE_NOTIFICATION):
@@ -80,6 +84,13 @@ export default (state: NotificationState = initialState, action): NotificationSt
         ...state,
         loading: false,
         currentEntities: action.payload.data,
+        totalItems: parseInt(action.payload.headers['x-total-count'], 10)
+      };
+    case SUCCESS(ACTION_TYPES.FETCH_COMPANYS_NOTIFICATIONS):
+      return {
+        ...state,
+        loading: false,
+        companysNotifications: action.payload.data,
         totalItems: parseInt(action.payload.headers['x-total-count'], 10)
       };
     case SUCCESS(ACTION_TYPES.FETCH_NOTIFICATION):
@@ -133,6 +144,18 @@ export const getCurrentEntities = (isMounted: boolean) => {
   const requestUrl = `${apiUrl}/current`;
   return {
     type: ACTION_TYPES.FETCH_CURRENT_NOTIFICATION,
+    payload: axios.get<INotification>(requestUrl).then(result => {
+      if (isMounted) {
+        return result;
+      }
+    })
+  };
+};
+
+export const getCompanysNotifiactions = (isMounted: boolean, companyId: string) => {
+  const requestUrl = `${apiUrl}/company/${companyId}`;
+  return {
+    type: ACTION_TYPES.FETCH_COMPANYS_NOTIFICATIONS,
     payload: axios.get<INotification>(requestUrl).then(result => {
       if (isMounted) {
         return result;

@@ -267,7 +267,7 @@ public class CompanyService {
 
 
     public Page<CompanyDTO> findCompanyWithCurrentUser(User user) {
-        Optional<Employee> employee = employeeService.findOneByLogin(user.getLogin());
+        Optional<Employee> employee = employeeService.findOneByEmail(user.getEmail());
         Optional<Company> company = companyRepository.findOneByEmployees(Collections.singleton(employee.get()));
         CompanyDTO companyDTO = companyMapper.toDto(company.get());
 

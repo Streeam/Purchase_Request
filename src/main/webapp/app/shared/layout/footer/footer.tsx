@@ -7,10 +7,16 @@ import { Col, Row } from 'reactstrap';
 const Footer = props => (
   <div className="footer page-content">
     <Row>
-      <Col md="8">
+      <Col md="12">
         <p>
-          <a href="https://github.com/Streeam/Purchase_Request" target="_blank" rel="noopener noreferrer">
-            https://github.com/Streeam/Purchase_Request
+          <strong>Company Information Database</strong>
+          {'  '}|{' '}
+          <a href="https://github.com/Streeam/Purchase_Request" target="_blank">
+            GitHub
+          </a>
+          {'  '}| An application developed by{' '}
+          <a href="linkedin.com/in/bogdan-mihoci-729561188" target="_blank">
+            Bogdan Mihoci
           </a>
         </p>
       </Col>

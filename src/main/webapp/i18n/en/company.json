@@ -28,6 +28,9 @@
       "rejectinvitation": {
         "question": "Are you sure you want to reject the company's invitation?"
       },
+      "rejectrequest": {
+        "question": "Are you sure you want to reject the employee's application?"
+      },
       "fire": {
         "question": "Are you sure you want to fire employee: {{ name }}?"
       },

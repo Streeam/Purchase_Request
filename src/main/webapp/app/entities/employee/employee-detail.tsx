@@ -27,8 +27,31 @@ export class EmployeeDetail extends React.Component<IEmployeeDetailProps> {
   render() {
     const { employeeEntity } = this.props;
     return (
-      <Row>
-        <Col md="10">
+      <Row className="justify-content-center">
+        <Col>
+          {employeeEntity.image ? (
+            <div>
+              <a>
+                <img
+                  src={`data:${employeeEntity.imageContentType};base64,${employeeEntity.image}`}
+                  style={{
+                    maxHeight: '100px',
+                    borderRadius: '50%'
+                  }}
+                />
+              </a>
+            </div>
+          ) : (
+            <div>
+              <img
+                src={`content/images/company-logo.png`}
+                style={{
+                  maxHeight: '100px',
+                  borderRadius: '50%'
+                }}
+              />
+            </div>
+          )}
           <h2>{employeeEntity.login}</h2>
           <dl className="jh-entity-details">
             <dt>
@@ -73,31 +96,6 @@ export class EmployeeDetail extends React.Component<IEmployeeDetailProps> {
             </span>
           </Button>
           &nbsp;
-        </Col>
-        <Col md="1">
-          {employeeEntity.image ? (
-            <div>
-              <a>
-                <img
-                  src={`data:${employeeEntity.imageContentType};base64,${employeeEntity.image}`}
-                  style={{
-                    maxHeight: '100px',
-                    borderRadius: '50%'
-                  }}
-                />
-              </a>
-            </div>
-          ) : (
-            <div>
-              <img
-                src={`content/images/company-logo.png`}
-                style={{
-                  maxHeight: '100px',
-                  borderRadius: '50%'
-                }}
-              />
-            </div>
-          )}
         </Col>
       </Row>
     );

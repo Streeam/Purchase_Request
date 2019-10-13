@@ -82,13 +82,12 @@ export class EmployeeUpdate extends React.Component<IEmployeeUpdateProps, IEmplo
   };
 
   handleClose = () => {
-    this.props.history.push('/entity/employee');
+    this.props.history.goBack();
   };
 
   render() {
     const { employeeEntity, users, companies, loading, updating } = this.props;
     const { isNew } = this.state;
-
     const { image, imageContentType } = employeeEntity;
 
     return (

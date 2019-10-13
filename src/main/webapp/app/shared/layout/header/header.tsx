@@ -2,10 +2,8 @@ import './header.scss';
 
 import React, { useState } from 'react';
 import { Translate, Storage } from 'react-jhipster';
-import { Navbar, Nav, NavbarToggler, NavbarBrand, Collapse } from 'reactstrap';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Navbar, Nav, NavbarToggler, Collapse } from 'reactstrap';
 
-import { NavLink as Link } from 'react-router-dom';
 import LoadingBar from 'react-redux-loading-bar';
 
 import { Home, Brand } from './header-components';
@@ -48,15 +46,15 @@ const Header = (props: IHeaderProps) => {
   return (
     <div id="app-header">
       {renderDevRibbon()}
-      <LoadingBar className="loading-bar" />
+      {/* <LoadingBar className="loading-bar" />*/}
       <Navbar light expand="sm" fixed="top" className="bg-light">
         <NavbarToggler aria-label="Menu" onClick={toggleMenu} />
         <Brand />
         <Collapse isOpen={menuOpen} navbar>
           <Nav id="header-tabs" className="ml-auto" navbar>
             <Home />
-            {props.isAuthenticated && <EntitiesMenu {...props} />}
-            {props.isAuthenticated && <CompanyMenu isManager={props.isManager} isUnemployed={props.isOnlyUser} />}
+            {props.isAuthenticated && props.isAdmin && <EntitiesMenu {...props} />}
+            {props.isAuthenticated && !props.isAdmin && <CompanyMenu isManager={props.isManager} isUnemployed={props.isOnlyUser} />}
             {props.isAuthenticated && props.isAdmin && (
               <AdminMenu showSwagger={props.isSwaggerEnabled} showDatabase={!props.isInProduction} />
             )}

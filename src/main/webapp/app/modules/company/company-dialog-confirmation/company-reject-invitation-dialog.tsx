@@ -9,9 +9,15 @@ import { rejectCompanyInvitation } from '../../../entities/employee/employee.red
 import { IRootState } from 'app/shared/reducers';
 
 export const companyAcceptInvitationDialog = props => {
+  let _isMounted = false;
+
+  useEffect(() => {
+    _isMounted = true;
+    return () => (_isMounted = false);
+  }, []);
+
   const rejectInvitation = event => {
-    props.rejectCompanyInvitation(props.match.params.id);
-    props.getCurrentNotifications();
+    props.rejectCompanyInvitation(_isMounted, props.match.params.id);
     handleClose(event);
   };
 
@@ -43,7 +49,7 @@ export const companyAcceptInvitationDialog = props => {
         <Button id="jhi-confirm-acceptinvitation-company" color="danger" onClick={rejectInvitation}>
           <FontAwesomeIcon icon="ban" />
           &nbsp;
-          <Translate contentKey="entity.action.rejecteinvitation">Reject</Translate>
+          <Translate contentKey="entity.action.reject">Reject</Translate>
         </Button>
       </ModalFooter>
     </Modal>

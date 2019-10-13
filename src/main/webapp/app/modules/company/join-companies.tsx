@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IRootState } from 'app/shared/reducers';
 import { getSearchEntities, getEntities as getCompanies } from '../../entities/company/company.reducer';
 // tslint:disable-next-line:no-unused-variable
-import { ITEMS_PER_PAGE } from 'app/shared/util/pagination.constants';
+import LoadingModal from '../../shared/layout/custom-components/loading-modal/loading-modal';
 import '../../../content/css/grid.css';
 import { getAsyncCurentEntities as getNotifications } from '../../entities/notification/notification.reducer';
 import CustomButton from '../../shared/layout/custom-components/custom-status-button';
@@ -24,7 +24,19 @@ export interface ICompanyState extends IPaginationBaseState {
 
 export const joinCompany = props => {
   let _isMounted = false;
-  const { companyList, match, notifications, currentEmployee } = props;
+  const {
+    companyList,
+    match,
+    notifications,
+    currentEmployee,
+    companiesAreLoading,
+    notificationsAreLoading,
+    employeesAreLoading,
+    acceptOrRejectEmployeeIsLoading,
+    userIsLoading
+  } = props;
+  const isLoading =
+    companiesAreLoading || notificationsAreLoading || employeesAreLoading || userIsLoading || acceptOrRejectEmployeeIsLoading;
 
   useEffect(() => {
     _isMounted = true;
@@ -34,7 +46,9 @@ export const joinCompany = props => {
     return () => (_isMounted = false);
   }, []);
 
-  return (
+  return isLoading ? (
+    <LoadingModal />
+  ) : (
     <div>
       <h2 id="company-heading">
         <Translate contentKey="cidApp.company.home.join">Join a Company</Translate>
@@ -123,10 +137,15 @@ export const joinCompany = props => {
   );
 };
 
-const mapStateToProps = ({ company, notification, employee }: IRootState) => ({
+const mapStateToProps = ({ company, notification, employee, authentication }: IRootState) => ({
   companyList: company.entities,
   notifications: notification.currentEntities,
-  currentEmployee: employee.currentEmployeeEntity
+  currentEmployee: employee.currentEmployeeEntity,
+  companiesAreLoading: company.loading,
+  notificationsAreLoading: notification.loading,
+  employeesAreLoading: employee.loading,
+  acceptOrRejectEmployeeIsLoading: employee.updating,
+  userIsLoading: authentication.loading
 });
 
 const mapDispatchToProps = {
@@ -142,4 +161,10 @@ type DispatchProps = typeof mapDispatchToProps;
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(joinCompany);
+)(
+  React.memo(
+    joinCompany,
+    (prevProps, nextProps) =>
+      prevProps.companyList.length !== nextProps.companyList.length && prevProps.notifications.length !== nextProps.notifications.length
+  )
+);

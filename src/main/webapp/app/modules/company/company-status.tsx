@@ -75,16 +75,33 @@ export const companyDetail = (props: ICompanyDetailProps) => {
 
   return (
     <div>
-      <Row>
-        <Col sm="2">
-          {companyEntity.companyLogo ? (
+      <div>
+        <div
+          style={{
+            display: 'inline-block',
+            textAlign: 'left',
+            width: '50%'
+          }}
+        >
+          <div style={{ display: 'inline-block' }}>
+            <h1 style={lableStyle}>{companyEntity.name}</h1>
+          </div>
+        </div>
+        <div
+          style={{
+            display: 'inline-block',
+            textAlign: 'right',
+            width: '50%'
+          }}
+        >
+          {companyEntity && companyEntity.companyLogo ? (
             <div>
               <a onClick={openFile(companyEntity.companyLogoContentType, companyEntity.companyLogo)}>
                 <img
                   src={`data:${companyEntity.companyLogoContentType};base64,${companyEntity.companyLogo}`}
                   style={{
-                    maxHeight: '50px',
-                    borderRadius: '50%'
+                    maxHeight: '70px',
+                    borderRadius: '5%'
                   }}
                 />
               </a>
@@ -94,11 +111,10 @@ export const companyDetail = (props: ICompanyDetailProps) => {
               <img src={`content/images/company-logo.png`} style={{ maxHeight: '50px' }} />
             </div>
           )}
-        </Col>
-        <Col md="8">
-          <h1 style={lableStyle}>{companyEntity.name}</h1>
-        </Col>
-      </Row>
+        </div>
+      </div>
+      <br />
+      <h4>Company Details</h4>
       <br />
       <Table>
         <thead>
@@ -140,7 +156,7 @@ export const companyDetail = (props: ICompanyDetailProps) => {
         <thead>
           <tr>
             <th style={{ width: '2%' }} />
-            <th>Name</th>
+            <th>Employee's Name</th>
             <th>Username</th>
             <th>Manager</th>
             <th>Employee</th>

@@ -28,6 +28,9 @@
       "rejectinvitation": {
         "question": "Sunteți sigur că doriți să refuzați invitația?"
       },
+      "rejectrequest": {
+        "question": "Sunteți sigur că doriți să refuzați cererea de angajare?"
+      },
       "fire": {
         "question": "Sunteți sigur că doriți să concediați pe angajatul: {{ name }}?"
       },

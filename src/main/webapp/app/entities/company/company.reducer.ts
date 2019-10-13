@@ -1,10 +1,11 @@
 import axios from 'axios';
-import { ICrudSearchAction, ICrudGetAction, ICrudGetAllAction, ICrudPutAction, ICrudDeleteAction, IPayload } from 'react-jhipster';
+import { ICrudSearchAction, IPayload } from 'react-jhipster';
 
 import { cleanEntity } from 'app/shared/util/entity-utils';
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 import { ICompany, defaultValue } from 'app/shared/model/company.model';
 import { getAsyncEntities as getEmployees } from '../employee/employee.reducer';
+import { getSession } from '../../shared/reducers/authentication';
 
 export const ACTION_TYPES = {
   SEARCH_COMPANIES: 'company/SEARCH_COMPANIES',
@@ -83,45 +84,52 @@ export default (state: CompanyState = initialState, action): CompanyState => {
       };
     case SUCCESS(ACTION_TYPES.SEARCH_COMPANIES):
     case SUCCESS(ACTION_TYPES.FETCH_COMPANY_LIST):
-      if (!action.payload) {
-        return state;
-      }
-      return {
-        ...state,
-        loading: false,
-        entities: action.payload.data,
-        totalItems: parseInt(action.payload.headers['x-total-count'], 10)
-      };
+      return !action.payload
+        ? state
+        : {
+            ...state,
+            loading: false,
+            entities: action.payload.data,
+            totalItems: parseInt(action.payload.headers['x-total-count'], 10)
+          };
     case SUCCESS(ACTION_TYPES.FETCH_COMPANY):
-      return {
-        ...state,
-        loading: false,
-        entity: action.payload.data
-      };
+      return !action.payload
+        ? state
+        : {
+            ...state,
+            loading: false,
+            entity: action.payload.data
+          };
     case SUCCESS(ACTION_TYPES.FETCH_CURRENT_COMPANY):
-      return {
-        ...state,
-        loading: false,
-        employeeEntity: action.payload.data
-      };
+      return !action.payload
+        ? state
+        : {
+            ...state,
+            loading: false,
+            employeeEntity: action.payload.data
+          };
     case SUCCESS(ACTION_TYPES.CREATE_COMPANY):
     case SUCCESS(ACTION_TYPES.UPDATE_COMPANY):
+      return !action.payload
+        ? state
+        : {
+            ...state,
+            updating: false,
+            updateSuccess: true,
+            entity: action.payload.data
+          };
+    case SUCCESS(ACTION_TYPES.DELETE_COMPANY):
     case SUCCESS(ACTION_TYPES.HIRE_EMPLOYEE):
     case SUCCESS(ACTION_TYPES.REJECT_EMPLOYEE):
     case SUCCESS(ACTION_TYPES.FIRE_EMPLOYEE):
-      return {
-        ...state,
-        updating: false,
-        updateSuccess: true,
-        entity: action.payload.data
-      };
-    case SUCCESS(ACTION_TYPES.DELETE_COMPANY):
-      return {
-        ...state,
-        updating: false,
-        updateSuccess: true,
-        entity: {}
-      };
+      return !action.payload
+        ? state
+        : {
+            ...state,
+            updating: false,
+            updateSuccess: true,
+            entity: {}
+          };
     case ACTION_TYPES.SET_BLOB:
       const { name, data, contentType } = action.payload;
       return {
@@ -203,53 +211,64 @@ export const hireEmployee = (companyId: Number, employeeId: Number, isMounted: b
   return result;
 };
 
-export const rejectEmployee = (companyId: Number, employeeId: Number) => async dispatch => {
+export const rejectEmployee = (isMounted: boolean, companyId: string, employeeId: string) => async dispatch => {
   const requestUrl = `${apiUrl}/${companyId}/reject-employee/${employeeId}`;
   const result = await dispatch({
     type: ACTION_TYPES.REJECT_EMPLOYEE,
-    payload: axios.post(requestUrl)
+    payload: axios.post(requestUrl).then(data => {
+      if (isMounted) {
+        return data;
+      }
+    })
   });
-  // await dispatch(getCurrentUserEntity());
-  // await dispatch(getEmployees());
+  await dispatch(getEmployees(isMounted));
   return result;
 };
 
-export const fireEmployee = (companyId: Number, employeeId: Number) => async dispatch => {
+export const fireEmployee = (isMounted: boolean, companyId: string, employeeId: string) => async dispatch => {
   const requestUrl = `${apiUrl}/${companyId}/fire/${employeeId}`;
   const result = await dispatch({
     type: ACTION_TYPES.FIRE_EMPLOYEE,
-    payload: axios.post(requestUrl)
+    payload: axios.post(requestUrl).then(data => {
+      if (isMounted) {
+        return data;
+      }
+    })
   });
-  // await dispatch(getCurrentUserEntity());
-  // await dispatch(getEmployees());
+  await dispatch(getCurrentUserEntity(isMounted));
+  await dispatch(getEmployees(isMounted));
   return result;
 };
 
-export const createEntity = (entity, isMounted) => async dispatch => {
+export const createEntity = (isMounted: boolean, entity) => async dispatch => {
   const result = await dispatch({
     type: ACTION_TYPES.CREATE_COMPANY,
-    payload: axios.post(apiUrl, cleanEntity(entity))
+    payload: axios.post(apiUrl, cleanEntity(entity)).then(data => {
+      if (isMounted) {
+        return data;
+      }
+    })
   });
+  await dispatch(getSession());
   dispatch(getEntities(isMounted));
   return result;
 };
 
-export const updateEntity = (entity, isMounted) => async dispatch => {
+export const updateEntity = (isMounted: boolean, entity) => async dispatch => {
   const result = await dispatch({
     type: ACTION_TYPES.UPDATE_COMPANY,
     payload: axios.put(apiUrl, cleanEntity(entity))
   });
-  dispatch(getEntities(isMounted));
   return result;
 };
 
-export const deleteEntity = (id, IsMounted) => async dispatch => {
+export const deleteEntity = (isMounted: boolean, id) => async dispatch => {
   const requestUrl = `${apiUrl}/${id}`;
   const result = await dispatch({
     type: ACTION_TYPES.DELETE_COMPANY,
     payload: axios.delete(requestUrl)
   });
-  dispatch(getEntities(IsMounted));
+  dispatch(getEntities(isMounted));
   return result;
 };
 

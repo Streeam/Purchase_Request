@@ -1,0 +1,6 @@
+.loading-modal {
+  padding: 5px;
+  background-clip: padding-box;
+  border-radius: 5px;
+  text-align: center;
+}

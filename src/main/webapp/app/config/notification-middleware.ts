@@ -19,7 +19,7 @@ export default () => next => action => {
   return next(action)
     .then(response => {
       if (action.meta && action.meta.successMessage) {
-        toast.success(action.meta.successMessage);
+        toast.success('SUCCESS');
       } else if (response && response.action && response.action.payload && response.action.payload.headers) {
         const headers = response.action.payload.headers;
         let alert: string = null;
@@ -33,7 +33,7 @@ export default () => next => action => {
         });
         if (alert) {
           const alertParam = alertParams;
-          toast.success(translate(alert, { param: alertParam }));
+          toast.success('SUCCESS');
         }
       }
       return Promise.resolve(response);

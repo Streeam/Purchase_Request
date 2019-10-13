@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import { RouteComponentProps } from 'react-router-dom';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from 'reactstrap';
@@ -7,48 +7,55 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { inviteEmployee } from '../../../entities/employee/employee.reducer';
 
-export interface ICompanyInviteDialogProps extends DispatchProps, RouteComponentProps<{ email: string }> {}
+export interface ICompanyInviteDialogProps extends DispatchProps, RouteComponentProps<{ email: string; companyId: string }> {}
 
-export class CompanyInviteDialog extends React.Component<ICompanyInviteDialogProps> {
-  handleInvite = event => {
-    if (this.props.match.params.email) {
-      this.props.inviteEmployee(this.props.match.params.email);
-      this.handleClose(event);
+const CompanyInviteDialog = (props: ICompanyInviteDialogProps) => {
+  let _isMounted = false;
+
+  const { email, companyId } = props.match.params;
+
+  useEffect(() => {
+    _isMounted = true;
+    return () => (_isMounted = false);
+  }, []);
+
+  const handleInvite = event => {
+    if (props.match.params.email) {
+      props.inviteEmployee(_isMounted, email, companyId);
+      handleClose(event);
     }
   };
 
-  handleClose = event => {
+  const handleClose = event => {
     event.stopPropagation();
-    this.props.history.goBack();
+    props.history.goBack();
   };
 
-  render() {
-    return (
-      <Modal isOpen toggle={this.handleClose}>
-        <ModalHeader toggle={this.handleClose}>
-          <Translate contentKey="entity.invite.title">Confirm invite operation</Translate>
-        </ModalHeader>
-        <ModalBody id="cidApp.company.invite.question">
-          <Translate contentKey="cidApp.company.invite.question" interpolate={{ name: this.props.match.params.email }}>
-            Are you sure you want to invite a new employee?
-          </Translate>
-        </ModalBody>
-        <ModalFooter>
-          <Button color="secondary" onClick={this.handleClose}>
-            <FontAwesomeIcon icon="ban" />
-            &nbsp;
-            <Translate contentKey="entity.action.cancel">Cancel</Translate>
-          </Button>
-          <Button id="jhi-confirm-invite-company" color="primary" onClick={this.handleInvite}>
-            <FontAwesomeIcon icon="user" />
-            &nbsp;
-            <Translate contentKey="entity.action.invite">Invite</Translate>
-          </Button>
-        </ModalFooter>
-      </Modal>
-    );
-  }
-}
+  return (
+    <Modal isOpen toggle={handleClose}>
+      <ModalHeader toggle={handleClose}>
+        <Translate contentKey="entity.invite.title">Confirm invite operation</Translate>
+      </ModalHeader>
+      <ModalBody id="cidApp.company.invite.question">
+        <Translate contentKey="cidApp.company.invite.question" interpolate={{ name: props.match.params.email }}>
+          Are you sure you want to invite a new employee?
+        </Translate>
+      </ModalBody>
+      <ModalFooter>
+        <Button color="secondary" onClick={handleClose}>
+          <FontAwesomeIcon icon="ban" />
+          &nbsp;
+          <Translate contentKey="entity.action.cancel">Cancel</Translate>
+        </Button>
+        <Button id="jhi-confirm-invite-company" color="primary" onClick={handleInvite}>
+          <FontAwesomeIcon icon="user" />
+          &nbsp;
+          <Translate contentKey="entity.action.invite">Invite</Translate>
+        </Button>
+      </ModalFooter>
+    </Modal>
+  );
+};
 
 const mapDispatchToProps = { inviteEmployee };
 

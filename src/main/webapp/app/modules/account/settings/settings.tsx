@@ -1,36 +1,40 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Fragment } from 'react';
 import { Button, Col, Alert, Row } from 'reactstrap';
 import { connect } from 'react-redux';
-import { Translate, translate, setFileData, byteSize } from 'react-jhipster';
+import { Translate, translate } from 'react-jhipster';
 import { AvForm, AvField } from 'availity-reactstrap-validation';
 
 import { locales, languages } from 'app/config/translation';
 import { IRootState } from 'app/shared/reducers';
 import { getSession } from 'app/shared/reducers/authentication';
-import { saveAccountSettings, reset as accountReset } from './settings.reducer';
-import { getCurrentEmployeeEntity, updateEntity, setBlob, reset as employeeReset } from '../../../entities/employee/employee.reducer';
+import { saveAccountSettings, reset } from './settings.reducer';
+import { getCurrentEmployeeEntity } from '../../../entities/employee/employee.reducer';
 import '../../../app.scss';
-import { RouteComponentProps } from 'react-router-dom';
-import Avatar from '../../../shared/layout/custom-components/avatar/avatar';
+import { RouteComponentProps, Link } from 'react-router-dom';
+import ProfileIcon from '../../../shared/layout/custom-components/avatar/avatar';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import LoadingModal from '../../../shared/layout/custom-components/loading-modal/loading-modal';
 
 export interface IUserSettingsProps extends StateProps, DispatchProps, RouteComponentProps<{}> {}
 
 export const SettingsPage = (props: IUserSettingsProps) => {
   let _isMounted = false;
 
-  const { currentEmployee } = props;
+  const { currentEmployee, updatingUser, updatingEmployee } = props;
+
+  const isLoading = updatingUser || updatingEmployee;
 
   useEffect(() => {
     _isMounted = true;
     props.getSession();
     props.getCurrentEmployeeEntity(_isMounted);
     return () => {
-      props.accountReset();
       _isMounted = false;
+      props.reset();
     };
   }, []);
 
-  const handleValidSubmit = (event, error, values) => {
+  const handleValidSubmit = (event, values) => {
     const account = {
       ...props.account,
       ...values
@@ -38,14 +42,20 @@ export const SettingsPage = (props: IUserSettingsProps) => {
     props.saveAccountSettings(account);
     event.persist();
   };
+  // console.log(updatingEmployee);
 
-  const handleClose = () => {
-    props.history.push('/');
-  };
-
-  return (
-    <div>
-      <Avatar imageContentType={currentEmployee.imageContentType} image={currentEmployee.image} maxHeight="100px" round />
+  return isLoading ? (
+    <LoadingModal />
+  ) : (
+    <Fragment>
+      <ProfileIcon
+        imageContentType={currentEmployee.imageContentType}
+        image={currentEmployee.image}
+        maxHeight="100px"
+        round
+        url={`${props.match.url}/profile-icon`}
+        defaultSrc="content/images/default_profile_icon.png"
+      />
       <Row className="justify-content-center">
         <Col md="7">
           <h2 id="settings-title">
@@ -82,19 +92,6 @@ export const SettingsPage = (props: IUserSettingsProps) => {
               }}
               value={props.account.lastName}
             />
-            {/* Email */}
-            <AvField
-              name="email"
-              label={translate('global.form.email.label')}
-              placeholder={translate('global.form.email.placeholder')}
-              type="email"
-              validate={{
-                required: { value: true, errorMessage: translate('global.messages.validate.email.required') },
-                minLength: { value: 5, errorMessage: translate('global.messages.validate.email.minlength') },
-                maxLength: { value: 254, errorMessage: translate('global.messages.validate.email.maxlength') }
-              }}
-              value={props.account.email}
-            />
             {/* Language key */}
             <AvField
               type="select"
@@ -102,7 +99,7 @@ export const SettingsPage = (props: IUserSettingsProps) => {
               name="langKey"
               className="form-control"
               label={translate('settings.form.language')}
-              value={props.account.langKey}
+              value={props.account.langKey ? props.account.langKey : 'en'}
             >
               {locales.map(locale => (
                 <option value={locale} key={locale}>
@@ -110,23 +107,34 @@ export const SettingsPage = (props: IUserSettingsProps) => {
                 </option>
               ))}
             </AvField>
-            <Button className="Button" type="submit">
-              <Translate contentKey="settings.form.button">Save</Translate>
+            <Button className="Button" tag={Link} id="cancel-save" to="/" replace>
+              <FontAwesomeIcon icon="arrow-left" />
+              &nbsp;
+              <span className="d-none d-md-inline">
+                <Translate contentKey="entity.action.back">Back</Translate>
+              </span>
+            </Button>
+            &nbsp;
+            <Button className="Button" id="save-entity" type="submit" disabled={updatingUser}>
+              <FontAwesomeIcon icon="save" />
+              &nbsp;
+              <Translate contentKey="entity.action.save">Save</Translate>
             </Button>
           </AvForm>
         </Col>
       </Row>
-    </div>
+    </Fragment>
   );
 };
 
 const mapStateToProps = (storeState: IRootState) => ({
   account: storeState.authentication.account,
-  isAuthenticated: storeState.authentication.isAuthenticated,
-  currentEmployee: storeState.employee.currentEmployeeEntity
+  currentEmployee: storeState.employee.currentEmployeeEntity,
+  updatingUser: storeState.authentication.loading,
+  updatingEmployee: storeState.employee.updating
 });
 
-const mapDispatchToProps = { getSession, saveAccountSettings, accountReset, getCurrentEmployeeEntity };
+const mapDispatchToProps = { getSession, saveAccountSettings, reset, getCurrentEmployeeEntity };
 
 type StateProps = ReturnType<typeof mapStateToProps>;
 type DispatchProps = typeof mapDispatchToProps;

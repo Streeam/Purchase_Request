@@ -13,8 +13,7 @@ export interface ICompanyJoinDialogProps extends DispatchProps, RouteComponentPr
 export class CompanyJoinDialog extends React.Component<ICompanyJoinDialogProps> {
   _isMounted = false;
   confirmJoin = event => {
-    this.props.joinCompany(this.props.match.params.id);
-    // this.props.getCurrentNotifications(this._isMounted);
+    this.props.joinCompany(this._isMounted, this.props.match.params.id);
     this.handleClose(event);
   };
   componentDidMount() {
