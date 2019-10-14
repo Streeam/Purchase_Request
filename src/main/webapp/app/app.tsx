@@ -49,6 +49,7 @@ export const App = (props: IAppProps) => {
             ribbonEnv={props.ribbonEnv}
             isInProduction={props.isInProduction}
             isSwaggerEnabled={props.isSwaggerEnabled}
+            account={props.account}
           />
         </ErrorBoundary>
         <div className="container-fluid view-container" id="app-view-container">
@@ -72,7 +73,8 @@ const mapStateToProps = ({ authentication, applicationProfile, locale }: IRootSt
   isCurrentUserManager: authentication.isCurrentUserManager,
   ribbonEnv: applicationProfile.ribbonEnv,
   isInProduction: applicationProfile.inProduction,
-  isSwaggerEnabled: applicationProfile.isSwaggerEnabled
+  isSwaggerEnabled: applicationProfile.isSwaggerEnabled,
+  account: authentication.account
 });
 
 const mapDispatchToProps = { setLocale, getSession, getProfile };

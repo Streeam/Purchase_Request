@@ -6,7 +6,7 @@ import { Navbar, Nav, NavbarToggler, Collapse } from 'reactstrap';
 
 import LoadingBar from 'react-redux-loading-bar';
 
-import { Home, Brand, About } from './header-components';
+import { Home, Brand } from './header-components';
 import { AdminMenu, EntitiesMenu, AccountMenu, LocaleMenu, CompanyMenu } from '../menus';
 
 export interface IHeaderProps {
@@ -19,6 +19,7 @@ export interface IHeaderProps {
   isSwaggerEnabled: boolean;
   currentLocale: string;
   onLocaleChange: Function;
+  account: {};
 }
 
 const Header = (props: IHeaderProps) => {
@@ -59,8 +60,7 @@ const Header = (props: IHeaderProps) => {
               <AdminMenu showSwagger={props.isSwaggerEnabled} showDatabase={!props.isInProduction} />
             )}
             <LocaleMenu currentLocale={props.currentLocale} onClick={handleLocaleChange} />
-            <AccountMenu isAuthenticated={props.isAuthenticated} />
-            <About />
+            <AccountMenu isAuthenticated={props.isAuthenticated} account={props.account} />
           </Nav>
         </Collapse>
       </Navbar>

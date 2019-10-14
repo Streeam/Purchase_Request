@@ -38,7 +38,7 @@ Developement Ribbon
 Navbar styles
 ========================================================================== */
 .navbar-version {
-  font-size: 10px;
+  font-size: 8px;
   color: $header-color-secondary;
   padding: 0 0 0 10px;
 }
@@ -48,11 +48,11 @@ Navbar styles
     text-decoration: none;
   }
   .brand-icon {
-    height: 35px;
+    height: 25px;
     width: auto;
     display: inline-block;
     img {
-      height: 45px;
+      height: 35px;
     }
   }
 }
@@ -89,8 +89,8 @@ Navbar styles
   }
 }
 
-.buser-title {
-  font-size: 9px;
+.brand-title {
+  font-size: 24px;
   color: $header-color;
   &:hover {
     color: $header-color-hover;

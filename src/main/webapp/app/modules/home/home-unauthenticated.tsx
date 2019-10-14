@@ -37,7 +37,7 @@ export const home = () => (
       </li>
       <li>
         <p>
-          Contact me on{' '}
+          Connect with me on{' '}
           <a href="https://linkedin.com/in/bogdan-mihoci-729561188" target="_blank" rel="noopener noreferrer">
             linkedin.
           </a>{' '}
