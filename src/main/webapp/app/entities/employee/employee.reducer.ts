@@ -179,6 +179,18 @@ export const getEntities: ICrudGetAllActionWithGuard<IEmployee> = (isMounted, pa
   };
 };
 
+export const getAllEntities = isMounted => {
+  const requestUrl = `${apiUrl}/all?cacheBuster=${new Date().getTime()}`;
+  return {
+    type: ACTION_TYPES.FETCH_EMPLOYEE_LIST,
+    payload: axios.get<IEmployee>(requestUrl).then(result => {
+      if (isMounted) {
+        return result;
+      }
+    })
+  };
+};
+
 export const getEntity: ICrudGetActionWithGuard<IEmployee> = (isMounted: boolean, id) => {
   const requestUrl = `${apiUrl}/${id}`;
   return {
@@ -218,7 +230,7 @@ export const createEntity: ICrudPutActionWithGuard<IEmployee> = (isMounted, enti
   return result;
 };
 
-export const getAsyncEntities = (isMounted: boolean) => async dispatch => dispatch(getEntities(isMounted));
+export const getAsyncEntities = (isMounted: boolean) => async dispatch => dispatch(getAllEntities(isMounted));
 
 export const updateEntity: ICrudPutActionWithGuard<IEmployee> = (isMounted, entity) => async dispatch => {
   const result = await dispatch({

@@ -144,7 +144,7 @@ public class EmployeeResource {
     }
 
     /**
-     * {@code GET  /employees} : get all the employees. If the user is admin he can see all employees, otherwise only see employees from your company
+     * {@code GET  /employees} : get all the employees.
      *
      * @param pageable the pagination information.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of employees in body.
@@ -155,6 +155,18 @@ public class EmployeeResource {
         Page<EmployeeDTO> page = employeeService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * {@code GET  /employees} : get all the employees without pagination restriction limit (default 20);
+     *
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of employees in body.
+     */
+    @GetMapping("/employees/all")
+    public ResponseEntity<List<EmployeeDTO>> getAllEmployeesWhitoutPagination() {
+        log.debug("REST request to get a page of Employees");
+        List<EmployeeDTO> list = employeeService.findAllEmployees();
+        return ResponseEntity.ok().body(list);
     }
 
     /**

@@ -7,8 +7,9 @@ import { Row, Col, Alert, Button } from 'reactstrap';
 import PasswordStrengthBar from 'app/shared/layout/password/password-strength-bar';
 import { IRootState } from 'app/shared/reducers';
 import { handleRegister, reset } from './register.reducer';
+import { RouteComponentProps } from 'react-router-dom';
 
-export interface IRegisterProps extends StateProps, DispatchProps {}
+export interface IRegisterProps extends StateProps, DispatchProps, RouteComponentProps<{}> {}
 
 export const RegisterPage = (props: IRegisterProps) => {
   const [password, setPassword] = useState('');
@@ -18,6 +19,7 @@ export const RegisterPage = (props: IRegisterProps) => {
   const handleValidSubmit = (event, values) => {
     props.handleRegister(values.username, values.email, values.firstPassword, props.currentLocale);
     event.preventDefault();
+    props.history.goBack();
   };
 
   const updatePassword = event => setPassword(event.target.value);

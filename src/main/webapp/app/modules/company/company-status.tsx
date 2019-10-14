@@ -65,7 +65,7 @@ export const companyDetail = (props: ICompanyDetailProps) => {
               </div>
             )}
           </td>
-          <td>{employee.firstName && employee.lastName ? `${employee.firstName}` + ` ${employee.lastName}` : ''}</td>
+          <td>{employee.user.firstName && employee.user.lastName ? `${employee.user.firstName}` + ` ${employee.user.lastName}` : ''}</td>
           <td>{employee.login ? employee.login : ''}</td>
           <td>{isManager(employee.user.authorities, [AUTHORITIES.MANAGER])}</td>
           <td>{isManager(employee.user.authorities, [AUTHORITIES.EMPLOYEE])}</td>
@@ -115,7 +115,6 @@ export const companyDetail = (props: ICompanyDetailProps) => {
       </div>
       <br />
       <h4>Company Details</h4>
-      <br />
       <Table>
         <thead>
           <tr>
@@ -152,6 +151,7 @@ export const companyDetail = (props: ICompanyDetailProps) => {
       </Table>
       <br />
       <br />
+      <h4>Company Structure</h4>
       <Table>
         <thead>
           <tr>

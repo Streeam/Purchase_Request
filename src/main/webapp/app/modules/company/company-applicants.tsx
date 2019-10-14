@@ -14,8 +14,8 @@ import { getCurrentUsersCompanyAsync as getCurrentUserEntity, hireEmployee } fro
 
 const companyApplicants = props => {
   let _isMounted = false;
-  const { companyEntity, employeeList, companyLoading, rejectingOrAcceptingRequestLoading } = props;
-  const isLoading = companyLoading;
+  const { companyEntity, employeeList, companyLoading, companyIsUpdating } = props;
+  const isLoading = companyLoading || companyIsUpdating;
 
   useEffect(() => {
     _isMounted = true;
@@ -26,7 +26,7 @@ const companyApplicants = props => {
 
   const handleAccept = (employeeId: Number) => {
     if (employeeId && companyEntity.id) {
-      props.hireEmployee(companyEntity.id, employeeId, _isMounted);
+      props.hireEmployee(companyEntity.id, employeeId, true);
     }
   };
 
@@ -186,7 +186,8 @@ const companyApplicants = props => {
 const mapStateToProps = ({ employee, company }: IRootState) => ({
   companyEntity: company.employeeEntity,
   employeeList: employee.entities,
-  companyLoading: company.loading
+  companyLoading: company.loading,
+  companyIsUpdating: company.updating
 });
 
 const mapDispatchToProps = {

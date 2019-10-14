@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.stream.Collectors;
 
 import java.util.List;
 import java.util.Optional;
@@ -94,6 +95,14 @@ public class EmployeeService {
             .map(employeeMapper::toDto);
     }
 
+    @Transactional(readOnly = true)
+    public List<EmployeeDTO> findAllEmployees() {
+        log.debug("Request to get all Employees");
+        return employeeRepository.findAll().
+            stream().
+            map(employee -> employeeMapper.toDto(employee)).
+            collect(Collectors.toList());
+    }
 
     /**
      * Get one employee by id.

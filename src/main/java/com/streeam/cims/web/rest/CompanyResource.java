@@ -445,8 +445,6 @@ public class CompanyResource {
         }
         // Admin can reject anyone's application
 
-        CompanyDTO companyDTO = companyService.removeEmployeeFromCompany(employeeToFire, userToFire, companyThatEmployeeWasFiredFrom);
-
         mailService.sendFiredEmail(employeeToFire.getEmail(), currentUser);
         companyService.sendNotificationToEmployee(employeeToFire, currentEmployee.getEmail(),companyId, NotificationType.FIRED, "You have been fired from " + companyThatEmployeeWasFiredFrom.getName() + ".");
 
@@ -456,6 +454,8 @@ public class CompanyResource {
             employeeToFire,
             LEFT_COMPANY,
             currentUser.getFirstName() + " " + currentUser.getLastName() + " has been fired from our company!");
+
+        CompanyDTO companyDTO = companyService.removeEmployeeFromCompany(employeeToFire, userToFire, companyThatEmployeeWasFiredFrom);
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))

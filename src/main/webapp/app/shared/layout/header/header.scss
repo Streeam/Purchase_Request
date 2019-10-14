@@ -73,3 +73,27 @@ Navbar styles
   top: 0px;
   z-index: 1031;
 }
+
+.profile-icon {
+  &:hover {
+    text-decoration: none;
+  }
+  .brand-icon {
+    height: 20px;
+    width: auto;
+    display: inline-block;
+    padding-bottom: 20px;
+    img {
+      height: 25px;
+    }
+  }
+}
+
+.buser-title {
+  font-size: 9px;
+  color: $header-color;
+  &:hover {
+    color: $header-color-hover;
+    text-decoration: none;
+  }
+}

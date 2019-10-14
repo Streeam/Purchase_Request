@@ -113,6 +113,21 @@ public class NotificationResource {
     }
 
     /**
+     * {@code GET  /notifications} : get all the notifications.
+     *
+
+     * @param pageable the pagination information.
+
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of notifications in body.
+     */
+    @GetMapping("/notifications/all")
+    public ResponseEntity<List<NotificationDTO>> getAllNotificationsWithoutPagination() {
+        log.debug("REST request to get all Notifications");
+        List<NotificationDTO> list = notificationService.findAllNotifiations();
+        return ResponseEntity.ok().body(list);
+    }
+
+    /**
      * {@code GET  /notifications/current} : get all the employee notifications.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of notifications in body.
      */

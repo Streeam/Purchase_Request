@@ -23,4 +23,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findAllByFormat(NotificationType notificationType);
 
     List<Notification> findAllByCompany(Long companyId);
+
 }

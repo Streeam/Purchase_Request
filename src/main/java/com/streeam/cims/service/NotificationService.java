@@ -81,6 +81,14 @@ public class NotificationService {
         return notificationRepository.findAll(pageable)
             .map(notificationMapper::toDto);
     }
+    @Transactional(readOnly = true)
+    public List<NotificationDTO> findAllNotifiations() {
+        log.debug("Request to get all Notifications");
+        return notificationRepository.findAll().
+            stream().
+            map(notification -> notificationMapper.toDto(notification)).
+            collect(Collectors.toList());
+    }
 
     /**
      * Get all the employee's notifications.

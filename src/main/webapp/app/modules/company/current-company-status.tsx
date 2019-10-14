@@ -97,7 +97,6 @@ export const companyDetail = (props: ICompanyProps) => {
       </div>
       <br />
       <h4>Company Details</h4>
-      <br />
       <Table>
         <thead>
           <tr>
@@ -136,7 +135,6 @@ export const companyDetail = (props: ICompanyProps) => {
       <br />
       <br />
       <h4>Company Structure</h4>
-      <br />
       <CompanyStructure {...props} />
       <br />
       <br />
