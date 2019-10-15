@@ -318,7 +318,7 @@ public class CompanyResource {
         Set<Authority> authorities = approvedUser.getAuthorities();
         authorityRepository.findById(AuthoritiesConstants.EMPLOYEE).ifPresent(authorities::add);
         approvedUser.setAuthorities(authorities);
-        approvedEmployee.setUser(approvedUser);
+        approvedEmployee.setUser(approvedUser); // saved employee with iuser
 
         companyService.sendNotificationToEmployee(approvedEmployee, currentUser.getEmail(),companyId, NotificationType.ACCEPT_REQUEST,
             "Your application to join " + companyWhereEmployeeApplied.getName() + " has been approved!");
@@ -334,11 +334,12 @@ public class CompanyResource {
             NEW_EMPLOYEE,
             currentUser.getFirstName() + " " + currentUser.getLastName() + " has joined our company!");
 
-        CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(approvedEmployee, approvedUser, companyWhereEmployeeApplied);
+        // Must save company with employee
+        // CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(approvedEmployee, approvedUser, companyWhereEmployeeApplied);
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))
-            .body(companyDTO);
+            .body(null);
     }
 
 

@@ -11,6 +11,7 @@ import com.streeam.cims.service.EmployeeService;
 import com.streeam.cims.service.MailService;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.dto.EmployeeDTO;
+import com.streeam.cims.service.mapper.EmployeeMapper;
 import com.streeam.cims.service.util.Validator;
 import com.streeam.cims.web.rest.errors.BadRequestAlertException;
 import io.github.jhipster.web.util.HeaderUtil;
@@ -53,6 +54,9 @@ public class EmployeeResource {
 
     @Autowired
     private AuthorityRepository authorityRepository;
+
+    @Autowired
+    private EmployeeMapper employeeMapper;
 
     private static final String ENTITY_NAME = "employee";
 
@@ -402,8 +406,10 @@ public class EmployeeResource {
 
         Employee manager = employeeService.getCompanyManager(company).orElseThrow(() ->
             new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
+        User userManger = employeeService.findUserByEmail(manager.getEmail()).orElseThrow(() ->
+            new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
 
-        mailService.sendRequestToJoinEmail(manager.getEmail(), currentUser);
+        mailService.sendRequestToJoinEmail(currentUser.getEmail(), userManger);
 
         employeeService.sendNotificationToEmployee(currentEmployee, manager.getEmail(), companyId, REQUEST_TO_JOIN, "You have just submitted an request to join the company " + company.getName());
         employeeService.sendNotificationToEmployee(manager, currentEmployee.getEmail(), companyId, REQUEST_TO_JOIN, "A user submitted a request to join your company " + company.getName());
@@ -491,7 +497,7 @@ public class EmployeeResource {
         authorityRepository.findById(EMPLOYEE).ifPresent(authorities::add);
         currentUser.setAuthorities(authorities);
 
-        CompanyDTO companyDTO = employeeService.saveUserEmployeeAndCompany(currentEmployee, currentUser, companyWhereEmployeeHasJoined);
+
 
         Employee manager = employeeService.getCompanyManager(companyWhereEmployeeHasJoined).orElseThrow(() ->
             new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
@@ -509,6 +515,8 @@ public class EmployeeResource {
             currentEmployee,
             NEW_EMPLOYEE,
             currentUser.getFirstName() + " " + currentUser.getLastName() + " has joined our company!");
+
+        CompanyDTO companyDTO = employeeService.saveUserEmployeeAndCompany(currentEmployee, currentUser, companyWhereEmployeeHasJoined);
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))

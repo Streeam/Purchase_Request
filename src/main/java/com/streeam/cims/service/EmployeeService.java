@@ -76,8 +76,8 @@ public class EmployeeService {
 
         Employee employee = employeeMapper.toEntity(employeeDTO);
         employee.setUser(linkedUser);
-        employee = employeeRepository.save(employee);
-        EmployeeDTO result = employeeMapper.toDto(employee);
+        Employee updatedEmployee = employeeRepository.save(employee);
+        EmployeeDTO result = employeeMapper.toDto(updatedEmployee);
         employeeSearchRepository.save(employee);
         return result;
     }

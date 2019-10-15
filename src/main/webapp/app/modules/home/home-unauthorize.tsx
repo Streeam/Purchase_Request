@@ -34,7 +34,7 @@ export const homePage = props =>
       <br />
       <br />
     </div>
-  ) : (
+  ) : props.isUserOnly ? (
     <div>
       <br />
       <p>When you first log in, you are assigned the default user role. As a user you have two options:</p>
@@ -51,6 +51,22 @@ export const homePage = props =>
           <p className="font-weight-bold">
             <Link to="/entity/company/new" className="alert-link">
               <span> Create A Company</span>
+            </Link>
+          </p>
+        </li>
+      </ul>
+      <br />
+      <br />
+    </div>
+  ) : (
+    <div>
+      <br />
+      <p>As an employee you have only one option:</p>
+      <ul>
+        <li>
+          <p className="font-weight-bold">
+            <Link to="/company/company-status" className="alert-link">
+              <span>My Company</span>
             </Link>
           </p>
         </li>
