@@ -12,7 +12,7 @@ import Home from 'app/modules/home/home-unauthorize';
 import Entities from 'app/entities';
 import Company from 'app/modules/company';
 import PrivateRoute from 'app/shared/auth/private-route';
-import HomeRoute from 'app/shared/auth/user-route';
+import HomeRoute from 'app/shared/auth/private-home-route';
 import ErrorBoundaryRoute from 'app/shared/error/error-boundary-route';
 import PageNotFound from 'app/shared/error/page-not-found';
 import { AUTHORITIES } from 'app/config/constants';
@@ -42,7 +42,7 @@ const Routes = () => (
       <ErrorBoundaryRoute path="/about" component={About} />
       <PrivateRoute path="/admin" component={Admin} hasAnyAuthorities={[AUTHORITIES.ADMIN]} />
       <PrivateRoute path="/account" component={Account} hasAnyAuthorities={[AUTHORITIES.ADMIN, AUTHORITIES.USER]} />
-      <PrivateRoute path="/entity" component={Entities} hasAnyAuthorities={[AUTHORITIES.ADMIN]} />
+      <PrivateRoute path="/entity" component={Entities} hasAnyAuthorities={[AUTHORITIES.USER]} />
       <HomeRoute path="/company" component={Company} />
       <HomeRoute path="/" component={Home} />
       <ErrorBoundaryRoute component={PageNotFound} />

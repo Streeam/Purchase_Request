@@ -19,7 +19,7 @@ export interface IHeaderProps {
   isSwaggerEnabled: boolean;
   currentLocale: string;
   onLocaleChange: Function;
-  account: {};
+  account: any;
 }
 
 const Header = (props: IHeaderProps) => {

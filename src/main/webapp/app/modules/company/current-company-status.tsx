@@ -12,6 +12,7 @@ import { getSession } from '../../shared/reducers/authentication';
 import { getCurrentEmployeeAsync } from '../../entities/employee/employee.reducer';
 import CompanyStructure from './company-employee';
 import LoadingModal from '../../shared/layout/custom-components/loading-modal/loading-modal';
+import PopoverInfo from '../../shared/layout/custom-components/popover-info/popover-info';
 
 export interface ICompanyProps extends StateProps, DispatchProps {}
 
@@ -138,9 +139,7 @@ export const companyDetail = (props: ICompanyProps) => {
       <CompanyStructure {...props} />
       <br />
       <br />
-      <div style={{ textAlign: 'right' }}>
-        <img src={`content/images/Info-icon.png`} style={{ maxHeight: '20px' }} />
-      </div>
+      <PopoverInfo />
     </div>
   );
 };

@@ -24,7 +24,8 @@ describe('Header', () => {
     onLocaleChange: localeSpy,
     ribbonEnv: 'dev',
     isInProduction: false,
-    isSwaggerEnabled: true
+    isSwaggerEnabled: true,
+    account: {}
   };
   const prodProps = {
     ...devProps,
@@ -39,7 +40,8 @@ describe('Header', () => {
   const guestProps = {
     ...prodProps,
     isAdmin: false,
-    isAuthenticated: false
+    isAuthenticated: false,
+    account: {}
   };
 
   const wrapper = (props = devProps) => {

@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Spinner } from 'reactstrap';
 import { connect } from 'react-redux';
 import { Route, RouteProps } from 'react-router-dom';
 
@@ -25,10 +24,10 @@ export const UserPrivateRoute = ({
   );
 
   const renderRedirect = props => {
-    if (!sessionHasBeenFetched) {
-      return <Spinner />;
+    if (!sessionHasBeenFetched || !isAuthenticated) {
+      return <HomeUnauthenticated />;
     } else {
-      return isAuthenticated ? checkAuthorities(props) : <HomeUnauthenticated />;
+      return checkAuthorities(props);
     }
   };
 
