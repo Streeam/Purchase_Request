@@ -44,7 +44,7 @@ export class EmployeeDetail extends React.Component<IEmployeeDetailProps> {
           ) : (
             <div>
               <img
-                src={`content/images/company-logo.png`}
+                src={`content/images/default_profile_icon.png`}
                 style={{
                   maxHeight: '100px',
                   borderRadius: '50%'

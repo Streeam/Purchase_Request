@@ -157,7 +157,7 @@ public class NotificationService {
         Set<Notification> notifications = authorEmployee.getNotifications();
         notifications.add(notificationMapper.toEntity(notificationDTO));
         authorEmployee.setNotifications(notifications);
-        employeeRepository.save(authorEmployee); // This works for request to join
+        // employeeRepository.save(authorEmployee); // This works for request to join
         return notificationDTO;}
 
 

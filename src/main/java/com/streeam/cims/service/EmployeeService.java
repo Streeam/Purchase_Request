@@ -67,7 +67,7 @@ public class EmployeeService {
      * @return the persisted entity.
      */
     public EmployeeDTO save(User linkedUser, EmployeeDTO employeeDTO) {
-        log.debug("Request to save Employee : {}", employeeDTO);
+        log.debug("Request to save Employee : {}", employeeDTO.getLogin());
 
         linkedUser.setLogin(employeeDTO.getLogin());
         linkedUser.setFirstName(employeeDTO.getFirstName());

@@ -414,6 +414,7 @@ public class EmployeeResource {
         employeeService.sendNotificationToEmployee(currentEmployee, manager.getEmail(), companyId, REQUEST_TO_JOIN, "You have just submitted an request to join the company " + company.getName());
         employeeService.sendNotificationToEmployee(manager, currentEmployee.getEmail(), companyId, REQUEST_TO_JOIN, "A user submitted a request to join your company " + company.getName());
 
+        employeeService.save(currentUser, employeeMapper.toDto(currentEmployee));
         return ResponseEntity.ok().build();
     }
 

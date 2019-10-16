@@ -96,7 +96,6 @@ public class CompanyService {
      * @return the persisted entity.
      */
     public CompanyDTO save(CompanyDTO companyDTO) {
-        log.debug("Request to save Company : {}", companyDTO);
         Company company = companyMapper.toEntity(companyDTO);
         company = companyRepository.save(company);
         CompanyDTO result = companyMapper.toDto(company);
@@ -320,22 +319,21 @@ public class CompanyService {
         authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
         user.setAuthorities(authorities);
 
-        userService.save(user);
+        // userService.save(user);
         employee.setHired(false);
         employee.setUser(user);
         Set remainingEmployees = company.getEmployees();
         remainingEmployees.remove(employee);
         company.setEmployees(remainingEmployees);
 
-        CompanyDTO updatedCompany = save(companyMapper.toDto(company));
-
         employee.setCompany(null);
-        Employee updatedEmployee = employeeRepository.save(employee);
-        employeeSearchRepository.save(updatedEmployee);
-        log.debug("Request to save Company with employee: {}", updatedEmployee);
 
-        companySearchRepository.save(company);
-        log.debug("Request to save Company : {}", updatedCompany);
+        employeeSearchRepository.save(employee);
+        log.debug("Request to save Company with employee");
+        CompanyDTO updatedCompany = save(companyMapper.toDto(company));
+        Employee updatedEmployee = employeeRepository.save(employee);
+
+        log.debug("Request to save Company");
         return updatedCompany;
     }
 
