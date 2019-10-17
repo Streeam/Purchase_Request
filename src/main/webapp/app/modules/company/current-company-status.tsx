@@ -14,16 +14,12 @@ import CompanyStructure from './company-employee';
 import LoadingModal from '../../shared/layout/custom-components/loading-modal/loading-modal';
 import PopoverInfo from '../../shared/layout/custom-components/popover-info/popover-info';
 
-export interface ICompanyProps extends StateProps, DispatchProps {}
-
-export const companyDetail = (props: ICompanyProps) => {
-  let _isMounted = false;
+export const companyDetail = (props: StateProps) => {
   const lableStyle = { color: 'black' };
   const {
     companyEntity,
     isCurrentUserManager,
     companiesAreLoading,
-    notificationsAreLoading,
     currentEmployeeIsLoading,
     acceptOrDeclineRequestUpdating,
     userAccountIsLoading,
@@ -31,19 +27,7 @@ export const companyDetail = (props: ICompanyProps) => {
   } = props;
 
   const isLoading =
-    companiesAreLoading ||
-    notificationsAreLoading ||
-    currentEmployeeIsLoading ||
-    acceptOrDeclineRequestUpdating ||
-    userAccountIsLoading ||
-    companyIsUpdating;
-
-  useEffect(() => {
-    _isMounted = true;
-    props.getCurrentCompany(_isMounted);
-    props.getCurrentEmployeeAsync(_isMounted);
-    return () => (_isMounted = false);
-  }, [props.getCurrentCompany, props.getCurrentEmployeeAsync, _isMounted]);
+    companiesAreLoading || currentEmployeeIsLoading || acceptOrDeclineRequestUpdating || userAccountIsLoading || companyIsUpdating;
 
   return isLoading ? (
     <LoadingModal />
@@ -156,12 +140,9 @@ const mapStateToProps = ({ company, employee, authentication, notification }: IR
   companyIsUpdating: company.updating
 });
 
-const mapDispatchToProps = { getCurrentCompany, getSession, getCurrentEmployeeAsync };
-
 type StateProps = ReturnType<typeof mapStateToProps>;
-type DispatchProps = typeof mapDispatchToProps;
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  null
 )(React.memo(companyDetail));

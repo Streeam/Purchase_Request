@@ -296,8 +296,6 @@ public class CompanyResource {
         Company companyWhereEmployeeApplied = companyService.findCompanyById(companyId).orElseThrow(() ->
             new BadRequestAlertException("No company with this id found.", ENTITY_NAME, "nocompwithid"));
 
-
-
 // Manager can only approve employees applying to his company
         if (companyService.checkUserHasRoles(currentUser, AuthoritiesConstants.MANAGER)) {
             Company currentCompany = companyService.findUsersCompany(currentEmployee).orElseThrow(() ->
@@ -318,7 +316,7 @@ public class CompanyResource {
         Set<Authority> authorities = approvedUser.getAuthorities();
         authorityRepository.findById(AuthoritiesConstants.EMPLOYEE).ifPresent(authorities::add);
         approvedUser.setAuthorities(authorities);
-        approvedEmployee.setUser(approvedUser); // saved employee with iuser
+        approvedEmployee.setUser(approvedUser); // saved employee with user
 
         companyService.sendNotificationToEmployee(approvedEmployee, currentUser.getEmail(),companyId, NotificationType.ACCEPT_REQUEST,
             "Your application to join " + companyWhereEmployeeApplied.getName() + " has been approved!");
@@ -378,16 +376,9 @@ public class CompanyResource {
                 throw new BadRequestAlertException("The manager cannot reject a application by a employee who is applying to a different company then his.", ENTITY_NAME, "cannotrejectemployeeifheapplyestoadiffcompany");
             }
 
-            boolean afterTwoWeeksAgo = companyService.didUserRequestedTojoinLessThen14Days(currentEmployee, REQUEST_TO_JOIN, companyId, 14);
-
-            if(!afterTwoWeeksAgo){
-                throw new BadRequestAlertException("A manager cannot hire a user if no request to join has been sent to him or one was sent but before 14 days ago.", ENTITY_NAME, "hasrequestlessthen14days");
-            }
-
             mailService.sendRejectionEmail(rejectedEmployee.getEmail(), currentUser);
             companyService.sendNotificationToEmployee(rejectedEmployee, currentUser.getEmail(), companyId, NotificationType.REJECT_REQUEST,
                 "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
-
         }
 // Admin can reject anyone's application
         else {

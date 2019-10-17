@@ -269,7 +269,7 @@ export const joinCompany = (isMounted: boolean, companyId: string) => async disp
       }
     })
   });
-  await dispatch(getCurrentNotifications(isMounted));
+  await dispatch(getCurrentEmployeeEntity(isMounted));
   return result;
 };
 

@@ -91,7 +91,6 @@ public class CompanyService {
 
     /**
      * Save a company.
-     *
      * @param companyDTO the entity to save.
      * @return the persisted entity.
      */
@@ -103,10 +102,8 @@ public class CompanyService {
         return result;
     }
 
-
     /**
-     * Save a company.
-     *
+     * Save a company
      * @param company the entity to save.
      * @param employee
      * @return the persisted entity.

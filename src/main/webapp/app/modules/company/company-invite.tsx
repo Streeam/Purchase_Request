@@ -1,116 +1,21 @@
-import React, { useEffect, Fragment } from 'react';
+import React, { Fragment } from 'react';
 import { connect } from 'react-redux';
 import { Button, Table, ButtonGroup } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Translate } from 'react-jhipster';
-import moment from 'moment';
 import { Link } from 'react-router-dom';
 
-import { NOTIFICATIONS, AUTHORITIES } from '../../config/constants';
 import { IRootState } from 'app/shared/reducers';
-import { inviteEmployee, getCurrentEmployeeAsync, getAsyncEntities as getEmployees } from '../../entities/employee/employee.reducer';
-import { employeeListWithout } from '../../shared/util/entity-utils';
-import { getAsyncEntities as getNotifications } from '../../entities/notification/notification.reducer';
+import { inviteEmployee } from '../../entities/employee/employee.reducer';
+import { employeesToHire } from '../../shared/util/entity-utils';
 import LoadingModal from '../../shared/layout/custom-components/loading-modal/loading-modal';
 
 const companyInvite = props => {
-  let _isMounted = false;
-  const { currentEmployee, employeeList, notificationList, employeesLoading, notificationsLoading } = props;
+  const { currentEmployee, employeeList, employeesLoading, notificationsLoading } = props;
   const isLoading = employeesLoading || notificationsLoading;
 
-  useEffect(() => {
-    _isMounted = true;
-    props.getNotifications();
-    props.getCurrentEmployeeAsync(_isMounted);
-    props.getEmployees(_isMounted);
-    return () => (_isMounted = false);
-  }, [props.getNotifications, props.getCurrentEmployeeAsync, props.getEmployees, _isMounted]);
-
-  const employeesWithoutAuth = employeeListWithout(employeeList, [AUTHORITIES.ADMIN, AUTHORITIES.EMPLOYEE, AUTHORITIES.MANAGER]);
-
-  const invitees = employeesWithoutAuth
-    ? employeesWithoutAuth.filter(employee => {
-        const employeeNotifications = notificationList.filter(notification => notification.employeeId === employee.id);
-
-        if (employeeNotifications && employeeNotifications.length === 0) {
-          return true;
-        }
-        // ****** FIRE NOTIFICATIONS */
-        const fired = employeeNotifications.filter((notification, i) => notification.format === NOTIFICATIONS.FIRED);
-        if (fired.length > 0) {
-          let notificationDate: Date = moment(fired[0].sentDate).toDate();
-
-          const validFired = fired.filter(firedNotif => {
-            const nextDate: Date = moment(firedNotif.sentDate).toDate();
-            if (nextDate > notificationDate) {
-              notificationDate = moment(firedNotif.sentDate).toDate();
-            }
-            const now = Math.ceil(new Date().getTime() / (1000 * 60 * 60));
-            const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
-
-            // if latest rejected request is older then 720 hours (30 days) return true, false otherwise
-            return now - notificationDateTime > 720 ? true : false;
-          });
-          return validFired.length > 0 ? true : false;
-        }
-        // ****** REJECT NOTIFICATIONS */
-        const rejected = employeeNotifications.filter((notification, i) => notification.format === NOTIFICATIONS.REJECT_REQUEST);
-        if (rejected.length > 0) {
-          let notificationDate: Date = moment(rejected[0].sentDate).toDate();
-
-          const validRejected = rejected.filter(rejectedNotif => {
-            const nextDate: Date = moment(rejectedNotif.sentDate).toDate();
-            if (nextDate > notificationDate) {
-              notificationDate = moment(rejectedNotif.sentDate).toDate();
-            }
-            const now = Math.ceil(new Date().getTime() / (1000 * 60 * 60));
-            const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
-
-            // if latest rejected request is older then 72 hours (3 days) return true, false otherwise
-            return now - notificationDateTime > 72 ? true : false;
-          });
-          return validRejected.length > 0 ? true : false;
-        }
-
-        // ****** REQUEST NOTIFICATIONS */
-        const request = employeeNotifications.filter((notification, i) => notification.format === NOTIFICATIONS.REQUEST_TO_JOIN);
-        if (request.length > 0) {
-          let notificationDate: Date = moment(request[0].sentDate).toDate();
-
-          const validRejected = request.filter(requestedNotif => {
-            const nextDate: Date = moment(requestedNotif.sentDate).toDate();
-            if (nextDate > notificationDate) {
-              notificationDate = moment(requestedNotif.sentDate).toDate();
-            }
-            const now = Math.ceil(new Date().getTime() / (1000 * 60 * 60));
-            const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
-
-            // if latest request request is older then 72 hours (3 days) return false, true otherwise
-            return now - notificationDateTime > 72 ? true : false;
-          });
-          return validRejected.length > 0 ? true : false;
-        }
-        // ****** INVITE NOTIFICATIONS */
-        const inviteNotifications = employeeNotifications.filter((notification, i) => notification.format === NOTIFICATIONS.INVITATION);
-        if (inviteNotifications.length > 0) {
-          let notificationDate: Date = moment(inviteNotifications[0].sentDate).toDate();
-
-          const validInvite = inviteNotifications.filter(inviteNotif => {
-            const nextDate: Date = moment(inviteNotif.sentDate).toDate();
-            if (nextDate > notificationDate) {
-              notificationDate = moment(inviteNotif.sentDate).toDate();
-            }
-            const now = Math.ceil(new Date().getTime() / (1000 * 60 * 60));
-            const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
-
-            // if latest request request is older then 72 hours (3 days) return false, true otherwise
-            return now - notificationDateTime > 72 ? true : false;
-          });
-          return validInvite.length > 0 ? true : false;
-        }
-        return false;
-      })
-    : null;
+  // A list with only the available users to hire
+  const invitees = employeesToHire(employeeList);
 
   const tabContent = invitees ? (
     invitees.map((employee, i) => (
@@ -197,19 +102,14 @@ const companyInvite = props => {
   );
 };
 
-const mapStateToProps = ({ employee, notification }: IRootState) => ({
+const mapStateToProps = ({ employee }: IRootState) => ({
   employeeList: employee.entities,
   currentEmployee: employee.currentEmployeeEntity,
-  notificationList: notification.entities,
-  employeesLoading: employee.loading && employee.updating,
-  notificationsLoading: notification.loading
+  employeesLoading: employee.loading && employee.updating
 });
 
 const mapDispatchToProps = {
-  inviteEmployee,
-  getNotifications,
-  getCurrentEmployeeAsync,
-  getEmployees
+  inviteEmployee
 };
 
 export default connect(

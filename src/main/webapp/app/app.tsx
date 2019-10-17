@@ -28,6 +28,13 @@ const baseHref = document
 export interface IAppProps extends StateProps, DispatchProps {}
 
 export const App = (props: IAppProps) => {
+  /**
+   * 1. API to get all the companies without pagination
+   * 2. Request to join DONE
+   * 3. Reject request
+   * 4. Accept request
+   */
+
   useEffect(() => {
     props.getSession();
     props.getProfile();

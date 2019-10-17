@@ -4,7 +4,8 @@ import { Storage } from 'react-jhipster';
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 import { setLocale } from 'app/shared/reducers/locale';
 import { AUTHORITIES } from 'app/config/constants';
-import { FlattenStage } from 'ag-grid-community';
+import { getCurrentEmployeeEntity as getCurrentEmployee, getAllEntities as getEmployees } from '../../entities/employee/employee.reducer';
+import { getEntities as getAllCompanies, getCurrentUserEntity as getCurrentCompany } from '../../entities/company/company.reducer';
 
 export const ACTION_TYPES = {
   LOGIN: 'authentication/LOGIN',
@@ -121,6 +122,18 @@ export const getSession = () => async (dispatch, getState) => {
   if (account && account.langKey) {
     const langKey = Storage.session.get('locale', account.langKey);
     await dispatch(setLocale(langKey));
+  }
+
+  await dispatch(getCurrentEmployee(true));
+  const { currentEmployeeEntity } = getState().employee;
+
+  // if only user execute bellow
+  dispatch(getAllCompanies(true));
+
+  if (currentEmployeeEntity.companyId && currentEmployeeEntity.hired) {
+    dispatch(getCurrentCompany(true));
+    // if manager execute bellow
+    dispatch(getEmployees(true));
   }
 };
 

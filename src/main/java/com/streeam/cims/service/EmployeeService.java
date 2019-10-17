@@ -82,6 +82,14 @@ public class EmployeeService {
         return result;
     }
 
+    public EmployeeDTO saveEmployee(Employee employee) {
+        log.debug("Request to save Employee : {}", employee.getLogin());
+        Employee updatedEmployee = employeeRepository.save(employee);
+        EmployeeDTO result = employeeMapper.toDto(updatedEmployee);
+        employeeSearchRepository.save(employee);
+        return result;
+    }
+
     /**
      * Get all the employees.
      *

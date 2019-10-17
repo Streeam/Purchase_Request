@@ -12,7 +12,6 @@ import { getSearchEntities, getEntities as getCompanies } from '../../entities/c
 // tslint:disable-next-line:no-unused-variable
 import LoadingModal from '../../shared/layout/custom-components/loading-modal/loading-modal';
 import '../../../content/css/grid.css';
-import { getAsyncCurentEntities as getNotifications } from '../../entities/notification/notification.reducer';
 import CustomButton from '../../shared/layout/custom-components/custom-status-button';
 import { getCurrentEmployeeAsync } from '../../entities/employee/employee.reducer';
 
@@ -27,25 +26,20 @@ export const joinCompany = props => {
   const {
     companyList,
     match,
-    notifications,
     currentEmployee,
     companiesAreLoading,
-    notificationsAreLoading,
     employeesAreLoading,
     acceptOrRejectEmployeeIsLoading,
     userIsLoading
   } = props;
-  const isLoading =
-    companiesAreLoading || notificationsAreLoading || employeesAreLoading || userIsLoading || acceptOrRejectEmployeeIsLoading;
+  const isLoading = companiesAreLoading || employeesAreLoading || userIsLoading || acceptOrRejectEmployeeIsLoading;
 
   useEffect(() => {
     _isMounted = true;
-    props.getCompanies(_isMounted);
-    props.getNotifications(_isMounted);
-    props.getCurrentEmployeeAsync(_isMounted);
+    // props.getCompanies(_isMounted);
+    // props.getCurrentEmployeeAsync(_isMounted);
     return () => (_isMounted = false);
   }, []);
-
   return isLoading ? (
     <LoadingModal />
   ) : (
@@ -119,7 +113,7 @@ export const joinCompany = props => {
                         url={props.match.url}
                         currentEmployee={currentEmployee}
                         companyIndex={company.id}
-                        notifications={...notifications}
+                        notifications={...currentEmployee.notifications}
                       />
                     </div>
                   </td>
@@ -139,7 +133,6 @@ export const joinCompany = props => {
 
 const mapStateToProps = ({ company, notification, employee, authentication }: IRootState) => ({
   companyList: company.entities,
-  notifications: notification.currentEntities,
   currentEmployee: employee.currentEmployeeEntity,
   companiesAreLoading: company.loading,
   notificationsAreLoading: notification.loading,
@@ -151,7 +144,6 @@ const mapStateToProps = ({ company, notification, employee, authentication }: IR
 const mapDispatchToProps = {
   getSearchEntities,
   getCompanies,
-  getNotifications,
   getCurrentEmployeeAsync
 };
 
@@ -161,10 +153,4 @@ type DispatchProps = typeof mapDispatchToProps;
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(
-  React.memo(
-    joinCompany,
-    (prevProps, nextProps) =>
-      prevProps.companyList.length !== nextProps.companyList.length && prevProps.notifications.length !== nextProps.notifications.length
-  )
-);
+)(React.memo(joinCompany));
