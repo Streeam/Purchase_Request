@@ -40,10 +40,24 @@ const companyEmployeeTab = props => {
         </Button>
         <Button
           tag={Link}
+          to={`/entity/employee/${employee.id}/edit-roles`}
+          color="primary"
+          size="sm"
+          // disabled={isManager(employee.user.authorities)}
+          title="Edit Employee Roles"
+        >
+          <FontAwesomeIcon icon="pencil-alt" />{' '}
+          <span className="d-none d-md-inline">
+            <Translate contentKey="entity.action.edit">Edit</Translate>
+          </span>
+        </Button>
+        <Button
+          tag={Link}
           to={`/company/company-status/${companyEntity.id}/fire/${employee.id}`}
           color="danger"
           size="sm"
           disabled={isManager(employee.user.authorities)}
+          title="Fire Employee"
         >
           <FontAwesomeIcon icon="ban" />{' '}
           <span className="d-none d-md-inline">

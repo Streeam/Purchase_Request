@@ -295,7 +295,7 @@ public class CompanyService {
         return companyRepository.findOneById(companyId);
     }
 
-    public NotificationDTO   sendNotificationToEmployee(Employee authorEmployee, String referencedUserEmail,Long companyId, NotificationType notificationType, String comment) {
+    public Employee   sendNotificationToEmployee(Employee authorEmployee, String referencedUserEmail,Long companyId, NotificationType notificationType, String comment) {
 
        return notificationService.saveWithEmployee(authorEmployee,referencedUserEmail,companyId, notificationType, comment);
 
