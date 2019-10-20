@@ -393,3 +393,9 @@ tr:hover td div.table-button { display:inline-block;} */
   border-radius: 0;
   outline: 0;
 }
+select.form-control[multiple] {
+  height: 400px;
+}
+option {
+  cursor: pointer;
+}

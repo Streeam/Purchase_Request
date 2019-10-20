@@ -165,7 +165,7 @@ export const companyDetail = (props: ICompanyDetailProps) => {
         <tbody>{tableContent}</tbody>
       </Table>
       <br />
-      <Button className="Button" tag={Link} to="/company/join-company" replace size="sm">
+      <Button outline className="Button" tag={Link} to="/company/join-company" replace size="sm">
         <FontAwesomeIcon icon="arrow-left" />{' '}
         <span className="d-none d-md-inline">
           <Translate contentKey="entity.action.back">Back</Translate>

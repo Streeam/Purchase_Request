@@ -29,45 +29,50 @@ const companyEmployeeTab = props => {
     );
   };
 
-  const fireAndViewButtons = (employee: IEmployee): JSX.Element => {
-    return isCurrentUserManager ? (
-      <div className="btn-group flex-btn-group-container">
-        <Button tag={Link} to={`/entity/employee/${employee.id}`} color="info" size="sm">
+  const buttonGroup = (employee: IEmployee): JSX.Element => {
+    if (isCurrentUserManager) {
+      return (
+        <div className="btn-group flex-btn-group-container">
+          <Button
+            tag={Link}
+            to={`/entity/employee/${employee.id}`}
+            color="primary"
+            size="sm"
+            outline
+            // disabled={isManager(employee.user.authorities)}
+            title="Edit Employee Roles"
+          >
+            <FontAwesomeIcon icon="pencil-alt" />{' '}
+            <span className="d-none d-md-inline">
+              <Translate contentKey="entity.action.edit">Edit</Translate>
+            </span>
+          </Button>
+          <Button
+            tag={Link}
+            to={`/company/company-status/${companyEntity.id}/fire/${employee.id}`}
+            color="danger"
+            size="sm"
+            outline
+            disabled={isManager(employee.user.authorities)}
+            title="Fire Employee"
+          >
+            <FontAwesomeIcon icon="ban" />{' '}
+            <span className="d-none d-md-inline">
+              <Translate contentKey="entity.action.fire">Fire</Translate>
+            </span>
+          </Button>
+        </div>
+      );
+    } else {
+      return (
+        <Button outline tag={Link} to={`/entity/employee/${employee.id}`} color="info" size="sm" title="View Employee Details">
           <FontAwesomeIcon icon="eye" />{' '}
           <span className="d-none d-md-inline">
             <Translate contentKey="entity.action.view">View</Translate>
           </span>
         </Button>
-        <Button
-          tag={Link}
-          to={`/entity/employee/${employee.id}/edit-roles`}
-          color="primary"
-          size="sm"
-          // disabled={isManager(employee.user.authorities)}
-          title="Edit Employee Roles"
-        >
-          <FontAwesomeIcon icon="pencil-alt" />{' '}
-          <span className="d-none d-md-inline">
-            <Translate contentKey="entity.action.edit">Edit</Translate>
-          </span>
-        </Button>
-        <Button
-          tag={Link}
-          to={`/company/company-status/${companyEntity.id}/fire/${employee.id}`}
-          color="danger"
-          size="sm"
-          disabled={isManager(employee.user.authorities)}
-          title="Fire Employee"
-        >
-          <FontAwesomeIcon icon="ban" />{' '}
-          <span className="d-none d-md-inline">
-            <Translate contentKey="entity.action.fire">Fire</Translate>
-          </span>
-        </Button>
-      </div>
-    ) : (
-      <div />
-    );
+      );
+    }
   };
 
   const tabContent = companyEntity.employees
@@ -100,7 +105,7 @@ const companyEmployeeTab = props => {
           <td>{employee.login ? employee.login : ''}</td>
           <td>{isManagerCheck(isManager(employee.user.authorities))}</td>
           <td>{isManagerCheck(!isManager(employee.user.authorities))}</td>
-          <td className="text-right">{fireAndViewButtons(employee)}</td>
+          <td className="text-right">{buttonGroup(employee)}</td>
         </tr>
       ))
     : null;

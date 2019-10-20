@@ -5,8 +5,7 @@ import { cleanEntity } from 'app/shared/util/entity-utils';
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 
 import { IEmployee, defaultValue } from 'app/shared/model/employee.model';
-import { getSession } from '../../shared/reducers/authentication';
-import { getCompanysNotifiactions, getCurrentEntities as getCurrentNotifications } from '../notification/notification.reducer';
+import { getEntities as getCompanies } from '../company/company.reducer';
 
 export declare type ICrudGetAllActionWithGuard<T> = (
   isMounted: boolean,
@@ -283,7 +282,8 @@ export const acceptCompanyInvitation = (isMounted: boolean, companyId: String) =
       }
     })
   });
-  await dispatch(getSession());
+  await dispatch(getCurrentEmployeeEntity(isMounted));
+  dispatch(getCompanies(true));
   return result;
 };
 
@@ -297,7 +297,7 @@ export const rejectCompanyInvitation = (isMounted: boolean, companyId: String) =
       }
     })
   });
-  await dispatch(getCurrentNotifications(isMounted));
+  await dispatch(getCurrentEmployeeEntity(isMounted));
   return result;
 };
 
@@ -311,7 +311,7 @@ export const inviteEmployee = (isMounted: boolean, employeeEmail: string, compan
       }
     })
   });
-  await dispatch(getCompanysNotifiactions(isMounted, companyId));
+  await dispatch(getAllEntities(isMounted));
   return result;
 };
 

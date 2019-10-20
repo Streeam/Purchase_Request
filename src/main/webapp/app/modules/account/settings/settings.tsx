@@ -42,7 +42,6 @@ export const SettingsPage = (props: IUserSettingsProps) => {
     props.saveAccountSettings(account);
     event.persist();
   };
-  // console.log(updatingEmployee);
 
   return isLoading ? (
     <LoadingModal />

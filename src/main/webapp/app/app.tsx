@@ -18,7 +18,9 @@ import { hasAnyAuthority } from 'app/shared/auth/private-route';
 import ErrorBoundary from 'app/shared/error/error-boundary';
 import { AUTHORITIES } from 'app/config/constants';
 import AppRoutes from 'app/routes';
-import { hasOnlyUserRole } from 'app/shared/auth/private-home-route';
+
+import { enableRipple } from '@syncfusion/ej2-base';
+enableRipple(true);
 
 const baseHref = document
   .querySelector('base')
@@ -30,9 +32,18 @@ export interface IAppProps extends StateProps, DispatchProps {}
 export const App = (props: IAppProps) => {
   /**
    * 1. API to get all the companies without pagination
-   * 2. Request to join DONE
-   * 3. Reject request
-   * 4. Accept request
+   * 2. Request to Join DONE
+   * 3. Reject Request DONE
+   * 4. Accept Request DONE
+   * 5. Fire Employee DONE
+   * 6. Invite Employee DONE
+   * 7. Accept Invitation DONE
+   * 8. Reject Invitation DONE
+   * 9. Get Session DONE
+   * 10. Change last name to job title
+   * 11. Change the employee's roles
+   * 12. Finish the endpoints
+   * 13. Update user details TODO
    */
 
   useEffect(() => {

@@ -208,6 +208,7 @@ export const hireEmployee = (companyId: Number, employeeId: Number, isMounted: b
     })
   });
   await dispatch(getEmployees(isMounted));
+  await dispatch(getCurrentUserEntity(isMounted));
   return result;
 };
 

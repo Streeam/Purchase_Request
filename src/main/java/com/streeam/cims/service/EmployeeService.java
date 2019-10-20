@@ -63,19 +63,18 @@ public class EmployeeService {
     /**
      * Save a employee.
      *
-     * @param employeeDTO the entity to save.
+     * @param employee the entity to save.
      * @return the persisted entity.
      */
-    public EmployeeDTO save(User linkedUser, EmployeeDTO employeeDTO) {
-        log.debug("Request to save Employee : {}", employeeDTO.getLogin());
+    public EmployeeDTO saveWithUser(User linkedUser, Employee employee) {
+        log.debug("Request to save Employee : {}", employee.getLogin());
 
-        linkedUser.setLogin(employeeDTO.getLogin());
-        linkedUser.setFirstName(employeeDTO.getFirstName());
-        linkedUser.setLastName(employeeDTO.getLastName());
-        linkedUser.setLangKey(employeeDTO.getLanguage());
-
-        Employee employee = employeeMapper.toEntity(employeeDTO);
+        linkedUser.setLogin(employee.getLogin());
+        linkedUser.setFirstName(employee.getFirstName());
+        linkedUser.setLastName(employee.getLastName());
+        linkedUser.setLangKey(employee.getLanguage());
         employee.setUser(linkedUser);
+
         Employee updatedEmployee = employeeRepository.save(employee);
         EmployeeDTO result = employeeMapper.toDto(updatedEmployee);
         employeeSearchRepository.save(employee);
@@ -86,7 +85,6 @@ public class EmployeeService {
         log.debug("Request to save Employee : {}", employee.getLogin());
         Employee updatedEmployee = employeeRepository.save(employee);
         EmployeeDTO result = employeeMapper.toDto(updatedEmployee);
-        employeeSearchRepository.save(employee);
         return result;
     }
 
@@ -207,7 +205,6 @@ public class EmployeeService {
     public EmployeeDTO saveWithCompany(Employee employee, Company company) {
         employee.setCompany(company);
         Employee updatedEmployee = employeeRepository.save(employee);
-        employeeSearchRepository.save(updatedEmployee);
         EmployeeDTO result = employeeMapper.toDto(updatedEmployee);
         return result;
     }
@@ -263,8 +260,8 @@ public class EmployeeService {
         return companyService.getCompanysManager(company);
     }
 
-    public void sendNotificationToEmployee(Employee authorEmployee,String referencedUserEmail,Long companyId, NotificationType requestToJoin, String subject) {
-        notificationService.saveWithEmployee(authorEmployee,referencedUserEmail, companyId,requestToJoin, subject);
+    public Employee sendNotificationToEmployee(Employee authorEmployee,String referencedUserEmail,Long companyId, NotificationType requestToJoin, String subject) {
+        return notificationService.saveWithEmployee(authorEmployee,referencedUserEmail, companyId,requestToJoin, subject);
     }
 
     public boolean userRequestedToJoinCompanyAndWasRejectedLessThen3DaysAgo(Employee employeeToBeHired,NotificationType theEvent,Long companyId, int nDaysAgo) {
@@ -282,7 +279,7 @@ public class EmployeeService {
         return companyService.saveUserEmployeeAndComapany(approvedEmployee, currentUser, companyWhereEmployeeHasJoined);
     }
 
-    public void sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(Long companyId,Employee referencedEmployee , NotificationType notificationType, String subject) {
+    public void sendNotificationToAllFromCompanyExceptManagerAndEmployee(Long companyId,Employee referencedEmployee , NotificationType notificationType, String subject) {
         // get all company's employees
 
         Optional.of(companyService
@@ -298,7 +295,7 @@ public class EmployeeService {
                     .filter(employee1 ->!userService.checkIfUserHasRoles(employee1.getUser(),AuthoritiesConstants.MANAGER))
                     .filter(employee2 ->!employee2.getId().equals(referencedEmployee.getId()) )
                     .forEach(employee3 -> {
-                        notificationService.saveWithEmployee(employee3, referencedEmployee.getEmail(), companyId, notificationType, subject);
+                        employeeRepository.save(notificationService.saveWithEmployee(employee3, referencedEmployee.getEmail(), companyId, notificationType, subject));
                     });
                 return company;
             });

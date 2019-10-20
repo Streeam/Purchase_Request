@@ -41,7 +41,6 @@ export const employeeListWithout = (employeeList: ReadonlyArray<IEmployee>, hasA
 
 export const employeesToHire = (employeeList: IEmployee[]): IEmployee[] => {
   const employeesWithoutAuth = employeeListWithout(employeeList, [AUTHORITIES.ADMIN, AUTHORITIES.EMPLOYEE, AUTHORITIES.MANAGER]);
-
   return employeesWithoutAuth
     ? employeesWithoutAuth.filter(employee => {
         const employeeNotifications = employee.notifications;
@@ -77,7 +76,7 @@ export const employeesToHire = (employeeList: IEmployee[]): IEmployee[] => {
             const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
 
             // if latest request request is older then 360 hours (14 days) return false, true otherwise
-            return now - notificationDateTime > 360;
+            return now - notificationDateTime < 360;
           });
           if (validRequest.length > 0) {
             return false;
@@ -89,7 +88,6 @@ export const employeesToHire = (employeeList: IEmployee[]): IEmployee[] => {
         );
         if (inviteNotifications.length > 0) {
           let notificationDate: Date = moment(inviteNotifications[0].sentDate).toDate();
-
           const validInvite = inviteNotifications.filter(inviteNotif => {
             const nextDate: Date = moment(inviteNotif.sentDate).toDate();
             if (nextDate > notificationDate) {
@@ -98,7 +96,7 @@ export const employeesToHire = (employeeList: IEmployee[]): IEmployee[] => {
             const now = Math.ceil(new Date().getTime() / (1000 * 60 * 60));
             const notificationDateTime = Math.ceil(notificationDate.getTime() / (1000 * 60 * 60));
             // if latest invitation is older then 360 hours (14 days) return false, true otherwise
-            return now - notificationDateTime > 360;
+            return now - notificationDateTime < 360;
           });
           if (validInvite.length > 0) {
             return false;

@@ -7,7 +7,6 @@ import Employee from './employee';
 import EmployeeDetail from './employee-detail';
 import EmployeeUpdate from './employee-update';
 import EmployeeDeleteDialog from './employee-delete-dialog';
-import EditRoles from './update-employee-roles';
 
 const Routes = ({ match }) => (
   <>
@@ -15,7 +14,6 @@ const Routes = ({ match }) => (
       <ErrorBoundaryRoute exact path={`${match.url}/new`} component={EmployeeUpdate} />
       <ErrorBoundaryRoute exact path={`${match.url}/:id/edit`} component={EmployeeUpdate} />
       <ErrorBoundaryRoute exact path={`${match.url}/:id`} component={EmployeeDetail} />
-      <ErrorBoundaryRoute exact path={`${match.url}/:id/edit-roles`} component={EditRoles} />
       <ErrorBoundaryRoute path={match.url} component={Employee} />
     </Switch>
     <ErrorBoundaryRoute path={`${match.url}/:id/delete`} component={EmployeeDeleteDialog} />

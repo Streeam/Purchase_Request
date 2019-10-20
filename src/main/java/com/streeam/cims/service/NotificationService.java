@@ -143,7 +143,7 @@ public class NotificationService {
             .map(notificationMapper::toDto);
     }
 
-    NotificationDTO saveWithEmployee(Employee authorEmployee,String referencedEmployeeEmail,Long companyId, NotificationType notificationType, String comment) {
+    Employee saveWithEmployee(Employee authorEmployee,String referencedEmployeeEmail,Long companyId, NotificationType notificationType, String comment) {
         Instant now = Instant.now();
         NotificationDTO notificationDTO = new NotificationDTO();
         notificationDTO.setSentDate(now);
@@ -158,7 +158,7 @@ public class NotificationService {
         notifications.add(notificationMapper.toEntity(notificationDTO));
         authorEmployee.setNotifications(notifications);
         // employeeRepository.save(authorEmployee); // This works for request to join
-        return notificationDTO;}
+        return authorEmployee;}
 
 
     public void deleteAllByEmployee(Employee employeeToDelete) {

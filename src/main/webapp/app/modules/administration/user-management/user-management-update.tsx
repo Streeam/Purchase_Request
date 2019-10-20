@@ -174,7 +174,7 @@ export const UserManagementUpdate = (props: IUserManagementUpdateProps) => {
               </AvGroup>
               <AvGroup>
                 <Label for="authorities">
-                  <Translate contentKey="userManagement.profiles">Language Key</Translate>
+                  <Translate contentKey="userManagement.profiles">Roles</Translate>
                 </Label>
                 <AvInput type="select" className="form-control" name="authorities" value={user.authorities} multiple>
                   {roles.map(role => (

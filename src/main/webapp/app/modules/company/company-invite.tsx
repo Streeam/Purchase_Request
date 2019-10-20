@@ -11,8 +11,8 @@ import { employeesToHire } from '../../shared/util/entity-utils';
 import LoadingModal from '../../shared/layout/custom-components/loading-modal/loading-modal';
 
 const companyInvite = props => {
-  const { currentEmployee, employeeList, employeesLoading, notificationsLoading } = props;
-  const isLoading = employeesLoading || notificationsLoading;
+  const { currentEmployee, employeeList, employeesLoading, notificationsLoading, employeesUpdating } = props;
+  const isLoading = employeesLoading || notificationsLoading || employeesUpdating;
 
   // A list with only the available users to hire
   const invitees = employeesToHire(employeeList);
@@ -105,7 +105,8 @@ const companyInvite = props => {
 const mapStateToProps = ({ employee }: IRootState) => ({
   employeeList: employee.entities,
   currentEmployee: employee.currentEmployeeEntity,
-  employeesLoading: employee.loading && employee.updating
+  employeesLoading: employee.loading,
+  employeesUpdating: employee.updating
 });
 
 const mapDispatchToProps = {

@@ -43,7 +43,7 @@ export const hasOnlyUserRole = (authorities: string[]) => {
   return false;
 };
 
-export const isManager = authorities => {
+export const isManager = (authorities: string[]) => {
   if (authorities) {
     return authorities.includes(AUTHORITIES.MANAGER);
   }

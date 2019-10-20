@@ -18,6 +18,7 @@
     "@syncfusion/ej2-react-buttons": "^17.3.16",
     "@syncfusion/ej2-react-dropdowns": "^17.3.17",
     "@syncfusion/ej2-react-grids": "^17.2.51",
+    "@syncfusion/ej2-react-lists": "^17.3.16",
     "ag-grid-community": "^21.2.2",
     "ag-grid-react": "^21.2.2",
     "availity-reactstrap-validation": "2.5.1",

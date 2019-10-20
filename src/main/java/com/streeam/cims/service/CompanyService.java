@@ -15,7 +15,6 @@ import com.streeam.cims.repository.search.UserSearchRepository;
 import com.streeam.cims.security.AuthoritiesConstants;
 import com.streeam.cims.service.dto.CompanyDTO;
 import com.streeam.cims.service.dto.EmployeeDTO;
-import com.streeam.cims.service.dto.NotificationDTO;
 import com.streeam.cims.service.mapper.CompanyMapper;
 import com.streeam.cims.service.mapper.EmployeeMapper;
 import com.streeam.cims.service.mapper.UserMapper;
@@ -295,7 +294,7 @@ public class CompanyService {
         return companyRepository.findOneById(companyId);
     }
 
-    public Employee   sendNotificationToEmployee(Employee authorEmployee, String referencedUserEmail,Long companyId, NotificationType notificationType, String comment) {
+    public Employee sendNotificationToEmployee(Employee authorEmployee, String referencedUserEmail,Long companyId, NotificationType notificationType, String comment) {
 
        return notificationService.saveWithEmployee(authorEmployee,referencedUserEmail,companyId, notificationType, comment);
 
@@ -306,7 +305,7 @@ public class CompanyService {
     }
 
     public CompanyDTO saveUserEmployeeAndComapany(Employee employee, User user, Company company) {
-        userService.save(user);
+        employee.setUser(user);
        CompanyDTO companyDTO = saveWithEmployee(company, employee);
         return  companyDTO;
     }
@@ -316,7 +315,6 @@ public class CompanyService {
         authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add);
         user.setAuthorities(authorities);
 
-        // userService.save(user);
         employee.setHired(false);
         employee.setUser(user);
         Set remainingEmployees = company.getEmployees();
@@ -325,13 +323,13 @@ public class CompanyService {
 
         employee.setCompany(null);
 
-        employeeSearchRepository.save(employee);
-        log.debug("Request to save Company with employee");
-        CompanyDTO updatedCompany = save(companyMapper.toDto(company));
-        Employee updatedEmployee = employeeRepository.save(employee);
-
         log.debug("Request to save Company");
-        return updatedCompany;
+        Company updatedCompany = companyRepository.save(company);
+
+        log.debug("Request to save employee");
+        employeeRepository.save(employee);
+
+        return companyMapper.toDto(updatedCompany);
     }
 
     public Optional<Company> findUsersCompany(Employee currentEmployee) {
@@ -341,7 +339,15 @@ public class CompanyService {
     public void notifyEmployeeThatTheyHaveBeenFired(Company company, String referencedUserEmail) {
 
         company.getEmployees().stream().forEach(employee -> {
-            this.sendNotificationToEmployee(employee,employee.getEmail(),company.getId(), NotificationType.FIRED, "The company " + company.getName() + " has been struck off. You are out of job.");
+            employeeService.saveEmployee(
+                this.sendNotificationToEmployee(
+                    employee,
+                    employee.getEmail(),
+                    company.getId(),
+                    NotificationType.FIRED,
+                    "The company " + company.getName() + " has been struck off. You are out of job."
+                )
+            );
         });
     }
 
@@ -363,7 +369,11 @@ public class CompanyService {
         return  notificationService.hasEventOccurredInThePast(approvedEmployee, requestToJoin, companyId , i);
     }
 
-    public void sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(Long companyId, Employee approvedEmployee, NotificationType notificationType, String subject) {
-        employeeService.sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(companyId, approvedEmployee, notificationType, subject);
+    public void sendNotificationToAllFromCompanyExceptManagerAndEmployee(Long companyId, Employee approvedEmployee, NotificationType notificationType, String subject) {
+        employeeService.sendNotificationToAllFromCompanyExceptManagerAndEmployee(companyId, approvedEmployee, notificationType, subject);
+    }
+
+    public void saveEmployee(Employee approvedEmployee) {
+        employeeService.saveEmployee(approvedEmployee);
     }
 }

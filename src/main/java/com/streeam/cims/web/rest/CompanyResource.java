@@ -316,7 +316,7 @@ public class CompanyResource {
         Set<Authority> authorities = approvedUser.getAuthorities();
         authorityRepository.findById(AuthoritiesConstants.EMPLOYEE).ifPresent(authorities::add);
         approvedUser.setAuthorities(authorities);
-        approvedEmployee.setUser(approvedUser); // saved employee with user
+        //approvedEmployee.setUser(approvedUser); // saved employee with user
 
         companyService.sendNotificationToEmployee(approvedEmployee, currentUser.getEmail(),companyId, NotificationType.ACCEPT_REQUEST,
             "Your application to join " + companyWhereEmployeeApplied.getName() + " has been approved!");
@@ -325,15 +325,17 @@ public class CompanyResource {
         companyService.sendNotificationToEmployee(approvedEmployee, currentEmployee.getEmail(), companyId, NotificationType.WELCOME,
             "Welcome to " + companyWhereEmployeeApplied.getName() +"!");
 
-        // Send notification to all (except the manager and the current user) company's employees to inform them of a new employee joining the company.
-        companyService.sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(
+        // Send notification to all (except the manager and the hired employee) company's employees to inform them of a new employee joining the company.
+        companyService.sendNotificationToAllFromCompanyExceptManagerAndEmployee(
             companyWhereEmployeeApplied.getId(),
             approvedEmployee,
             NEW_EMPLOYEE,
             currentUser.getFirstName() + " " + currentUser.getLastName() + " has joined our company!");
 
+        // companyService.saveEmployee(approvedEmployee);
+
         // Must save company with employee
-        // CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(approvedEmployee, approvedUser, companyWhereEmployeeApplied);
+        CompanyDTO companyDTO = companyService.saveUserEmployeeAndComapany(approvedEmployee, approvedUser, companyWhereEmployeeApplied);
 
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, companyId.toString()))
@@ -379,12 +381,14 @@ public class CompanyResource {
             mailService.sendRejectionEmail(rejectedEmployee.getEmail(), currentUser);
             companyService.sendNotificationToEmployee(rejectedEmployee, currentUser.getEmail(), companyId, NotificationType.REJECT_REQUEST,
                 "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
+            companyService.saveEmployee(rejectedEmployee);
         }
 // Admin can reject anyone's application
         else {
             mailService.sendRejectionEmail(rejectedEmployee.getEmail(), currentUser);
             companyService.sendNotificationToEmployee(rejectedEmployee, currentUser.getEmail(), companyId, NotificationType.REJECT_REQUEST,
                 "Your application to join " + companyWhereEmployeeApplied.getName() + " has been rejected!");
+            companyService.saveEmployee(rejectedEmployee);
         }
     }
 
@@ -441,7 +445,7 @@ public class CompanyResource {
         companyService.sendNotificationToEmployee(employeeToFire, currentEmployee.getEmail(),companyId, NotificationType.FIRED, "You have been fired from " + companyThatEmployeeWasFiredFrom.getName() + ".");
 
         // Send notification to all (except the manager and the current user) company's employees to inform them of a new employee joining the company.
-        companyService.sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(
+        companyService.sendNotificationToAllFromCompanyExceptManagerAndEmployee(
             companyThatEmployeeWasFiredFrom.getId(),
             employeeToFire,
             LEFT_COMPANY,
@@ -494,8 +498,10 @@ public class CompanyResource {
             LEFT_COMPANY,
             currentEmployee.getFirstName() +" " + currentEmployee.getLastName() + " ");
 
+        companyService.saveEmployee(manager);
+
         // Send notification to all (except the manager and the current user) company's employees to inform them that an employee has left the company.
-        companyService.sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(
+        companyService.sendNotificationToAllFromCompanyExceptManagerAndEmployee(
             companyId,
             currentEmployee,
             LEFT_COMPANY,

@@ -135,11 +135,11 @@ public class EmployeeResource {
                 throw new BadRequestAlertException("You cannot modify the details of employees from other companies then your own.", ENTITY_NAME, "noupdatestoemployeesoutsidethecompany");
             }
 
-            result = employeeService.save(linkedUser, employeeDTO);
+            result = employeeService.saveWithUser(linkedUser, employeeMapper.toEntity(employeeDTO));
         }
         // The scenario where the user is the manager. He is only allowed to modify his details or the details of the employees from his company.
         else {
-            result = employeeService.save(linkedUser, employeeDTO);
+            result = employeeService.saveWithUser(linkedUser, employeeMapper.toEntity(employeeDTO));
         }
 
         return ResponseEntity.ok()
@@ -275,6 +275,8 @@ public class EmployeeResource {
 
             employeeService.sendNotificationToEmployee(employeeToJoin, currentEmployee.getEmail(), currentCompany.getId(),
                 INVITATION, "You have been invited to join " + currentCompany.getName() + ".");
+
+            employeeService.saveEmployee(employeeToJoin);
 
             mailService.sendInviteEmail(employeeToJoin.getEmail(), currentUser);
         } else {// Scenario where the user has never registered. The user doesn't yet exists so send the notification to the manager instead. Based on this notification when the user does registers he will automatically
@@ -456,7 +458,11 @@ public class EmployeeResource {
 
         employeeService.sendNotificationToEmployee(currentEmployee, manager.getEmail(), companyId, REJECT_INVITE, "You have declined an invitation from " + company.getName());
 
+        employeeService.saveEmployee(currentEmployee);
+
         employeeService.sendNotificationToEmployee(manager, currentEmployee.getEmail(), companyId, REJECT_INVITE, "A user has declined the invitation to join your company " + company.getName());
+
+        employeeService.saveEmployee(manager);
 
         return ResponseEntity.ok().build();
     }
@@ -499,7 +505,6 @@ public class EmployeeResource {
         currentUser.setAuthorities(authorities);
 
 
-
         Employee manager = employeeService.getCompanyManager(companyWhereEmployeeHasJoined).orElseThrow(() ->
             new BadRequestAlertException("No user with the role of manager found at this company.", ENTITY_NAME, "nomanager"));
 
@@ -507,11 +512,12 @@ public class EmployeeResource {
         // Send notification to the company's manager to inform him that the user accepted the invitation
         employeeService.sendNotificationToEmployee(manager, currentUser.getEmail(), companyId, ACCEPT_REQUEST,
             currentUser.getLogin() + " has accepted your invitation to join your company!");
+        employeeService.saveEmployee(manager);
         // Send notification to the user to welcome him to the company
         employeeService.sendNotificationToEmployee(currentEmployee, manager.getEmail(), companyId, NotificationType.WELCOME,
             "Welcome to " + companyWhereEmployeeHasJoined.getName() +"!");
         // Send notification to all (except the manager and the current user) company's employees to inform them of a new employee joining the company.
-        employeeService.sendNotificationToAllFromCompanyExceptManagerAndCurrentEmployee(
+        employeeService.sendNotificationToAllFromCompanyExceptManagerAndEmployee(
             companyWhereEmployeeHasJoined.getId(),
             currentEmployee,
             NEW_EMPLOYEE,

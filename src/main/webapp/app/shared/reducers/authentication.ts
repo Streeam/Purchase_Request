@@ -6,10 +6,13 @@ import { setLocale } from 'app/shared/reducers/locale';
 import { AUTHORITIES } from 'app/config/constants';
 import { getCurrentEmployeeEntity as getCurrentEmployee, getAllEntities as getEmployees } from '../../entities/employee/employee.reducer';
 import { getEntities as getAllCompanies, getCurrentUserEntity as getCurrentCompany } from '../../entities/company/company.reducer';
+import { hasAnyAuthority } from '../auth/private-route';
+import { hasOnlyUserRole } from '../auth/private-home-route';
 
 export const ACTION_TYPES = {
   LOGIN: 'authentication/LOGIN',
   GET_SESSION: 'authentication/GET_SESSION',
+  GET_ROLES: 'authentication/GET_ROLES',
   LOGOUT: 'authentication/LOGOUT',
   CLEAR_AUTH: 'authentication/CLEAR_AUTH',
   ERROR_MESSAGE: 'authentication/ERROR_MESSAGE'
@@ -43,8 +46,7 @@ export default (state: AuthenticationState = initialState, action): Authenticati
     case REQUEST(ACTION_TYPES.GET_SESSION):
       return {
         ...state,
-        loading: true,
-        isCurrentUserManager: false
+        loading: true
       };
     case FAILURE(ACTION_TYPES.LOGIN):
       return {
@@ -61,8 +63,7 @@ export default (state: AuthenticationState = initialState, action): Authenticati
         sessionHasBeenFetched: true,
         showModalLogin: true,
         errorMessage: action.payload,
-        isCurrentUserManager: false,
-        isUnemployed: false
+        isCurrentUserManager: false
       };
     case SUCCESS(ACTION_TYPES.LOGIN):
       return {
@@ -78,18 +79,20 @@ export default (state: AuthenticationState = initialState, action): Authenticati
         showModalLogin: true
       };
     case SUCCESS(ACTION_TYPES.GET_SESSION): {
-      const { authorities } = action.payload.data;
       const isAuthenticated = action.payload && action.payload.data && action.payload.data.activated;
-      const isCurrentUserManager = authorities ? authorities.includes(AUTHORITIES.MANAGER) : false;
-      const isUnemployed = authorities ? authorities.includes(AUTHORITIES.USER) && authorities.length === 1 : false;
       return {
         ...state,
         isAuthenticated,
-        isCurrentUserManager,
-        isUnemployed,
         loading: false,
         sessionHasBeenFetched: true,
         account: action.payload.data
+      };
+    }
+    case ACTION_TYPES.GET_ROLES: {
+      return {
+        ...state,
+        isCurrentUserManager: action.payload.isCurrentUserManager,
+        isUnemployed: action.payload.isUnemployed
       };
     }
     case ACTION_TYPES.ERROR_MESSAGE:
@@ -125,15 +128,29 @@ export const getSession = () => async (dispatch, getState) => {
   }
 
   await dispatch(getCurrentEmployee(true));
+
   const { currentEmployeeEntity } = getState().employee;
 
-  // if only user execute bellow
-  dispatch(getAllCompanies(true));
+  const authorities: Array<{ name: string; authority: string }> = currentEmployeeEntity.user.authorities;
+  const justAuthority: string[] = authorities.map(auth => auth.name);
+  dispatch({
+    type: ACTION_TYPES.GET_ROLES,
+    payload: {
+      isCurrentUserManager: hasAnyAuthority(justAuthority, [AUTHORITIES.MANAGER]),
+      isUnemployed: hasOnlyUserRole(justAuthority)
+    }
+  });
+  const { isCurrentUserManager } = getState().authentication;
+
+  if (!isCurrentUserManager) {
+    dispatch(getAllCompanies(true));
+  }
 
   if (currentEmployeeEntity.companyId && currentEmployeeEntity.hired) {
     dispatch(getCurrentCompany(true));
-    // if manager execute bellow
-    dispatch(getEmployees(true));
+    if (isCurrentUserManager) {
+      dispatch(getEmployees(true));
+    }
   }
 };
 
