@@ -8,7 +8,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { acceptCompanyInvitation } from '../../../entities/employee/employee.reducer';
 import { getUser, getRoles, updateUser, reset as userReset } from '../../administration/user-management/user-management.reducer';
 import { IRootState } from 'app/shared/reducers';
-import { AUTHORITIES } from 'app/config/constants';
 
 export interface ICompanyAcceptInvitationDialogProps extends DispatchProps, RouteComponentProps<{ id: string }> {}
 
@@ -21,13 +20,7 @@ export const companyAcceptInvitationDialog = props => {
   }, []);
 
   const confirmAccept = event => {
-    props.acceptCompanyInvitation(_isMounted, props.match.params.id);
-    /*     const updatedUser = { ...props.user };
-    const authorities = [...updatedUser.authorities];
-    authorities.push(AUTHORITIES.EMPLOYEE);
-    updatedUser.authorities = authorities;
-    props.updateUser(updatedUser);
-    event.stopPropagation(); */
+    props.acceptCompanyInvitation(true, props.match.params.id);
     props.history.push('/company/company-status');
   };
 

@@ -130,7 +130,7 @@ const customButton = props => {
       now1.setDate(now1.getDate() - 3);
       const threeDaysAgo = new Date(now1); // Three days ago
       const now2 = new Date();
-      now2.setDate(now2.getDate() - 30); // Thirty days ago
+      now2.setDate(now2.getDate() - 14); // Thirty days ago
       const thirtyDaysAgo = new Date(now2);
 
       if (

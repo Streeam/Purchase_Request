@@ -23,6 +23,9 @@ export const companyDetail = (props: StateProps) => {
     companyIsUpdating
   } = props;
 
+  const popupBody = `The top part of the page shows the company’s details. The bottom part shows all the company’s employee and their roles. The manager
+        has the option to edit the company’s details, view every employee’s details and fire them from the company.`;
+  const popupTitle = `Company Status`;
   const isLoading =
     companiesAreLoading || currentEmployeeIsLoading || acceptOrDeclineRequestUpdating || userAccountIsLoading || companyIsUpdating;
 
@@ -120,7 +123,7 @@ export const companyDetail = (props: StateProps) => {
       <CompanyStructure {...props} />
       <br />
       <br />
-      <PopoverInfo />
+      <PopoverInfo popupBody={popupBody} popupTitle={popupTitle} />
     </div>
   );
 };

@@ -8,11 +8,8 @@ const popoverInfo = props => (
       </Button>
     </div>
     <UncontrolledPopover trigger="focus" placement="left" target="PopoverFocus">
-      <PopoverHeader>Company Status</PopoverHeader>
-      <PopoverBody>
-        The top part of the page shows the company’s details. The bottom part shows all the company’s employee and their roles. The manager
-        has the option to edit the company’s details, view every employee’s details and fire them from the company.
-      </PopoverBody>
+      <PopoverHeader>{props.popupTitle}</PopoverHeader>
+      <PopoverBody>{props.popupBody}</PopoverBody>
     </UncontrolledPopover>
   </div>
 );

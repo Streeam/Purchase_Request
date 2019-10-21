@@ -305,11 +305,11 @@ public class CompanyResource {
                 throw new BadRequestAlertException("The manager cannot approve a application by a employee who is applying to a different company then his.", ENTITY_NAME, "cannotapproveemployeeifheapplyestoadiffcompany");
             }
 
-            boolean afterTwoWeeksAgo = companyService.didUserRequestedTojoinLessThen14Days(currentEmployee, REQUEST_TO_JOIN, companyId, 14);
-
-            if(!afterTwoWeeksAgo){
-                throw new BadRequestAlertException("A manager cannot hire a user if no request to join has been sent to him or one was sent but before 14 days ago.", ENTITY_NAME, "hasrequestlessthen14days");
-            }
+//            boolean afterTwoWeeksAgo = companyService.didUserRequestedTojoinLessThen14Days(currentEmployee, REQUEST_TO_JOIN, companyId, 14);
+//
+//            if(!afterTwoWeeksAgo){
+//                throw new BadRequestAlertException("A manager cannot hire a user if no request to join has been sent to him or one was sent but before 14 days ago.", ENTITY_NAME, "hasrequestlessthen14days");
+//            }
 
         }
 // Admin can approve anyone's application

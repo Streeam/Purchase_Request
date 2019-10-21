@@ -9,6 +9,7 @@ import { IRootState } from 'app/shared/reducers';
 import { inviteEmployee } from '../../entities/employee/employee.reducer';
 import { employeesToHire } from '../../shared/util/entity-utils';
 import LoadingModal from '../../shared/layout/custom-components/loading-modal/loading-modal';
+import PopoverInfo from 'app/shared/layout/custom-components/popover-info/popover-info';
 
 const companyInvite = props => {
   const { currentEmployee, employeeList, employeesLoading, notificationsLoading, employeesUpdating } = props;
@@ -16,6 +17,9 @@ const companyInvite = props => {
 
   // A list with only the available users to hire
   const invitees = employeesToHire(employeeList);
+
+  const popupBody = `Invite an employee to join your company. The invitation expires in 14 days`;
+  const popupTitle = `Invite Employee`;
 
   const tabContent = invitees ? (
     invitees.map((employee, i) => (
@@ -50,7 +54,7 @@ const companyInvite = props => {
           <div className="table-button">
             <div className="btn-group flex-btn-group-container">
               <ButtonGroup>
-                <Button tag={Link} to={`/entity/employee/${employee.id}`} size="sm">
+                <Button tag={Link} to={`/entity/employee/${employee.id}`} size="sm" outline color="info" title="View Employee Details">
                   <FontAwesomeIcon icon="eye" />{' '}
                   <span className="d-none d-md-inline">
                     <Translate contentKey="entity.action.view">View</Translate>
@@ -59,8 +63,10 @@ const companyInvite = props => {
                 <Button
                   tag={Link}
                   to={`/company/invite/${currentEmployee.companyId}/invite-employee/${employee.email}`}
-                  // color="primary"
                   size="sm"
+                  outline
+                  color="success"
+                  title="Invite Employee"
                 >
                   <FontAwesomeIcon icon="user" />{' '}
                   <span className="d-none d-md-inline">
@@ -98,6 +104,7 @@ const companyInvite = props => {
       ) : (
         <div className="alert alert-light">No Available employees</div>
       )}
+      <PopoverInfo popupBody={popupBody} popupTitle={popupTitle} />
     </Fragment>
   );
 };

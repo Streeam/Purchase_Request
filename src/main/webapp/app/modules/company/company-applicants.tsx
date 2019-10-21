@@ -11,6 +11,7 @@ import { hireEmployee } from '../../entities/company/company.reducer';
 import { IEmployee } from 'app/shared/model/employee.model';
 import { INotification } from 'app/shared/model/notification.model';
 import { applicantsEmployees } from '../../shared/util/entity-utils';
+import PopoverInfo from 'app/shared/layout/custom-components/popover-info/popover-info';
 
 const companyApplicants = props => {
   const { companyEntity, employeeList, companyLoading, companyIsUpdating } = props;
@@ -21,6 +22,9 @@ const companyApplicants = props => {
       props.hireEmployee(companyEntity.id, employeeId, true);
     }
   };
+
+  const popupTitle = `Applicants`;
+  const popupBody = `Accept or reject a request to join your company. If you reject the request the employee cannot apply again in the next 14 days`;
 
   // To be replaced with a sql query
   const employeeWithNotificationsAddressedToThisCompany: IEmployee[] = employeeList.filter(employee => {
@@ -66,6 +70,7 @@ const companyApplicants = props => {
             <Button
               color="success"
               size="sm"
+              outline
               // tslint:disable
               onClick={() => handleAccept(employee.id)}
             >
@@ -74,7 +79,13 @@ const companyApplicants = props => {
                 <Translate contentKey="entity.action.accept">Accept</Translate>
               </span>
             </Button>
-            <Button color="danger" size="sm" tag={Link} to={`${props.match.url}/${companyEntity.id}/reject-employee/${employee.id}`}>
+            <Button
+              color="danger"
+              size="sm"
+              outline
+              tag={Link}
+              to={`${props.match.url}/${companyEntity.id}/reject-employee/${employee.id}`}
+            >
               <FontAwesomeIcon icon="ban" />{' '}
               <span className="d-none d-md-inline">
                 <Translate contentKey="entity.action.reject">Reject</Translate>
@@ -109,6 +120,7 @@ const companyApplicants = props => {
       ) : (
         <div className="alert alert-light">No Applicants</div>
       )}
+      <PopoverInfo popupBody={popupBody} popupTitle={popupTitle} />
     </Fragment>
   );
 };

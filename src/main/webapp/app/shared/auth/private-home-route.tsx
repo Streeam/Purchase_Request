@@ -50,11 +50,13 @@ export const isManager = (authorities: string[]) => {
   return false;
 };
 
-const mapStateToProps = ({ authentication: { isAuthenticated, account, sessionHasBeenFetched } }: IRootState) => ({
+const mapStateToProps = ({
+  authentication: { isAuthenticated, sessionHasBeenFetched, isCurrentUserManager, isUnemployed }
+}: IRootState) => ({
   isAuthenticated,
-  isAuthorized: hasOnlyUserRole(account.authorities),
+  isAuthorized: isUnemployed,
   sessionHasBeenFetched,
-  isUserManager: isManager(account.authorities)
+  isUserManager: isCurrentUserManager
 });
 
 type StateProps = ReturnType<typeof mapStateToProps>;

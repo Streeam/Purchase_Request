@@ -63,8 +63,13 @@ export const about = () => {
                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; This is an end-to-end full stack monolithic application. The backend server is build
                         using Java and Spring Boot. For authorization and authentication, I used Spring Security along with JWT
                         authentication. For storage I used PostgreSQL a relational database management system. The front-end application is
-                        be built using ReactJS and TypeScript. Loag term goal is to turn this application into a gateway microservice and
-                        attach several microservices to it.
+                        be built using ReactJS and TypeScript.
+                      </p>
+                      <p>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The purpose of this application is to group all users into campanies so that the
+                        manager of a company ca asign roles to his employees. The roles are then used to either restrict the employee's
+                        access to future featues or to allow him/her access. The long term goal is to turn this application into a gateway
+                        microservice and attach several microservices to it.
                       </p>
                       &nbsp;
                       <p>
@@ -79,21 +84,42 @@ export const about = () => {
                         are also sent to all the company's employees informing them that a new employee has join the company.
                       </p>
                       <p style={{ paddingLeft: '3em' }}>
-                        <span>There are 4 roles that a user can have:</span>
+                        <span>There are 4 major roles that a user can have:</span>
                       </p>
                       <ol style={{ fontSize: '1.1rem' }}>
                         <li>
-                          ROLE_USER - After registration every user is given this role. It can never be replaced. All other roles will be
-                          added on top of this role.
+                          USER - After registration every user is given this role. It can never be replaced. All other roles will be added
+                          on top of this role.
                         </li>
+                        <li>ADMIN - Only one user can be in this role. This user can create, see, update and delete almost any entity.</li>
+                        <li>MANAGER - A user is given this role when he creates his own company.</li>
                         <li>
-                          ROLE_ADMIN - Only one user can be in this role. This user can create, see, update and delete almost any entity.
+                          EMPLOYEE - A user is given this role when he joins a company. A user cannot have both employee role and manager
+                          role at the same time.
                         </li>
-                        <li>ROLE_MANAGER - A user is given this role when he creates his own company.</li>
-                        <li>
-                          ROLE_EMPLOYEE - A user is given this role when he joins a company. A user cannot have both employee role and
-                          manager role at the same time.
-                        </li>
+                      </ol>
+                      <p style={{ paddingLeft: '3em' }}>
+                        <span>There are 18 minor roles that a user can have on top of the major roles:</span>
+                      </p>
+                      <ol style={{ fontSize: '1.1rem' }}>
+                        <li> SALES MANAGER</li>
+                        <li> SALES SUPPORT</li>
+                        <li> ACCOUNT MANAGER</li>
+                        <li> ACCOUNT SUPPORT</li>
+                        <li> CLIENT SERVICE</li>
+                        <li> QUALITY MANAGER</li>
+                        <li> QUALITY CONTROL</li>
+                        <li> QUALITY ASSURANCE</li>
+                        <li> PRODUCTION MANAGER</li>
+                        <li> PRODUCTION SUPPORT</li>
+                        <li> LOGISTIC MANAGER</li>
+                        <li> LOGISTIC SUPPORT</li>
+                        <li> ENGINEERING MANAGER</li>
+                        <li> ENGINEER</li>
+                        <li> STORE MANAGER</li>
+                        <li> STORE SUPPORT</li>
+                        <li> MARKETING MANAGER</li>
+                        <li> MARKETING SUPPORT</li>
                       </ol>
                     </div>
                   </blockquote>
@@ -401,16 +427,16 @@ export const about = () => {
             <Col>
               <Button
                 color="light"
-                onClick={collapsSeventhtoggle}
+                onClick={collapsNinethtoggle}
                 style={{
                   marginBottom: '1rem',
                   width: '100%',
                   textAlign: 'left'
                 }}
               >
-                api/employees/{'{'}employeeId{'}'}/decline-request/{'{'}companyId{'}'}
+                api/companies/{'{'}companyId{'}'}/hire-employee/{'{'}employeeId{'}'}
               </Button>
-              <Collapse isOpen={seventhCollapse}>
+              <Collapse isOpen={ninethCollapse}>
                 <Card>
                   <CardBody>
                     <strong>
@@ -418,12 +444,86 @@ export const about = () => {
                     </strong>
                     <div style={{ paddingLeft: '3em' }}>
                       <ul>
-                        <li>Decline a request to join a company</li>
-                        <li>The logged user has to be an unemployed user.</li>
+                        <li>Approve a request from an employee.</li>
                         <li>
-                          An email and a notification is sent to the company's manager informing him that the employee has declined the
-                          invitation.
+                          The manager or the admin approves the users request. The manager can only approve employees that apply to join his
+                          company.
                         </li>
+                        <li>Check to see if the employee is already taken by another company.</li>
+                        <li>The user can be hired if he has requested to join this company in the last 14 days.</li>
+                        <li>The user is given the ROLE_EMPLOYEE and joins the manages's company.</li>
+                        <li>Sends a email and a notification to the user to inform him that his request has been approved.</li>
+                        <li>
+                          Send notification to all employees from that compnay (exept the manager) to inform them the new employee is going
+                          to be joining in.
+                        </li>
+                      </ul>
+                    </div>
+                  </CardBody>
+                </Card>
+              </Collapse>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Button
+                color="light"
+                onClick={collapsTenthtoggle}
+                style={{
+                  marginBottom: '1rem',
+                  width: '100%',
+                  textAlign: 'left'
+                }}
+              >
+                api/companies/{'{'}companyId{'}'}/reject-employee/{'{'}employeeId{'}'}
+              </Button>
+              <Collapse isOpen={tenthCollapse}>
+                <Card>
+                  <CardBody>
+                    <strong>
+                      <p style={{ paddingLeft: '2em' }}> POST</p>
+                    </strong>
+                    <div style={{ paddingLeft: '3em' }}>
+                      <ul>
+                        <li>
+                          Only the manager or the admin rejects the users request. The manager can only reject employees that apply to join
+                          his company.
+                        </li>
+                        <li>The user must not have the role of manager nor employee and he must not be part of a company.</li>
+                        <li>The user's application can be rejected only if he has requested to join this company in the last 14 days.</li>
+                        <li>Sends an email and a notification to the user to inform him that his request has been rejected.</li>
+                      </ul>
+                    </div>
+                  </CardBody>
+                </Card>
+              </Collapse>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Button
+                color="light"
+                onClick={collapsEighthtoggle}
+                style={{
+                  marginBottom: '1rem',
+                  width: '100%',
+                  textAlign: 'left'
+                }}
+              >
+                api/companies/{'{'}companyId{'}'}/fire/{'{'}employeeId{'}'}
+              </Button>
+              <Collapse isOpen={eighthCollapse}>
+                <Card>
+                  <CardBody>
+                    <strong>
+                      <p style={{ paddingLeft: '2em' }}> POST</p>
+                    </strong>
+                    <div style={{ paddingLeft: '3em' }}>
+                      <ul>
+                        <li>Only the manager or the admin can fire an employee.</li>
+                        <li>Removes all the employee's roles except the default ROLE_USER.</li>
+                        <li>Send a notification and a email to the user informing him that he got fired.</li>
+                        <li>Send notifications to all company's employees informing them that the employee has been fired.</li>
                       </ul>
                     </div>
                   </CardBody>

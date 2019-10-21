@@ -6,7 +6,7 @@ import { Navbar, Nav, NavbarToggler, Collapse } from 'reactstrap';
 
 import LoadingBar from 'react-redux-loading-bar';
 
-import { Home, Brand } from './header-components';
+import { Home, Brand, About } from './header-components';
 import { AdminMenu, EntitiesMenu, AccountMenu, LocaleMenu, CompanyMenu } from '../menus';
 
 export interface IHeaderProps {
@@ -61,6 +61,7 @@ const Header = (props: IHeaderProps) => {
             )}
             <LocaleMenu currentLocale={props.currentLocale} onClick={handleLocaleChange} />
             <AccountMenu isAuthenticated={props.isAuthenticated} account={props.account} />
+            <About />
           </Nav>
         </Collapse>
       </Navbar>

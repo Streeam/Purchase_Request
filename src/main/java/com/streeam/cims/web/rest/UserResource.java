@@ -171,11 +171,10 @@ public class UserResource {
                 throw  new BadRequestAlertException("You cannot modify the details of employees from other companies then your own.", ENTITY_NAME, "noupdatestoemployeesoutsidethecompany");
             }
 
-            updatedUser = userService.updateUserRoles(userDTO);
+            updatedUser = userService.updateUserRoles(userDTO, currentEmployee);
         }
         else {
             updatedUser = userService.updateUser(userDTO);
-            //Todo Update the linked employee as well
         }
 
 

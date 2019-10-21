@@ -298,7 +298,7 @@ public class UserService {
      * @param userDTO user to update.
      * @return updated user.
      */
-    public Optional<UserDTO> updateUserRoles(UserDTO userDTO) {
+    public Optional<UserDTO> updateUserRoles(UserDTO userDTO, Employee currentEmployee) {
 
         Optional<UserDTO> userToUpdate = Optional.of(userRepository
             .findById(userDTO.getId()))
@@ -313,10 +313,12 @@ public class UserService {
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .forEach(managedAuthorities::add);
-                userRepository.save(user);
-                userSearchRepository.save(user);
+                // userRepository.save(user);
+                user.setAuthorities(managedAuthorities);
+                currentEmployee.setUser(user);
+                employeeService.saveEmployee(currentEmployee);
                 this.clearUserCaches(user);
-                log.debug("Changed Information for User: {}", user);
+                log.debug("Changed Information for User: {}", authorityRepository.findAll());
                 return user;
             })
             .map(UserDTO::new);

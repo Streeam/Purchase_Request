@@ -6,10 +6,12 @@ import { AvForm, AvGroup, AvInput, AvField, AvFeedback } from 'availity-reactstr
 import { Translate, translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import { getEntity } from '../../../entities/employee/employee.reducer';
 import { updateUser, reset } from './user-management.reducer';
 import { IRootState } from 'app/shared/reducers';
 import { AUTHORITIES } from 'app/config/constants';
 import { IEmployee } from 'app/shared/model/employee.model';
+import PopoverInfo from 'app/shared/layout/custom-components/popover-info/popover-info';
 
 export interface IUserManagementUpdateProps extends StateProps, DispatchProps {
   employeeEntity: IEmployee;
@@ -17,11 +19,10 @@ export interface IUserManagementUpdateProps extends StateProps, DispatchProps {
 
 export const UserManagementUpdate = (props: IUserManagementUpdateProps) => {
   const employeeAuthorities = props.employeeEntity && props.employeeEntity.user ? props.employeeEntity.user.authorities : null;
-  const [employeeAuthoritiesArray, setEmployeeAuthoritiesArray] = useState(
-    employeeAuthorities ? employeeAuthorities.map(auth => auth.name) : []
-  );
+  const [employeeAuthoritiesArray, setEmployeeAuthoritiesArray] = useState([]);
 
   useEffect(() => {
+    setEmployeeAuthoritiesArray(employeeAuthorities ? employeeAuthorities.map(auth => auth.name) : []);
     return () => props.reset();
   }, []);
 
@@ -50,7 +51,11 @@ export const UserManagementUpdate = (props: IUserManagementUpdateProps) => {
     })
   ];
 
-  const { employeeEntity, loading, updating, roles } = props;
+  const popupBody = `Select from the list above what rols to assign to the employee. In order to select multiple roles hold down Ctrl
+key while clicking on each role you want to assign.`;
+  const popupTitle = `Role Assigment`;
+
+  const { employeeEntity, loading, updating, isCurrentUserManager } = props;
 
   const saveUser = (event, values) => {
     const selectedRoles = values.authorities;
@@ -71,7 +76,14 @@ export const UserManagementUpdate = (props: IUserManagementUpdateProps) => {
         ) : (
           <AvForm onValidSubmit={saveUser}>
             <AvGroup>
-              <AvInput type="select" className="form-control" name="authorities" value={employeeAuthoritiesArray} multiple>
+              <AvInput
+                type="select"
+                className="form-control"
+                name="authorities"
+                value={employeeAuthoritiesArray}
+                multiple
+                disabled={!isCurrentUserManager}
+              >
                 {visibleRoles.map(role => (
                   <option value={role} key={role}>
                     {upperCaseFirst(role.replace(/_/g, ' ').slice(5))}
@@ -87,26 +99,28 @@ export const UserManagementUpdate = (props: IUserManagementUpdateProps) => {
               </span>
             </Button>
             &nbsp;
-            <Button outline size="sm" color="primary" type="submit" disabled={updating}>
-              <FontAwesomeIcon icon="save" />
-              &nbsp;
-              <Translate contentKey="entity.action.save">Save</Translate>
-            </Button>
+            {isCurrentUserManager && (
+              <Button outline size="sm" color="primary" type="submit" disabled={updating} title={'Update Roles'}>
+                <FontAwesomeIcon icon="save" />
+                &nbsp;
+                <Translate contentKey="entity.action.save">Save</Translate>
+              </Button>
+            )}
           </AvForm>
         )}
+        <PopoverInfo popupBody={popupBody} popupTitle={popupTitle} />
       </Col>
     </Row>
   );
 };
 
 const mapStateToProps = (storeState: IRootState) => ({
-  user: storeState.userManagement.user,
-  roles: storeState.userManagement.authorities,
+  isCurrentUserManager: storeState.authentication.isCurrentUserManager,
   loading: storeState.userManagement.loading,
   updating: storeState.userManagement.updating
 });
 
-const mapDispatchToProps = { updateUser, reset };
+const mapDispatchToProps = { updateUser, reset, getEntity };
 
 type StateProps = ReturnType<typeof mapStateToProps>;
 type DispatchProps = typeof mapDispatchToProps;
