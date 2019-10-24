@@ -42,12 +42,12 @@ const CompanyInviteDialog = (props: ICompanyInviteDialogProps) => {
         </Translate>
       </ModalBody>
       <ModalFooter>
-        <Button color="secondary" onClick={handleClose}>
+        <Button outline size="sm" color="secondary" onClick={handleClose}>
           <FontAwesomeIcon icon="ban" />
           &nbsp;
           <Translate contentKey="entity.action.cancel">Cancel</Translate>
         </Button>
-        <Button id="jhi-confirm-invite-company" color="primary" onClick={handleInvite}>
+        <Button outline size="sm" id="jhi-confirm-invite-company" color="success" onClick={handleInvite}>
           <FontAwesomeIcon icon="user" />
           &nbsp;
           <Translate contentKey="entity.action.invite">Invite</Translate>

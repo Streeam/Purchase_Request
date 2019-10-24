@@ -12,8 +12,8 @@ import LoadingModal from '../../shared/layout/custom-components/loading-modal/lo
 import PopoverInfo from 'app/shared/layout/custom-components/popover-info/popover-info';
 
 const companyInvite = props => {
-  const { currentEmployee, employeeList, employeesLoading, notificationsLoading, employeesUpdating } = props;
-  const isLoading = employeesLoading || notificationsLoading || employeesUpdating;
+  const { currentEmployee, employeeList, employeesLoading, employeesUpdating } = props;
+  const isLoading = employeesLoading || employeesUpdating;
 
   // A list with only the available users to hire
   const invitees = employeesToHire(employeeList);

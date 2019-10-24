@@ -347,21 +347,6 @@ http://stackoverflow.com/questions/23436430/bootstrap-3-input-group-100-width */
 
 /* jhipster-needle-scss-add-main JHipster will add new css style */
 
-.Button {
-  background-color: #abb6c2;
-  font: inherit;
-  color: black;
-  border: transparent;
-  padding: 8px;
-  box-shadow: 0 1px 6px 0 rgba(32, 33, 36, 0.28);
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-.Button:hover {
-  background-color: #9e9d9d;
-}
-
 .nav-tabs .nav-link.active,
 .nav-tabs .nav-item.show .nav-link {
   color: #ebebeb;

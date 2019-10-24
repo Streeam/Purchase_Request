@@ -6,6 +6,7 @@ import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util'
 import { ICompany, defaultValue } from 'app/shared/model/company.model';
 import { getAsyncEntities as getEmployees } from '../employee/employee.reducer';
 import { getSession } from '../../shared/reducers/authentication';
+import company from './company';
 
 export const ACTION_TYPES = {
   SEARCH_COMPANIES: 'company/SEARCH_COMPANIES',
@@ -89,7 +90,7 @@ export default (state: CompanyState = initialState, action): CompanyState => {
         : {
             ...state,
             loading: false,
-            entities: action.payload.data,
+            entities: action.payload.data.filter(comp => comp.name !== 'Stream ltd.'),
             totalItems: parseInt(action.payload.headers['x-total-count'], 10)
           };
     case SUCCESS(ACTION_TYPES.FETCH_COMPANY):

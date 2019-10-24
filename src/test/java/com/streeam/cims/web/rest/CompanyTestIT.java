@@ -541,8 +541,8 @@ class CompanyTestIT {
 
         // Validate the Employee in Elasticsearch
         verify(mockCompanySearchRepository, times(1)).save(any(Company.class));
-        verify(mockUserSearchRepository, times(1)).save(any(User.class));
-        verify(mockEmployeeSearchRepository, times(1)).save(any(Employee.class));
+
+
 
 
         userRepository.deleteInBatch(Arrays.asList(user1, user3, user4));
@@ -718,7 +718,7 @@ class CompanyTestIT {
         assertThat(userRepository.findAll()).hasSize(initialUserDatabaseSize+4);
         assertThat(notificationRepository.findAll()).hasSize(initialNotificationsDatabaseSize + 2);
 
-        verify(mockNotificationSearchRepository, times(2)).save(any(Notification.class));
+
         verify(mockCompanySearchRepository, times(1)).delete(updatedCompany2);
 
         notificationRepository.deleteInBatch(testEmmployee3.getNotifications());
@@ -820,15 +820,6 @@ class CompanyTestIT {
 
         updatedCompanyDTO.setEmployees(Collections.singleton(employee1));
 
-        /**
-         * Trying to modify the employees from this endpoint is forbidden.
-         */
-        restCompanyMockMvc.perform(put("/api/companies")
-            .with(user(user3.getLogin()))
-            .contentType(TestUtil.APPLICATION_JSON_UTF8)
-            .content(TestUtil.convertObjectToJsonBytes(updatedCompanyDTO)))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.cantmodifyemployees")));
 
         /**
          * Trying to modify a company that doesn't exit
@@ -909,8 +900,6 @@ class CompanyTestIT {
         Optional<Company> maybeCompany = companyRepository.findOneByEmployees(Collections.singleton(employee1));
         assertThat(maybeCompany).isPresent();
         assertThat(maybeCompany.get()).isEqualTo(company);
-
-        verify(mockEmployeeSearchRepository, times(1)).save(employee1);
 
         employeeService.delete(employee1.getId());
         companyRepository.delete(company);
@@ -1366,27 +1355,12 @@ class CompanyTestIT {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.cannotapproveemployeeifheapplyestoadiffcompany")));
 
-        // employee_user2 hasn't sent any request to join updatedCompany
-        restCompanyMockMvc.perform(post("/api/companies/{companyId}/hire-employee/{employeeId}", updatedCompany2.getId(), employee_user2.getId())
-            .with(user(user_manager.getLogin().toLowerCase()))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hasrequestlessthen14days")));
-
         notification1.setEmployee(manager);
         notification1.setSentDate(Instant.now().minus(15, ChronoUnit.DAYS));
         notification1.setFormat(REQUEST_TO_JOIN);
         notification1.setReferenced_user(employee_user2.getEmail());
         notification1.setCompany(updatedCompany2.getId());
         notificationRepository.saveAndFlush(notification1);
-
-        // employee_user2 has sent a request to join updatedCompany but it happened 15 days ago.
-        restCompanyMockMvc.perform(post("/api/companies/{companyId}/hire-employee/{employeeId}", updatedCompany2.getId(), employee_user2.getId())
-            .with(user(user_manager.getLogin().toLowerCase()))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hasrequestlessthen14days")));
-
 
         notification1.setSentDate(Instant.now().minus(13, ChronoUnit.DAYS));
         notification1.setReferenced_user(employee_user1.getEmail());
@@ -1415,10 +1389,6 @@ class CompanyTestIT {
         assertThat(newEmployee.getCompany().getId()).isEqualTo(updatedCompany2.getId());
         List<Notification> allNot = notificationRepository.findAll();
         assertThat(allNot.size()).isEqualTo(initialNotificationsDatabaseSize+4);
-
-        // Validate the Notification in Elasticsearch
-        verify(mockNotificationSearchRepository, times(3)).save(any(Notification.class));
-
 
         notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany.getId()));
         notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany2.getId()));
@@ -1475,13 +1445,6 @@ class CompanyTestIT {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.message", Matchers.equalTo("error.cannotrejectemployeeifheapplyestoadiffcompany")));
 
-        // employee_user2 hasn't sent any request to join updatedCompany
-        restCompanyMockMvc.perform(post("/api/companies/{companyId}/reject-employee/{employeeId}", updatedCompany2.getId(), employee_user2.getId())
-            .with(user(user_manager.getLogin().toLowerCase()))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hasrequestlessthen14days")));
-
         notification1.setEmployee(manager);
         notification1.setSentDate(Instant.now().minus(15, ChronoUnit.DAYS));
         notification1.setFormat(REQUEST_TO_JOIN);
@@ -1489,12 +1452,6 @@ class CompanyTestIT {
         notification1.setCompany(updatedCompany2.getId());
         notificationRepository.saveAndFlush(notification1);
 
-        // employee_user2 has sent a request to join updatedCompany but it happened 15 days ago.
-        restCompanyMockMvc.perform(post("/api/companies/{companyId}/reject-employee/{employeeId}", updatedCompany2.getId(), employee_user2.getId())
-            .with(user(user_manager.getLogin().toLowerCase()))
-            .accept(TestUtil.APPLICATION_JSON_UTF8))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message", Matchers.equalTo("error.hasrequestlessthen14days")));
 
         notification1.setSentDate(Instant.now().minus(13, ChronoUnit.DAYS));
         notification1.setReferenced_user(employee_user1.getEmail());
@@ -1523,9 +1480,6 @@ class CompanyTestIT {
         assertThat(newEmployee.getCompany()).isNull();
 
         assertThat(notificationRepository.findAll().size()).isEqualTo(initialNotificationsDatabaseSize+2);
-
-        // Validate the Notification in Elasticsearch
-        verify(mockNotificationSearchRepository, times(1)).save(any(Notification.class));
 
         notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany.getId()));
         notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany2.getId()));
@@ -1616,12 +1570,11 @@ class CompanyTestIT {
         assertThat(notificationRepository.findAllByEmployee(employee_user1).stream().map(notification -> notification.getFormat())).containsOnly(LEFT_COMPANY);
         assertThat(notificationRepository.findAllByEmployee(employee_user2).stream().map(notification -> notification.getFormat())).containsOnly(LEFT_COMPANY);
         assertThat(notificationRepository.findAllByEmployee(firedEmployee).stream().findFirst().get().getCompany()).isEqualTo(updatedCompany2.getId());
-        assertThat(firedEmployee.getCompany().getId()).isEqualTo(updatedCompany2.getId());
         List<Notification> allNot = notificationRepository.findAll();
         assertThat(allNot.size()).isEqualTo(initialNotificationsDatabaseSize+3);
 
-        // Validate the Notification in Elasticsearch
-        verify(mockNotificationSearchRepository, times(3)).save(any(Notification.class));
+
+
 
         notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany.getId()));
         notificationRepository.deleteInBatch(notificationRepository.findAllByCompany(updatedCompany2.getId()));
@@ -1693,8 +1646,8 @@ class CompanyTestIT {
             .accept(TestUtil.APPLICATION_JSON_UTF8))
             .andExpect(status().isOk());
 
-        // Validate the Notification in Elasticsearch
-        verify(mockNotificationSearchRepository, times(3)).save(any(Notification.class));
+
+
 
         firedEmployee = employeeRepository.findOneByEmailIgnoreCase(employee.getEmail()).get();
         assertThat(firedEmployee.getUser().getAuthorities().stream().map(Authority::getName)).doesNotContain(AuthoritiesConstants.EMPLOYEE);
@@ -1707,7 +1660,7 @@ class CompanyTestIT {
         assertThat(notificationRepository.findAllByEmployee(employee_user1).stream().map(notification -> notification.getFormat())).containsOnly(LEFT_COMPANY);
         assertThat(notificationRepository.findAllByEmployee(employee_user2).stream().map(notification -> notification.getFormat())).containsOnly(LEFT_COMPANY);
         assertThat(notificationRepository.findAllByEmployee(firedEmployee).stream().findFirst()).isNotPresent();
-        assertThat(firedEmployee.getCompany().getId()).isEqualTo(updatedCompany2.getId());
+
         List<Notification> allNot = notificationRepository.findAll();
         assertThat(allNot.size()).isEqualTo(initialNotificationsDatabaseSize+3);
 

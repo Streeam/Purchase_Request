@@ -40,12 +40,12 @@ export const companyAcceptRequestDialog = (props: ICompanyRejectRequestDialogPro
         </Translate>
       </ModalBody>
       <ModalFooter>
-        <Button color="secondary" onClick={handleClose}>
+        <Button outline size="sm" color="secondary" onClick={handleClose}>
           <FontAwesomeIcon icon="ban" />
           &nbsp;
           <Translate contentKey="entity.action.cancel">Cancel</Translate>
         </Button>
-        <Button id="jhi-confirm-rejectrequest-company" color="danger" onClick={handleReject}>
+        <Button outline size="sm" id="jhi-confirm-rejectrequest-company" color="danger" onClick={handleReject}>
           <FontAwesomeIcon icon="ban" />
           &nbsp;
           <Translate contentKey="entity.action.reject">Reject</Translate>

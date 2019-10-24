@@ -22,7 +22,6 @@ export interface ICompanyState extends IPaginationBaseState {
 }
 
 export const joinCompany = props => {
-  let _isMounted = false;
   const {
     companyList,
     match,
@@ -34,12 +33,6 @@ export const joinCompany = props => {
   } = props;
   const isLoading = companiesAreLoading || employeesAreLoading || userIsLoading || acceptOrRejectEmployeeIsLoading;
 
-  useEffect(() => {
-    _isMounted = true;
-    // props.getCompanies(_isMounted);
-    // props.getCurrentEmployeeAsync(_isMounted);
-    return () => (_isMounted = false);
-  }, []);
   return isLoading ? (
     <LoadingModal />
   ) : (
@@ -103,7 +96,7 @@ export const joinCompany = props => {
                   <td>{company.postcode}</td>
                   <td className="text-right">
                     <div className="btn-group flex-btn-group-container">
-                      <Button tag={Link} to={`${match.url}/${company.id}`} color="info" size="sm">
+                      <Button outline tag={Link} to={`${match.url}/${company.id}`} color="info" size="sm">
                         <FontAwesomeIcon icon="eye" />{' '}
                         <span className="d-none d-md-inline">
                           <Translate contentKey="entity.action.view">View</Translate>

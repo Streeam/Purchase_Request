@@ -52,7 +52,7 @@ export const about = () => {
           <Row>
             <Col sm="12">
               <br />
-              <div className="container">
+              <div>
                 <h2>About</h2>
                 <div>
                   &nbsp;

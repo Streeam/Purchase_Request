@@ -41,12 +41,12 @@ export const companyAcceptInvitationDialog = props => {
         </ModalBody>
       )}
       <ModalFooter>
-        <Button color="secondary" onClick={handleClose}>
+        <Button outline size="sm" color="secondary" onClick={handleClose}>
           <FontAwesomeIcon icon="ban" />
           &nbsp;
           <Translate contentKey="entity.action.cancel">Cancel</Translate>
         </Button>
-        <Button id="jhi-confirm-acceptinvitation-company" color="danger" onClick={rejectInvitation}>
+        <Button outline size="sm" id="jhi-confirm-acceptinvitation-company" color="danger" onClick={rejectInvitation}>
           <FontAwesomeIcon icon="ban" />
           &nbsp;
           <Translate contentKey="entity.action.reject">Reject</Translate>

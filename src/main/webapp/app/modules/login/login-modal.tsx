@@ -62,12 +62,12 @@ const loginModal = (props: ILoginModalProps) => {
             </Col>
           </Row>
           <div className="mt-1">&nbsp;</div>
-          <Alert color="light">
+          <Alert color="dark">
             <Link to="/reset/request">
               <Translate contentKey="login.password.forgot">Did you forget your password?</Translate>
             </Link>
           </Alert>
-          <Alert color="light">
+          <Alert color="dark">
             <span>
               <Translate contentKey="global.messages.info.register.noaccount">You don't have an account yet?</Translate>
             </span>{' '}
@@ -77,10 +77,10 @@ const loginModal = (props: ILoginModalProps) => {
           </Alert>
         </ModalBody>
         <ModalFooter>
-          <Button onClick={handleClose} tabIndex="1">
+          <Button size="sm" outline onClick={handleClose} tabIndex="1">
             <Translate contentKey="entity.action.cancel">Cancel</Translate>
           </Button>{' '}
-          <Button type="submit">
+          <Button size="sm" outline type="submit">
             <Translate contentKey="login.form.button">Sign in</Translate>
           </Button>
         </ModalFooter>

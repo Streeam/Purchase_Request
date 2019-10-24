@@ -226,7 +226,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
                   <AvInput type="hidden" name="companyLogo" value={companyLogo ? companyLogo : ''} />
                 </AvGroup>
               </AvGroup>
-              <Button tag={Link} id="cancel-save" to={redirect} replace>
+              <Button outline color="info" size="sm" tag={Link} id="cancel-save" to={redirect} replace>
                 <FontAwesomeIcon icon="arrow-left" />
                 &nbsp;
                 <span className="d-none d-md-inline">
@@ -234,7 +234,7 @@ export class CompanyUpdate extends React.Component<ICompanyUpdateProps, ICompany
                 </span>
               </Button>
               &nbsp;
-              <Button id="save-entity" type="submit" disabled={updating}>
+              <Button outline color="primary" size="sm" id="save-entity" type="submit" disabled={updating}>
                 <FontAwesomeIcon icon="save" />
                 &nbsp;
                 <Translate contentKey="entity.action.save">Save</Translate>

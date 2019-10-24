@@ -3,7 +3,7 @@ import { ICrudGetAction, ICrudGetAllAction, ICrudPutAction, ICrudDeleteAction } 
 
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 import { IUser, defaultValue } from 'app/shared/model/user.model';
-import { getCurrentEmployeeEntity } from '../../../entities/employee/employee.reducer';
+import { getEntity } from '../../../entities/employee/employee.reducer';
 
 export const ACTION_TYPES = {
   FETCH_ROLES: 'userManagement/FETCH_ROLES',
@@ -145,6 +145,15 @@ export const updateUser: ICrudPutAction<IUser> = user => async dispatch => {
     payload: axios.put(apiUrl, user)
   });
   // await dispatch(getCurrentEmployeeEntity(true));
+  return result;
+};
+
+export const updateUserAndEmployee = (user, employeeId) => async dispatch => {
+  const result = await dispatch({
+    type: ACTION_TYPES.UPDATE_USER,
+    payload: axios.put(apiUrl, user)
+  });
+  await dispatch(getEntity(true, employeeId));
   return result;
 };
 

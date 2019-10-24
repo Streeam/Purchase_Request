@@ -26,8 +26,8 @@ export const SettingsPage = (props: IUserSettingsProps) => {
 
   useEffect(() => {
     _isMounted = true;
-    props.getSession();
-    props.getCurrentEmployeeEntity(_isMounted);
+    // props.getSession();
+    // props.getCurrentEmployeeEntity(_isMounted);
     return () => {
       _isMounted = false;
       props.reset();
@@ -106,7 +106,7 @@ export const SettingsPage = (props: IUserSettingsProps) => {
                 </option>
               ))}
             </AvField>
-            <Button className="Button" tag={Link} id="cancel-save" to="/" replace>
+            <Button outline color="info" size="sm" tag={Link} id="cancel-save" to="/" replace>
               <FontAwesomeIcon icon="arrow-left" />
               &nbsp;
               <span className="d-none d-md-inline">
@@ -114,7 +114,7 @@ export const SettingsPage = (props: IUserSettingsProps) => {
               </span>
             </Button>
             &nbsp;
-            <Button className="Button" id="save-entity" type="submit" disabled={updatingUser}>
+            <Button outline color="primary" size="sm" id="save-entity" type="submit" disabled={updatingUser}>
               <FontAwesomeIcon icon="save" />
               &nbsp;
               <Translate contentKey="entity.action.save">Save</Translate>

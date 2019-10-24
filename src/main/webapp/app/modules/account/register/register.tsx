@@ -83,7 +83,7 @@ export const RegisterPage = (props: IRegisterProps) => {
                 match: { value: 'firstPassword', errorMessage: translate('global.messages.error.dontmatch') }
               }}
             />
-            <Button id="register-submit" type="submit">
+            <Button outline size="sm" id="register-submit" type="submit">
               <Translate contentKey="register.form.button">Register</Translate>
             </Button>
           </AvForm>

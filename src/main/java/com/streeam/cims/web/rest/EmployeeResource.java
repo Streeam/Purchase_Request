@@ -326,7 +326,7 @@ public class EmployeeResource {
      * @param employeeId the id of the employeeDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
-    @DeleteMapping("/employees/{id}")
+    @DeleteMapping("/employees/{employeeId}")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long employeeId) {
 
         if (employeeId == null) {

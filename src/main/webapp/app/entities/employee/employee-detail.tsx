@@ -97,7 +97,7 @@ export const employeeDetail = (props: IEmployeeDetailProps) => {
       <Row>
         <Col>
           <h4>Assign Roles</h4>
-          <RolesUpdate {...props} />
+          <RolesUpdate employeeEntity={employeeEntity} employeeId={props.match.params.id} />
           &nbsp;&nbsp;
         </Col>
       </Row>

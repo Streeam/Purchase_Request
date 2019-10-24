@@ -5,7 +5,7 @@ import { cleanEntity } from 'app/shared/util/entity-utils';
 import { REQUEST, SUCCESS, FAILURE } from 'app/shared/reducers/action-type.util';
 
 import { IEmployee, defaultValue } from 'app/shared/model/employee.model';
-import { getEntities as getCompanies } from '../company/company.reducer';
+import { getSession } from 'app/shared/reducers/authentication';
 
 export declare type ICrudGetAllActionWithGuard<T> = (
   isMounted: boolean,
@@ -282,8 +282,8 @@ export const acceptCompanyInvitation = (isMounted: boolean, companyId: String) =
       }
     })
   });
-  await dispatch(getCurrentEmployeeEntity(isMounted));
-  dispatch(getCompanies(true));
+  dispatch(getCurrentEmployeeEntity(isMounted));
+  await dispatch(getSession());
   return result;
 };
 

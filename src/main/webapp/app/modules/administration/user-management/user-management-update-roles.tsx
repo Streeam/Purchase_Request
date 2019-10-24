@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, RouteComponentProps } from 'react-router-dom';
 import { Button, Label, Row, Col } from 'reactstrap';
 import { AvForm, AvGroup, AvInput, AvField, AvFeedback } from 'availity-reactstrap-validation';
 import { Translate, translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { getEntity } from '../../../entities/employee/employee.reducer';
-import { updateUser, reset } from './user-management.reducer';
+import { updateUserAndEmployee, reset } from './user-management.reducer';
 import { IRootState } from 'app/shared/reducers';
 import { AUTHORITIES } from 'app/config/constants';
 import { IEmployee } from 'app/shared/model/employee.model';
@@ -15,17 +15,20 @@ import PopoverInfo from 'app/shared/layout/custom-components/popover-info/popove
 
 export interface IUserManagementUpdateProps extends StateProps, DispatchProps {
   employeeEntity: IEmployee;
+  employeeId: string;
 }
 
 export const UserManagementUpdate = (props: IUserManagementUpdateProps) => {
+  const { employeeEntity, loading, updating, isCurrentUserManager, employeeId } = props;
+
   const employeeAuthorities = props.employeeEntity && props.employeeEntity.user ? props.employeeEntity.user.authorities : null;
+  const employeeAuthoritiesList = employeeAuthorities.map(auth => auth.name);
+
   const [employeeAuthoritiesArray, setEmployeeAuthoritiesArray] = useState([]);
 
   useEffect(() => {
-    setEmployeeAuthoritiesArray(employeeAuthorities ? employeeAuthorities.map(auth => auth.name) : []);
-    return () => props.reset();
+    // props.getEntity(true, props.employeeEntity.id);
   }, []);
-
   const upperCaseFirst = text =>
     text
       .toLowerCase()
@@ -55,15 +58,17 @@ export const UserManagementUpdate = (props: IUserManagementUpdateProps) => {
 key while clicking on each role you want to assign.`;
   const popupTitle = `Role Assigment`;
 
-  const { employeeEntity, loading, updating, isCurrentUserManager } = props;
-
   const saveUser = (event, values) => {
+    setEmployeeAuthoritiesArray(employeeAuthoritiesList);
     const selectedRoles = values.authorities;
-    const newRoles = employeeAuthoritiesArray.concat(selectedRoles);
+    const basicAuthorities = employeeAuthoritiesList.includes('ROLE_MANAGER')
+      ? ['ROLE_USER', 'ROLE_MANAGER']
+      : ['ROLE_USER', 'ROLE_EMPLOYEE'];
+    const newRoles = basicAuthorities.concat(selectedRoles);
     const uniqueNewRoles = newRoles.filter((value, index) => newRoles.indexOf(value) === index);
     const user = { ...employeeEntity.user };
     user.authorities = uniqueNewRoles;
-    props.updateUser(user);
+    props.updateUserAndEmployee(user, props.employeeEntity.id);
     setEmployeeAuthoritiesArray(uniqueNewRoles);
     event.persist();
   };
@@ -71,7 +76,7 @@ key while clicking on each role you want to assign.`;
   return (
     <Row className="justify-content-center">
       <Col>
-        {loading ? (
+        {+employeeId !== employeeEntity.id ? (
           <p>Loading...</p>
         ) : (
           <AvForm onValidSubmit={saveUser}>
@@ -80,7 +85,7 @@ key while clicking on each role you want to assign.`;
                 type="select"
                 className="form-control"
                 name="authorities"
-                value={employeeAuthoritiesArray}
+                value={employeeAuthoritiesList}
                 multiple
                 disabled={!isCurrentUserManager}
               >
@@ -120,7 +125,7 @@ const mapStateToProps = (storeState: IRootState) => ({
   updating: storeState.userManagement.updating
 });
 
-const mapDispatchToProps = { updateUser, reset, getEntity };
+const mapDispatchToProps = { updateUserAndEmployee, reset, getEntity };
 
 type StateProps = ReturnType<typeof mapStateToProps>;
 type DispatchProps = typeof mapDispatchToProps;

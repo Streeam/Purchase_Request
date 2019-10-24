@@ -37,7 +37,7 @@ const customButton = props => {
   };
 
   const submittedButton = (): JSX.Element => (
-    <Button color="primary" size="sm" disabled>
+    <Button outline color="primary" size="sm" disabled>
       <FontAwesomeIcon icon="file-signature" />{' '}
       <span className="d-none d-md-inline">
         <Translate contentKey="entity.action.submitted">Application Submitted</Translate>
@@ -47,13 +47,13 @@ const customButton = props => {
 
   const rejectedButton = (tooltipMessage: String): JSX.Element => (
     <span id="rejectButton">
-      <Button color="danger" size="sm" disabled>
+      <Button outline color="danger" size="sm" disabled>
         <FontAwesomeIcon icon="ban" />{' '}
         <span className="d-none d-md-inline">
           <Translate contentKey="entity.action.rejected">Application Rejected</Translate>
         </span>
       </Button>
-      <Tooltip placement="top" isOpen={tooltipOpen} target="rejectButton" toggle={toggle}>
+      <Tooltip placement="bottom" isOpen={tooltipOpen} target="rejectButton" toggle={toggle}>
         {tooltipMessage}
       </Tooltip>
     </span>
@@ -61,13 +61,13 @@ const customButton = props => {
 
   const rejectedInviteButton = (tooltipMessage: String): JSX.Element => (
     <span id="rejectInviteButton">
-      <Button color="danger" size="sm" disabled>
+      <Button outline color="danger" size="sm" disabled>
         <FontAwesomeIcon icon="ban" />{' '}
         <span className="d-none d-md-inline">
           <Translate contentKey="entity.action.rejected">Invitation Rejected</Translate>
         </span>
       </Button>
-      <Tooltip placement="top" isOpen={tooltipOpen} target="rejectInviteButton" toggle={toggle}>
+      <Tooltip placement="bottom" isOpen={tooltipOpen} target="rejectInviteButton" toggle={toggle}>
         {tooltipMessage}
       </Tooltip>
     </span>
@@ -75,20 +75,20 @@ const customButton = props => {
 
   const firedButton = (tooltipMessage: String): JSX.Element => (
     <span id="firedButton">
-      <Button color="danger" size="sm" disabled>
+      <Button outline color="danger" size="sm" disabled>
         <FontAwesomeIcon icon="ban" />{' '}
         <span className="d-none d-md-inline">
           <Translate contentKey="entity.action.fired">Fired</Translate>
         </span>
       </Button>
-      <Tooltip placement="top" isOpen={tooltipOpen} target="firedButton" toggle={toggle}>
+      <Tooltip placement="bottom" isOpen={tooltipOpen} target="firedButton" toggle={toggle}>
         {tooltipMessage}
       </Tooltip>
     </span>
   );
 
   const joinButton = (companyId: Number): JSX.Element => (
-    <Button id="joinButton" tag={Link} to={`${props.url}/${companyId}/join`} color="primary" size="sm">
+    <Button outline id="joinButton" tag={Link} to={`${props.url}/${companyId}/join`} color="primary" size="sm">
       <FontAwesomeIcon icon="file-signature" />{' '}
       <span className="d-none d-md-inline">
         <Translate contentKey="entity.action.join">Request to Join</Translate>
@@ -98,19 +98,19 @@ const customButton = props => {
 
   const acceptButton = (tooltipMessage: String, companyId: Number): JSX.Element => (
     <div className="btn-group flex-btn-group-container" id="acceptAndRejectButton">
-      <Button tag={Link} to={`${props.url}/${companyId}/accept-invitation`} color="success" size="sm">
+      <Button outline tag={Link} to={`${props.url}/${companyId}/accept-invitation`} color="success" size="sm">
         <FontAwesomeIcon icon="check" />{' '}
         <span className="d-none d-md-inline">
           <Translate contentKey="entity.action.accept">Accept Invitation</Translate>
         </span>
       </Button>
-      <Button tag={Link} to={`${props.url}/${companyId}/reject-invitation`} color="danger" size="sm">
+      <Button outline tag={Link} to={`${props.url}/${companyId}/reject-invitation`} color="danger" size="sm">
         <FontAwesomeIcon icon="ban" />{' '}
         <span className="d-none d-md-inline">
           <Translate contentKey="entity.action.reject">Invitation Rejected</Translate>
         </span>
       </Button>
-      <Tooltip placement="top" isOpen={tooltipOpen} target="acceptAndRejectButton" toggle={toggle}>
+      <Tooltip placement="bottom" isOpen={tooltipOpen} target="acceptAndRejectButton" toggle={toggle}>
         {tooltipMessage}
       </Tooltip>
     </div>

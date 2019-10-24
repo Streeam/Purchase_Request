@@ -40,12 +40,12 @@ export const employeeFireDialog = (props: ICompanyProps) => {
         </Translate>
       </ModalBody>
       <ModalFooter>
-        <Button color="secondary" onClick={handleClose}>
+        <Button outline size="sm" color="secondary" onClick={handleClose}>
           <FontAwesomeIcon icon="ban" />
           &nbsp;
           <Translate contentKey="entity.action.cancel">Cancel</Translate>
         </Button>
-        <Button id="jhi-confirm-join-company" color="danger" onClick={confirmFire}>
+        <Button id="jhi-confirm-join-company" outline size="sm" color="danger" onClick={confirmFire}>
           <FontAwesomeIcon icon="ban" />
           &nbsp;
           <Translate contentKey="entity.action.fire">Fire</Translate>

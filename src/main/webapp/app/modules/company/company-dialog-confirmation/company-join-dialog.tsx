@@ -41,12 +41,12 @@ export class CompanyJoinDialog extends React.Component<ICompanyJoinDialogProps> 
           </Translate>
         </ModalBody>
         <ModalFooter>
-          <Button color="secondary" onClick={this.handleClose}>
+          <Button color="secondary" outline size="sm" onClick={this.handleClose}>
             <FontAwesomeIcon icon="ban" />
             &nbsp;
             <Translate contentKey="entity.action.cancel">Cancel</Translate>
           </Button>
-          <Button id="jhi-confirm-join-company" color="primary" onClick={this.confirmJoin}>
+          <Button outline size="sm" id="jhi-confirm-join-company" color="success" onClick={this.confirmJoin}>
             <FontAwesomeIcon icon="file-signature" />
             &nbsp;
             <Translate contentKey="entity.action.join">Join</Translate>
