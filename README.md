@@ -1,7 +1,7 @@
 # Company Information Database
 
 This is an end-to-end full stack monolithic application. The backend server is build using Java and Spring Boot. For authorization and authentication, I used Spring Security along with JWT authentication. For storage I used PostgreSQL a relational database management system.
-The front-end application will be built using ReactJS (with TypeScript).  Loag term goal is to turn this application into a gateway microservice and attach several microservices to it. 
+The front-end application will be built using ReactJS (with TypeScript).  Long term goal is to turn this application into a gateway microservice and attach several microservices to it. 
 
  [Live Demo](https://company-information-database.herokuapp.com/)
 
