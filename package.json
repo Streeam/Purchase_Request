@@ -22,7 +22,7 @@
     "ag-grid-community": "^21.2.2",
     "ag-grid-react": "^21.2.2",
     "availity-reactstrap-validation": "2.5.1",
-    "axios": "0.19.0",
+    "axios": "0.21.1",
     "bit-bin": "^14.3.0",
     "bootstrap": "4.3.1",
     "bootswatch": "4.3.1",
