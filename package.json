@@ -30,7 +30,7 @@
     "jsrender": "^1.0.5",
     "loaders.css": "0.1.2",
     "lodash": "4.17.13",
-    "moment": "2.24.0",
+    "moment": "2.29.2",
     "npm": "^6.11.3",
     "react": "16.8.5",
     "react-avatar-edit": "^0.8.3",
